@@ -1,7 +1,7 @@
 #What is this?
 
 Pumpkin is a non-profit personal side project aiming at building a powerful education/research-oriented CPU prototype with the following targets:
-* super-scalar & Out-of-order
+* super-scalar & out-of-order
 * super-pipelined
 * parameterized
 * synthesizable
@@ -71,4 +71,6 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 -impl -sim_time -dump -unit fifo_queue indicates a post-implementation timing simulation of unit testcase fifo_queue with signals dumping.
 
 7. (Possibly) Required Packages
-sudo apt-get install libswitch-perl
+
+- sudo apt-get install libswitch-perl
+- sudo apt-get install gtkwave

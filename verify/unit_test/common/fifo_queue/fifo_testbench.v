@@ -43,9 +43,7 @@ fifo_queue
         .issue_ack_out		(issue_ack_from_fifo),
         .request_out		(request_out),
         .request_valid_out      (request_valid_out),
-        .issue_ack_in		(issue_ack_to_fifo),
-        .fifo_entry_packed_out	(),
-        .fifo_entry_valid_packed_out ()
+        .issue_ack_in		(issue_ack_to_fifo)
 );
 
 always @(posedge clk_in or posedge reset_in)

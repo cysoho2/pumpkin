@@ -1,4 +1,4 @@
-./working_temp/*
+/working_temp/
 ./core/*
 ./unified_cache/*
 ./rtl/pumpkin_cpu_top.v
