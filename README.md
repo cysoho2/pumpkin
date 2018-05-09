@@ -70,6 +70,8 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 -synth -sim_func -full 001_basic_loop indicates a post-synthesis full-chip functional simulation of testcase 001_basic_loop.
 -impl -sim_time -dump -unit fifo_queue indicates a post-implementation timing simulation of unit testcase fifo_queue with signals dumping.
 
+-./pumpkin.pl -impl -sim_time -dump -unit fifo
+
 7. (Possibly) Required Packages
 
 - sudo apt-get install libswitch-perl
