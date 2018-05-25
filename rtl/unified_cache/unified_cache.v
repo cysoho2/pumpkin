@@ -74,7 +74,7 @@ data_request_queue
         .reset_in                       (reset_in),
         .clk_in                         (clk_in),
 
-        .is_empty_out                   (),  // intened left unconnected
+        .is_empty_out                   (),  // intended to left unconnected
         .is_full_out                    (is_data_request_queue_full),
 
         .request_in                     (data_packet_in),
@@ -83,8 +83,8 @@ data_request_queue
         .request_out                    (data_packet_to_arbiter),
         .request_valid_out              (data_packet_valid_to_arbiter),
         .issue_ack_in                   (packet_ack_to_data_request_queue),
-        .fifo_entry_packed_out          (), // intened left unconnected
-        .fifo_entry_valid_packed_out    ()  // intened left unconnected
+        .fifo_entry_packed_out          (), // intended toleft unconnected
+        .fifo_entry_valid_packed_out    ()  // intended to left unconnected
 );
 
 // arbiter
@@ -112,9 +112,9 @@ input_requests_arbiter
 assign to_mem_packet_out = access_packet_from_arbiter;
 assign ack_to_arbiter = to_mem_packet_ack_in;
 
-assign data_packet_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? from_mem_packet_in : 0;
-assign inst_packet_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? 0 : from_mem_packet_in;
-assign from_mem_packet_ack_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? data_packet_ack_in : inst_packet_ack_in;
+//assign data_packet_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? from_mem_packet_in : 0;
+//assign inst_packet_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? 0 : from_mem_packet_in;
+//assign from_mem_packet_ack_out = from_mem_packet_in[`MEM_PACKET_TYPE_POS_LO] == `DATA_PACKET_FLAG ? data_packet_ack_in : inst_packet_ack_in;
 
 
 // tag array
@@ -221,7 +221,7 @@ writeback_buffer
         .QUEUE_SIZE                     (`WRITEBACK_BUFFER_SIZE),
         .QUEUE_PTR_WIDTH_IN_BITS        (`WRITEBACK_BUFFER_PTR_WIDTH_IN_BITS),
         .SINGLE_ENTRY_WIDTH_IN_BITS     (`MEM_PACKET_WIDTH_IN_BITS),
-        .ADDR_LEN_IN_BITS               (`CPU_WORD_LEN_IN_BITS),
+        .ADDR_LEN_IN_BITS               (`CPU_DATA_LEN_IN_BITS),
         .STORAGE_TYPE                   ("LUTRAM")
 )
 writeback_buffer

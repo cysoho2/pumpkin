@@ -43,7 +43,7 @@ generate
             wire [ELEMENT_PTR_SIZE_IN_BITS - 1 : 0]       ptr2 =   ptrs_layer1[(i+1 + (NUM_ELEMENTS / 2)) * ELEMENT_PTR_SIZE_IN_BITS - 1 : (i + (NUM_ELEMENTS / 2)) * ELEMENT_PTR_SIZE_IN_BITS];
 
             assign values_layer2[(i+1) * SINGLE_ELEMENT_WIDTH_IN_BITS - 1 : i * SINGLE_ELEMENT_WIDTH_IN_BITS] = value1 > value2 ? value1 : value2;
-            assign   ptrs_layer2[(i+1) * ELEMENT_PTR_SIZE_IN_BITS     - 1 : i * ELEMENT_PTR_SIZE_IN_BITS]     = value1 > value2 ? ptr1 : ptr2;;
+            assign   ptrs_layer2[(i+1) * ELEMENT_PTR_SIZE_IN_BITS     - 1 : i * ELEMENT_PTR_SIZE_IN_BITS]     = value1 > value2 ? ptr1 : ptr2;
         end
     end
 

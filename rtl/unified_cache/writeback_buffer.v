@@ -5,7 +5,7 @@ module writeback_buffer
         parameter QUEUE_SIZE = 16,
         parameter QUEUE_PTR_WIDTH_IN_BITS = 4,
         parameter SINGLE_ENTRY_WIDTH_IN_BITS = 32,
-        parameter ADDR_LEN_IN_BITS = `CPU_WORD_LEN_IN_BITS,
+        parameter ADDR_LEN_IN_BITS = `CPU_DATA_LEN_IN_BITS,
         parameter STORAGE_TYPE = "LUTRAM"      
 )
 (  

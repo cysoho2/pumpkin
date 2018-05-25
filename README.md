@@ -72,7 +72,8 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 
 -./pumpkin.pl -impl -sim_time -dump -unit fifo
 
-7. (Possibly) Required Packages
+7. (Probably) Required Packages
 
 - sudo apt-get install libswitch-perl
 - sudo apt-get install gtkwave
+- sudo apt-get install iverilog

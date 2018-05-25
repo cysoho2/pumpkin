@@ -218,8 +218,7 @@ reg                             read_mismatch;
 reg                             burst_write_active;
 reg                             burst_read_active;
 reg [C_M_AXI_DATA_WIDTH-1 : 0]  expected_rdata;
-/
-/Interface response error flags
+//Interface response error flags
 wire                            write_resp_error;
 wire                            read_resp_error;
 wire                            wnext;

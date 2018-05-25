@@ -3,17 +3,17 @@
 module pumpkin_cpu_top
 (
     input                                                       reset_in,
-    input                                                       clk_in,  
+    input                                                       clk_in  
 
-    inout   [(`OFF_CORE_ACCESS_WIDTH_IN_BITS) - 1 : 0]          off_core_access_payload_inout,
+    /*inout   [(`OFF_CORE_ACCESS_WIDTH_IN_BITS) - 1 : 0]          off_core_access_payload_inout,
     inout                                                       off_core_access_ack_inout,
     inout   [(`CPU_WORD_LEN_IN_BITS)          - 1 : 0]          off_core_access_addr_inout,  
     inout                                                       off_core_access_addr_valid_inout,
     output                                                      off_core_access_is_write_out,
-    output                                                      inout_ctrl_out
+    output                                                      inout_ctrl_out*/
 );
 
-wire    [(`INSTS_FETCH_WIDTH_IN_BITS)         - 1 : 0]          insts_fetch_from_l1_icache_to_ifetcher;
+/*wire    [(`INSTS_FETCH_WIDTH_IN_BITS)         - 1 : 0]          insts_fetch_from_l1_icache_to_ifetcher;
 wire    [(`CPU_WORD_LEN_IN_BITS)              - 1 : 0]          insts_fetch_addr_from_ifetcher_to_l1_icache;
 wire    [(`L2_PACKET_WIDTH_IN_BITS)           - 1 : 0]          l2_packet_from_l2_cache_to_l1_icache;
 wire    [(`L2_PACKET_WIDTH_IN_BITS)           - 1 : 0]          l2_packet_from_l1_icache_to_l2_cache;
@@ -79,7 +79,7 @@ l2_unified_cache l2_cache
 );
 
 
-/*insts_decoder idecoder
+insts_decoder idecoder
 (
     //input
     .insts_from_ifetcher_in(insts_fetched_from_ifetcher_to_idecoder_out)
@@ -88,6 +88,7 @@ l2_unified_cache l2_cache
     //output
 
 
-);*/
+);
+*/
 
 endmodule
