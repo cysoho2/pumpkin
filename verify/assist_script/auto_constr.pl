@@ -1,9 +1,8 @@
-#!/usr/bin/perl -w
+#!/usr/local/bin/perl -w
 
-use v5.24;
+use v5.26;
 use strict;
 use Data::Dumper;
-use Switch;
 use POSIX;
 
 =pod
@@ -184,50 +183,48 @@ sub infix_exp_to_postfix_exp # transform the infix expression to postfix express
         for(my $index = 0; $index < length($infix_exp); $index++)
         {
                 my $char = substr($infix_exp,$index,1);
-                switch($char)
+                
+                if($char =~ /[\s]/)
                 {
-                        case(/[\s]/)
+                }
+                elsif($char =~ /[\d]/)
+                {
+                        $postfix_exp .= sprintf("%s", $char);
+                }
+                elsif($char =~ '(')
+                {
+                        $postfix_exp .= sprintf("%s", $num_boundary);
+                        
+                        push @stack, $char;
+                }
+                elsif($char =~ ')')
+                {
+                        $postfix_exp .= sprintf("%s", $num_boundary);
+                        
+                        while(my $top = pop @stack)
                         {
+                                $postfix_exp .= sprintf(" %s", $top) if $top ne '(';
+                                last if $top eq '(';
                         }
-                        case(/[\d]/)
+                }
+                elsif($char =~ /[\+\-\*\/]/)
+                {
+                        $postfix_exp .= sprintf("%s", $num_boundary);
+                        
+                        my $lower_priority_op;
+                        $lower_priority_op = '' if $char eq '+' or $char eq '-';
+                        $lower_priority_op = '+-' if $char eq '*' or $char eq '/';
+                        
+                        while(my $top = pop @stack)
                         {
-                                $postfix_exp .= sprintf("%s", $char);
-                        }
-                        case('(')
-                        {
-                                $postfix_exp .= sprintf("%s", $num_boundary);
-                                
-                                push @stack, $char;
-                        }
-                        case(')')
-                        {
-                                $postfix_exp .= sprintf("%s", $num_boundary);
-                                
-                                while(my $top = pop @stack)
+                                if($top eq '(' or index($lower_priority_op, $top) != -1)  # find a lower priority op at the top of the stack
                                 {
-                                        $postfix_exp .= sprintf(" %s", $top) if $top ne '(';
-                                        last if $top eq '(';
+                                        push @stack, $top;
+                                        last;
                                 }
+                                $postfix_exp .= sprintf(" %s", $top) if $top ne '(';
                         }
-                        case(/[\+\-\*\/]/)
-                        {
-                                $postfix_exp .= sprintf("%s", $num_boundary);
-                                
-                                my $lower_priority_op;
-                                $lower_priority_op = '' if $char eq '+' or $char eq '-';
-                                $lower_priority_op = '+-' if $char eq '*' or $char eq '/';
-                                
-                                while(my $top = pop @stack)
-                                {
-                                        if($top eq '(' or index($lower_priority_op, $top) != -1)  # find a lower priority op at the top of the stack
-                                        {
-                                                push @stack, $top;
-                                                last;
-                                        }
-                                        $postfix_exp .= sprintf(" %s", $top) if $top ne '(';
-                                }
-                                push @stack, $char;
-                        }
+                        push @stack, $char;
                 }
         }
 
@@ -252,43 +249,39 @@ sub postfix_exp_evaluate
         {
                 my $char = substr($postfix_exp,$index,1);
 
-                switch($char)
+                if($char =~ /[\d]/)
                 {
-                        case(/[\d]/)
-                        {
-                                $num = $num * 10 + $char;
-                                $last_char_is_a_num = 1;
-                        }
-                        case(/\s/)
-                        { 
-                                push @stack, $num if $last_char_is_a_num;
-                                $num = 0;
-                                $last_char_is_a_num = 0;
-                        }
-                        case(/[\+\-\*\/]/)
-                        {
-                                my $op2 = pop @stack;
-                                my $op1 = pop @stack;
+                        $num = $num * 10 + $char;
+                        $last_char_is_a_num = 1;
+                }
+                elsif($char =~ /\s/)
+                { 
+                        push @stack, $num if $last_char_is_a_num;
+                        $num = 0;
+                        $last_char_is_a_num = 0;
+                }
+                elsif($char =~ /[\+\-\*\/]/)
+                {
+                        my $op2 = pop @stack;
+                        my $op1 = pop @stack;
 
-                                if($char eq '+')
-                                {
-                                        push @stack, $op1 + $op2;
-                                }
-                                elsif($char eq '-')
-                                {
-                                        push @stack, $op1 - $op2;
-                                }
-                                elsif($char eq '*')
-                                {
-                                        push @stack, $op1 * $op2;
-                                }
-                                elsif($char eq '/')
-                                {
-                                        push @stack, &floor($op1 / $op2);
-                                }
-                                $last_char_is_a_num = 0;
+                        if($char eq '+')
+                        {
+                                push @stack, $op1 + $op2;
                         }
-
+                        elsif($char eq '-')
+                        {
+                                push @stack, $op1 - $op2;
+                        }
+                        elsif($char eq '*')
+                        {
+                                push @stack, $op1 * $op2;
+                        }
+                        elsif($char eq '/')
+                        {
+                                push @stack, &floor($op1 / $op2);
+                        }
+                        $last_char_is_a_num = 0;
                 }
         }
         

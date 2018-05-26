@@ -1,6 +1,6 @@
-#!/usr/bin/perl -w
+#!/usr/local/bin/perl -w
 
-use v5.18;
+use v5.26;
 use strict;
 use File::Find;
 use File::Copy;
@@ -284,7 +284,7 @@ sub task_begin
 		my $util_rpt_path   = "$report_dir/$pumpkin_parameter_hash{'util_rpt_filename'}";
 		my $waveform_path   = "$report_dir/$pumpkin_parameter_hash{'waveform_filename'}";
 
-		# invoke vivado
+		# invoke vivado for linux
 		if($pumpkin_parameter_hash{'running_on_mac'} == 0)
 		{
 			my ($sim_log_path, $synth_log_path, $impl_log_path) = 
@@ -301,8 +301,13 @@ sub task_begin
 			`cp $impl_log_path  $report_dir/$pumpkin_parameter_hash{impl_log_filename}`  if -e $impl_log_path;
 			`cp $sim_log_path   $report_dir/$pumpkin_parameter_hash{sim_log_filename}`   if -e $sim_log_path;
 		}
+		# invoke icarus for mac
 		else
 		{
+			chdir $build_dir;
+			$pumpkin_parameter_hash{'waveform_filename'} = "sim_waves.fst";
+			$waveform_path = "$build_dir/$pumpkin_parameter_hash{'waveform_filename'}";
+
 			say "[info-script] invoking icarus compiler ...";
 			
 			my $icarus_cmd = "iverilog -o $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'} -s $topmodule_test"
@@ -315,7 +320,7 @@ sub task_begin
 			if(-e "$build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}")
 			{
 				say "[info-script] invoking icarus simulator ...";
-				system "vvp $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}";
+				system "vvp $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'} IVERILOG_DUMPER=fst -fst";
 			}
 			else
 			{
@@ -327,8 +332,15 @@ sub task_begin
 		{
 			die "[error-script] the waveform file $waveform_path does not exist" if !-e $waveform_path;
 			say "[info-script] the waveform file is $waveform_path";
-				
-			system "gtkwave --optimize -c 4 -f $waveform_path";
+
+			if($pumpkin_parameter_hash{'running_on_mac'} == 0)
+			{
+				system "gtkwave --optimize -c 4 -f $waveform_path";
+			}
+			else
+			{
+				system "gtkwave $waveform_path";
+			}
 		}
 	}
 	else

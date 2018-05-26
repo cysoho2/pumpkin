@@ -93,8 +93,8 @@ end
 initial
 begin
     `ifdef DUMP
-        $dumpfile("sim_waves.vcd");
-        $dumpvars(0, "fifo_testbench");
+        $dumpfile("sim_waves.fst");
+        $dumpvars(0, fifo_testbench);
     `endif
         
     	$display("\n[info-rtl] simulation begins now\n");
