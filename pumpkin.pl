@@ -38,13 +38,16 @@ foreach my $test_name (keys %full_test_queue_hash)
     &task_begin($test_name, 'full_test', 'arm64');
 }
 
+say "\n";
+say " ******* Developed by Pobu - huangbowen\@ict.ac.cn";
+say "\n";
+
 #################### major subrountines ###############
 
 sub pumpkin_init
 {
 	say "\n";
 	say " ******* Pumpkin auto worker script v1.5";
-	say " ******* Developed by Pobu - huangbowen\@ict.ac.cn";
 	say "\n";
 	
 	%pumpkin_parameter_hash =
