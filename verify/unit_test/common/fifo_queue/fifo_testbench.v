@@ -100,13 +100,13 @@ begin
     	$display("\n[info-rtl] simulation begins now\n");
     	clk_in   = 1'b0;
     	reset_in = 1'b0;
-#5  	reset_in = 1'b1;
-#5  	reset_in = 1'b0;
+#10  	reset_in = 1'b1;
+#10  	reset_in = 1'b0;
 
 #3000   $display("\n[info-rtl] simulation comes to the end\n");
         $finish;
 end
 
-always begin #1 clk_in <= ~clk_in; end
+always begin #5 clk_in <= ~clk_in; end
 
 endmodule

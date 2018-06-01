@@ -191,13 +191,13 @@ sub infix_exp_to_postfix_exp # transform the infix expression to postfix express
                 {
                         $postfix_exp .= sprintf("%s", $char);
                 }
-                elsif($char =~ '(')
+                elsif($char eq '(')
                 {
                         $postfix_exp .= sprintf("%s", $num_boundary);
                         
                         push @stack, $char;
                 }
-                elsif($char =~ ')')
+                elsif($char eq ')')
                 {
                         $postfix_exp .= sprintf("%s", $num_boundary);
                         
