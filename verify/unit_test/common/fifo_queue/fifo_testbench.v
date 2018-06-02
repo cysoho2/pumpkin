@@ -8,9 +8,26 @@ parameter QUEUE_PTR_WIDTH_IN_BITS = 3;
 parameter SINGLE_ENTRY_WIDTH_IN_BITS = 32;
 parameter STORAGE_TYPE = "LUTRAM";
 
+parameter TEST_CASE_1 = "write invalue data";
+parameter TEST_CASE_2 = "normal write/read";
+parameter TEST_CASE_3 = "write data then read more data";
+parameter TEST_CASE_4 = "write data to full queue";
+parameter TEST_CASE_5 = "read data from empty queue";
+
+integer i;
+
+
 reg                                             clk_in;
 reg                                             reset_in;
 reg     [31:0]                                  clk_ctr;
+
+reg     [2:0]                                   test_case;
+reg     [32:0]                                  test_ctr;
+reg                                             test_stage;
+reg                                             test_wait;
+reg                                             test_end_flag;
+reg                                             test_check_buffer;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]      test_buffer[QUEUE_SIZE - 1:0];
 
 wire                                            is_empty;
 wire		                                	is_full;
@@ -48,47 +65,392 @@ fifo_queue
 
 always @(posedge clk_in or posedge reset_in)
 begin
-	if(reset_in)
-	begin
-		request_in <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
-		request_valid_in <= 1'b0;
-	end
-	
-	else if(issue_ack_from_fifo)
-	begin
-		request_in <= request_in - 1'b1;
-		request_valid_in <= 1'b1;
-	end
 
-	else
-	begin
-		request_in       <= request_in;
-		request_valid_in <= 1'b1;       
-	end
+    case(test_case)
+	
+    2'b00: begin
+	
+        if(reset_in)
+        begin
+            test_ctr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}}; 
+            request_in          <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+            request_valid_in    <= 1'b0;
+                
+            test_stage          <= 1'b0;
+            test_wait           <= 1'b0;
+         end
+	
+         else if((test_ctr < QUEUE_SIZE / 2) & ~test_end_flag & ~test_stage)
+            begin
+                
+                if (~test_wait)
+                begin
+                    request_in          <= request_in - 1'b1;
+                    request_valid_in    <= 1'b0;
+                    test_ctr            <= test_ctr + 1;
+                end
+                
+                else
+                    test_wait = 1'b0;
+            end
+
+         else
+            begin
+                request_in       <= request_in;
+                request_valid_in <= 1'b0;   
+                
+                if(test_ctr == QUEUE_SIZE / 2)
+                begin
+                    test_ctr    <= 1'b0;
+                    test_stage  <= 1'b1;
+                end    
+            end
+			
+    end
+	
+    2'b01: begin
+        	
+        if(reset_in)
+            begin
+                test_ctr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}}; 
+                request_in          <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+                request_valid_in    <= 1'b0;
+                
+                test_wait           <= 1'b0;
+            end
+    
+         else if((test_ctr < QUEUE_SIZE / 2) & ~test_end_flag)
+            begin
+                if (~test_wait)
+                begin
+            
+                    request_in          <= request_in - 1'b1;
+                    request_valid_in    <= 1'b1;
+            
+                    //record
+                    test_buffer[test_ctr]   <= request_in - 1'b1;
+                    test_ctr                <= test_ctr + 1'b1;
+                    test_wait               <= 1'b1;
+                end
+                
+                else
+                    test_wait <= 1'b0;
+            end
+
+         else
+            begin
+                request_in       <= request_in;
+                request_valid_in <= 1'b0;       
+            end
+    end
+	
+    2'b10: begin
+
+        if(reset_in)
+        begin
+             test_ctr         <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}}; 
+             request_in       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+             request_valid_in <= 1'b0;
+                   
+             test_stage       <= 1'b0;
+        end
+        
+        else
+        begin
+            if(test_ctr < 1'b1)
+            begin
+                request_in       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+                request_valid_in <= 1'b0;
+                
+                test_ctr         <= test_ctr + 1;
+            end
+            
+            else
+            begin
+                request_in       <= request_in;
+                request_valid_in <= 1'b0;       
+            end
+        end
+               
+    end
+
+    2'b11: begin
+	   
+            if(reset_in)
+                begin
+                    test_ctr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}}; 
+                    request_in          <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+                    request_valid_in    <= 1'b0;
+                    
+                    test_wait = 1'b0;
+                    test_stage = 1'b0;
+                end
+        
+             else if((test_ctr < QUEUE_SIZE * 2) & ~test_end_flag & (test_stage == 1'b0))
+                begin
+                    if (~test_wait)
+                    begin
+                
+                        request_in          <= request_in - 1'b1;
+                        request_valid_in    <= 1'b1;
+                
+                        //record
+                        if(test_ctr >= QUEUE_SIZE)
+                        begin
+                            test_buffer[test_ctr]   <= request_in - 1'b1;
+                            test_ctr                <= test_ctr + 1'b1;
+                            test_wait               <= 1'b1;
+                        end
+                    end
+                    
+                    else
+                        test_wait <= 1'b0;
+                end
+    
+             else
+                begin
+                    request_in          <= request_in;
+                    request_valid_in    <= 1'b0;   
+                    
+                    test_stage          <= 1'b1;    
+                end
+                
+    end
+	
+	3'b100 : begin
+        if(reset_in)
+        begin
+            test_ctr         <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}}; 
+            request_in       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}};
+            request_valid_in <= 1'b0;
+               
+            test_stage       <= 1'b0;
+        end
+        
+        else
+        begin
+            request_in       <= request_in;
+            request_valid_in <= 1'b0;
+            
+            test_stage       <= 1'b1;       
+        end
+           
+    end
+	
+    endcase
 end
 
 always @(posedge clk_in or posedge reset_in)
 begin
-	if(reset_in)
-	begin
-		clk_ctr           <= 0;
-		issue_ack_to_fifo <= 1'b0;
-	end
+    case(test_case)
+    
+    2'b00: begin   
+        if(reset_in)
+        begin
+            issue_ack_to_fifo <= 1'b0;
+        end
         
-	else
-	begin
-		clk_ctr <= clk_ctr + 1'b1;
-		if(clk_ctr[3:0] == 5'b00000 & request_valid_out)
-		begin
-			issue_ack_to_fifo <= 1'b1;
-		end
+        else if(~test_end_flag)
+        begin
+            if(test_stage & (test_ctr < QUEUE_SIZE / 2))
+            begin
+            
+                if(~issue_ack_to_fifo)
+                    issue_ack_to_fifo <= 1'b1;
+            
+                else 
+                begin
+                
+                    if(~request_valid_out)
+                        #5 test_buffer[test_ctr]    <= request_out;
+                    else
+                        #5 test_buffer[test_ctr]    <= 1'b1;
+        
+                        test_ctr                    <= test_ctr + 1'b1;
+                    end
+                end
 		
-		else
-		begin
-			issue_ack_to_fifo <= 1'b0;
-		end
-	end
+            else
+            begin
+                issue_ack_to_fifo <= 1'b0;
+                
+                if(test_ctr == QUEUE_SIZE / 2)
+                    test_check_buffer <= 1'b1;
+            end
+        end
+    end
+	
+    2'b01: begin
+	
+        if(reset_in)
+           begin
+               issue_ack_to_fifo <= 1'b0;
+           end
+           
+           else if(~test_end_flag)
+           begin
+               if((test_ctr >= QUEUE_SIZE / 2) && (test_ctr < QUEUE_SIZE))
+               begin
+               
+                   if(~issue_ack_to_fifo)
+                       issue_ack_to_fifo <= 1'b1;
+               
+                   else if(request_valid_out)
+                   begin
+                        //record
+                        #5 test_buffer[test_ctr - QUEUE_SIZE / 2] <= test_buffer[test_ctr - QUEUE_SIZE / 2] ^ request_out;
+                        test_ctr                                  <= test_ctr + 1'b1;              
+                   end
+               end
+           
+               else
+               begin
+                   issue_ack_to_fifo <= 1'b0;
+                   
+                   if(test_ctr == QUEUE_SIZE)
+                       test_check_buffer <= 1'b1;
+               end
+           end
+       end
+	
+    2'b10: begin
+            if(reset_in)
+            begin
+                issue_ack_to_fifo <= 1'b0;
+            end
+            
+            else if(~test_end_flag & (test_ctr < QUEUE_SIZE))
+            begin
+                if(~issue_ack_to_fifo)
+                    issue_ack_to_fifo <= 1'b1;
+                
+                else if (test_ctr > 1'b0)
+                begin
+                    //record
+                    #5 test_buffer[test_ctr]    <= request_out | request_valid_out;
+                    test_ctr                    <= test_ctr + 1'b1;              
+                end
+            end
+            
+            else   
+            begin
+                issue_ack_to_fifo <= 1'b0;
+                    
+                if(test_ctr == QUEUE_SIZE)
+                    test_check_buffer  <= 1'b1;
+            end
+        
+    end
+	
+    2'b11: begin
+	       if(reset_in)
+           begin
+               issue_ack_to_fifo <= 1'b0;
+           end
+            
+           else if(~test_end_flag)
+           begin
+               if(test_stage == 1'b1)
+               begin
+                
+                   if(~issue_ack_to_fifo)
+                   begin
+                       test_ctr = 1'b0;
+                       issue_ack_to_fifo <= 1'b1;
+                   end
+                
+                   else if(request_valid_out &  (test_ctr < QUEUE_SIZE))
+                   begin
+                     //record
+                      #5 test_buffer[test_ctr]  <= test_buffer[test_ctr] ^ request_out;
+                        test_ctr                <= test_ctr + 1'b1;              
+                   end
+                end
+            
+                else
+                begin
+                    issue_ack_to_fifo <= 1'b0;
+                    
+                    if(test_ctr == QUEUE_SIZE)
+                        test_check_buffer = 1'b1;
+                end
+            end
+         end
+	
+	3'b100: begin
+        if(reset_in)
+        begin
+            issue_ack_to_fifo <= 1'b0;
+        end
+                
+        else if(~test_end_flag & (test_ctr < QUEUE_SIZE))
+        begin
+             if(~issue_ack_to_fifo)
+                  issue_ack_to_fifo <= 1'b1;
+                            
+             else
+             begin
+                //record
+                #5 test_buffer[test_ctr]    <= request_out | request_valid_out;
+                test_ctr                    <= test_ctr + 1'b1;              
+             end
+        end
+                        
+        else   
+        begin
+            issue_ack_to_fifo <= 1'b0;
+                               
+            if(test_ctr == QUEUE_SIZE)
+                 test_check_buffer  <= 1'b1;
+        end
+     end  
+    endcase
 end
+
+
+
+    always@*
+    begin
+    //init buffer
+    if(reset_in)
+    begin
+        for(i = 0; i < QUEUE_SIZE; i = i + 1)
+        begin
+            test_buffer[i] <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};    
+        end
+    end
+
+    //check data of buffer
+    if(test_check_buffer & ~test_end_flag)
+    begin
+        for(i = 0; i < QUEUE_SIZE; i = i + 1)
+        begin
+            if(test_buffer[i] != {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}})
+                i = QUEUE_SIZE;
+        end
+        
+        if (i == QUEUE_SIZE)
+            case(test_case)
+            2'b00: $display("[info-rtl] test case 1%35s : \tpassed", TEST_CASE_1);
+            2'b01: $display("[info-rtl] test case 2%35s : \tpassed", TEST_CASE_2);
+            2'b10: $display("[info-rtl] test case 3%35s : \tpassed", TEST_CASE_3);
+            2'b11: $display("[info-rtl] test case 4%35s : \tpassed", TEST_CASE_4);
+            3'b100: $display("[info-rtl] test case 5%35s : \tpassed", TEST_CASE_5);
+            endcase
+        else
+            case(test_case)
+            2'b00: $display("[info-rtl] test case 1%35s : \tfailed", TEST_CASE_1);
+            2'b01: $display("[info-rtl] test case 2%35s : \tfailed", TEST_CASE_2);
+            2'b10: $display("[info-rtl] test case 3%35s : \tfailed", TEST_CASE_3);
+            2'b11: $display("[info-rtl] test case 4%35s : \tfailed", TEST_CASE_4);
+            3'b100: $display("[info-rtl] test case 5%35s : \tfailed", TEST_CASE_5);
+            endcase
+            
+        test_check_buffer   = 1'b0;
+        test_end_flag       = 1'b1;
+        end   
+    end
+
 
 initial
 begin
@@ -98,10 +460,47 @@ begin
     `endif
         
     	$display("\n[info-rtl] simulation begins now\n");
-    	clk_in   = 1'b0;
-    	reset_in = 1'b0;
-#10  	reset_in = 1'b1;
-#10  	reset_in = 1'b0;
+    	clk_in              = 1'b0;
+    	reset_in            = 1'b0;
+    	
+    	test_end_flag       = 1'b1;
+        test_check_buffer   = 1'b0;
+        test_case           = 2'b00;
+    	
+#10     reset_in            = 1'b1;
+#10     reset_in            = 1'b0;
+
+//test case 1
+#10     test_case           = 2'b00;     
+#10     test_end_flag       = 1'b0;
+
+//test case 2
+#500    reset_in            = 1'b1;
+#10     reset_in            = 1'b0;
+
+#10     test_case           = 2'b01;     
+#10     test_end_flag       = 1'b0;
+
+//test case 3
+#500    reset_in            = 1'b1;
+#10     reset_in            = 1'b0;
+
+#10     test_case           = 2'b10;     
+#10     test_end_flag       = 1'b0;
+
+//test case 4
+#500    reset_in            = 1'b1;
+#10     reset_in            = 1'b0;
+
+#10     test_case           = 2'b11;     
+#10     test_end_flag       = 1'b0;
+
+//test case 5
+#500    reset_in            = 1'b1;
+#10     reset_in            = 1'b0;
+
+#10     test_case           = 3'b100;     
+#10     test_end_flag       = 1'b0;
 
 #3000   $display("\n[info-rtl] simulation comes to the end\n");
         $finish;
