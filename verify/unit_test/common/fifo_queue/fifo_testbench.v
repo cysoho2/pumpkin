@@ -460,7 +460,7 @@ end
 initial
 begin
     `ifdef DUMP
-        $dumpfile("sim_waves.fst");
+        $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, fifo_testbench);
     `endif
 
