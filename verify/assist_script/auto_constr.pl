@@ -373,7 +373,7 @@ sub output_xdc_generate
         {
                 if($device_constr_path =~ $device)
                 {
-                        $xdc_output_buffer .= sprintf("create_clock -period %d -name clk_in -waveform {0 %d} [get_ports clk_in]\n\n",
+                        $xdc_output_buffer .= sprintf("create_clock -period %d -name clk_in -waveform {0 %f} [get_ports clk_in]\n\n",
                                        $cycle_time, $cycle_time/2) if !exists $pin_hash{%{$device_info_hash{$device}}{'clk_in'}};
                         #$xdc_output_buffer .= sprintf("set_property clock_dedicated_route false [get_nets clk_ibuf]\n\n");
                 }
