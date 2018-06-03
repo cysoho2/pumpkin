@@ -266,10 +266,10 @@ begin
                 begin
                 
 				if(~request_valid_out)
-					#5 test_buffer[test_ctr]    <= request_out;
+					#`FULL_CYCLE_DELAY test_buffer[test_ctr]   <= request_out;
 				else
-					#5 test_buffer[test_ctr]    <= 1'b1;
-					test_ctr                    <= test_ctr + 1'b1;
+					#`FULL_CYCLE_DELAY test_buffer[test_ctr]   <= 1'b1;
+					 test_ctr                                  <= test_ctr + 1'b1;
 				end
             end
 		
@@ -302,8 +302,8 @@ begin
 				else if(request_valid_out)
 				begin
 					//record
-					#5 test_buffer[test_ctr - QUEUE_SIZE / 2] <= test_buffer[test_ctr - QUEUE_SIZE / 2] ^ request_out;
-					test_ctr                                  <= test_ctr + 1'b1;              
+					#`FULL_CYCLE_DELAY test_buffer[test_ctr - QUEUE_SIZE / 2] <= test_buffer[test_ctr - QUEUE_SIZE / 2] ^ request_out;
+					 test_ctr                                                 <= test_ctr + 1'b1;              
 				end
 			end
 		
@@ -332,8 +332,8 @@ begin
 			else if (test_ctr > 1'b0)
 			begin
 				//record
-				#5 test_buffer[test_ctr]    <= request_out | request_valid_out;
-				test_ctr                    <= test_ctr + 1'b1;              
+				#`FULL_CYCLE_DELAY test_buffer[test_ctr]   <= request_out | request_valid_out;
+				 test_ctr                                  <= test_ctr + 1'b1;              
 			end
 		end
 		
@@ -368,8 +368,8 @@ begin
 				else if(request_valid_out &  (test_ctr < QUEUE_SIZE))
 				begin
 					//record
-					#5 	test_buffer[test_ctr]  <= test_buffer[test_ctr] ^ request_out;
-						test_ctr                <= test_ctr + 1'b1;              
+					#`FULL_CYCLE_DELAY 	test_buffer[test_ctr]  <= test_buffer[test_ctr] ^ request_out;
+					 test_ctr                                  <= test_ctr + 1'b1;              
 				end
 			end
 			
@@ -398,8 +398,8 @@ begin
              else
              begin
                 //record
-                #5 	test_buffer[test_ctr]    <= request_out | request_valid_out;
-                	test_ctr                    <= test_ctr + 1'b1;              
+                #`FULL_CYCLE_DELAY 	test_buffer[test_ctr]       <= request_out | request_valid_out;
+                 test_ctr                                       <= test_ctr + 1'b1;              
              end
         end
                         
@@ -473,45 +473,45 @@ begin
         test_check_buffer   = 1'b0;
         test_case           = 0;
     	
-#10     reset_in            = 1'b1;
-#10     reset_in            = 1'b0;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
 //test case 1
-#10     test_case           = 0;     
-#10     test_end_flag       = 1'b0;
+#`FULL_CYCLE_DELAY           test_case           = 0;     
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 2
-#500    reset_in            = 1'b1;
-#10     reset_in            = 1'b0;
+#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#10     test_case           = 1;     
-#10     test_end_flag       = 1'b0;
+#`FULL_CYCLE_DELAY           test_case           = 1;     
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 3
-#500    reset_in            = 1'b1;
-#10     reset_in            = 1'b0;
+#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#10     test_case           = 2;     
-#10     test_end_flag       = 1'b0;
+#`FULL_CYCLE_DELAY           test_case           = 2;     
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 4
-#500    reset_in            = 1'b1;
-#10     reset_in            = 1'b0;
+#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#10     test_case           = 3;     
-#10     test_end_flag       = 1'b0;
+#`FULL_CYCLE_DELAY           test_case           = 3;     
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 5
-#500    reset_in            = 1'b1;
-#10     reset_in            = 1'b0;
+#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#10     test_case           = 4;     
-#10     test_end_flag       = 1'b0;
+#`FULL_CYCLE_DELAY           test_case           = 4;     
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
-#3000   $display("\n[info-rtl] simulation comes to the end\n");
+#(`FULL_CYCLE_DELAY * 300)   $display("\n[info-rtl] simulation comes to the end\n");
         $finish;
 end
 
-always begin #2.5 clk_in <= ~clk_in; end
+always begin #`HALF_CYCLE_DELAY clk_in <= ~clk_in; end
 
 endmodule
