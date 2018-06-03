@@ -68,7 +68,7 @@
 --  | Details : Updated from Engineering Sample to Production
 ------------------------------------------------------------------------
                                                                                                 
-Pin   Pin Name                            Memory Byte Group  Bank  I/O Type  Super Logic Region 
+#Pin   Pin Name                            Memory Byte Group  Bank  I/O Type  Super Logic Region 
 R12   DXN                                 NA                 NA    NA        NA                 
 M13   VCCADC                              NA                 NA    NA        NA                 
 M12   GNDADC                              NA                 NA    NA        NA                 
