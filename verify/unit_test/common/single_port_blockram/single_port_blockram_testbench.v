@@ -1,4 +1,4 @@
-`timescale 10ns/1ns
+`include "sim_config.h"
 `include "parameters.h"
 
 module single_port_blockram_testbench();
