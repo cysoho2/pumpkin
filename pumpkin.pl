@@ -303,6 +303,15 @@ sub task_begin
 			`cp $synth_log_path $report_dir/$pumpkin_parameter_hash{synth_log_filename}` if -e $synth_log_path;
 			`cp $impl_log_path  $report_dir/$pumpkin_parameter_hash{impl_log_filename}`  if -e $impl_log_path;
 			`cp $sim_log_path   $report_dir/$pumpkin_parameter_hash{sim_log_filename}`   if -e $sim_log_path;
+
+			if(&check_timing($timing_rpt_path) eq 'pass')
+			{
+				say "\n[info-script] timing constraints for cycle time $cycle_time ns is met";
+			}
+			else
+			{
+				say "\n[critical-warning-script] timing constraints for cycle time $cycle_time ns is not met";
+			}
 		}
 		# invoke icarus for mac
 		else
@@ -403,6 +412,24 @@ sub vivado_wrapper
 	system $vivado_cmd;
 
 	return ($sim_log_path, $synth_log_path, $impl_log_path);
+}
+
+sub check_timing
+{
+	my ($timing_rpt_path) = @_;
+
+	die "[error-script] fail to open $timing_rpt_path"
+	if !open log_handle, "<$timing_rpt_path";
+
+	while(my $current_line = <log_handle>)
+	{
+		if($current_line =~ 'All user specified timing constraints are met.')
+		{
+			return 'pass';
+		}
+	}
+
+	return 'failed';
 }
 
 sub arm_dumper_build

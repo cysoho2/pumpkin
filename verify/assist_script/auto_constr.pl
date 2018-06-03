@@ -299,7 +299,7 @@ sub device_constr_parse
 
         while(my $line .= <package_file_handle>)
         {
-                next if $line =~ /\A\#/;
+                next if ($line =~ /\A\#/ or $line =~ /\A\-/);
                 
                 if($line =~ /(?<pin>\w+)                \s+ 
                              (?<pin_name>\w+)           \s+
