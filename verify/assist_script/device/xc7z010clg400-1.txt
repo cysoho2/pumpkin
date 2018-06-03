@@ -1,6 +1,6 @@
 # Device/Package xc7z010clg400 9/18/2012 09:50:56                                                                                                           
-                                                                                                                
-#Pin Pin Name                 Memory Byte Group  Bank               VCCAUX Group  Super Logic Region  I/O Type  No-Connect
+
+!Pin Pin_Name                 Memory_Byte_Group  Bank  		    VCCAUX_Group  Super_Logic_Region  I/O_Type  No-Connect
 R11  DONE_0                   NA                 0                  NA            NA                  CONFIG    NA
 M9   DXP_0                    NA                 0                  NA            NA                  CONFIG    NA
 J10  GNDADC_0                 NA                 0                  NA            NA                  CONFIG    NA
@@ -401,5 +401,5 @@ D12  VCCO_MIO1_501            NA                 501                NA          
 E15  VCCO_MIO1_501            NA                 501                NA            NA                  NA        NA
 H6   PS_DDR_VREF0_502         NA                 502                NA            NA                  DDR       NA
 P6   PS_DDR_VREF1_502         NA                 502                NA            NA                  DDR       NA
-                                                                                                                
+
 # Total Number of Pins, 400                                                                                                           

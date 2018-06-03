@@ -1,4 +1,4 @@
-`timescale 10ns/1ns
+`include "timing_def.h"
 `include "parameters.h"
 
 module fifo_testbench();
@@ -68,7 +68,7 @@ begin
 
     case(test_case)
 	
-    2'b00:
+    0:
 	begin
 	
         if(reset_in)
@@ -109,7 +109,7 @@ begin
 			
     end
 	
-    2'b01:
+    1:
 	begin
         	
         if(reset_in)
@@ -146,7 +146,7 @@ begin
 		end
     end
 	
-    2'b10:
+    2:
 	begin
 
         if(reset_in)
@@ -177,7 +177,7 @@ begin
                
     end
 
-    2'b11:
+    3:
 	begin
 		if(reset_in)
 		begin
@@ -219,7 +219,7 @@ begin
 		end        
     end
 	
-	3'b100:
+	4:
 	begin
         if(reset_in)
         begin
@@ -247,7 +247,7 @@ begin
     
 	case(test_case)
     
-    2'b00:
+    0:
 	begin   
         if(reset_in)
         begin
@@ -269,7 +269,6 @@ begin
 					#5 test_buffer[test_ctr]    <= request_out;
 				else
 					#5 test_buffer[test_ctr]    <= 1'b1;
-	
 					test_ctr                    <= test_ctr + 1'b1;
 				end
             end
@@ -284,7 +283,7 @@ begin
         end
     end
 	
-    2'b01:
+    1:
 	begin
 	
         if(reset_in)
@@ -318,7 +317,7 @@ begin
 		end
     end
 	
-    2'b10:
+    2:
 	begin
 		if(reset_in)
 		begin
@@ -347,7 +346,7 @@ begin
 		end
     end
 	
-    2'b11:
+    3:
 	begin
 		if(reset_in)
 		begin
@@ -369,7 +368,7 @@ begin
 				else if(request_valid_out &  (test_ctr < QUEUE_SIZE))
 				begin
 					//record
-					#5 test_buffer[test_ctr]  <= test_buffer[test_ctr] ^ request_out;
+					#5 	test_buffer[test_ctr]  <= test_buffer[test_ctr] ^ request_out;
 						test_ctr                <= test_ctr + 1'b1;              
 				end
 			end
@@ -384,7 +383,7 @@ begin
 		end
 	end
 	
-	3'b100:
+	4:
 	begin
         if(reset_in)
         begin
@@ -399,8 +398,8 @@ begin
              else
              begin
                 //record
-                #5 test_buffer[test_ctr]    <= request_out | request_valid_out;
-                test_ctr                    <= test_ctr + 1'b1;              
+                #5 	test_buffer[test_ctr]    <= request_out | request_valid_out;
+                	test_ctr                    <= test_ctr + 1'b1;              
              end
         end
                         
@@ -409,7 +408,7 @@ begin
             issue_ack_to_fifo <= 1'b0;
                                
             if(test_ctr == QUEUE_SIZE)
-                 test_check_buffer  <= 1'b1;
+                test_check_buffer  <= 1'b1;
         end
     end  
     endcase
@@ -437,19 +436,19 @@ begin
 		
 		if (i == QUEUE_SIZE)
 			case(test_case)
-			2'b00: $display("[info-rtl] test case 1%35s : \tpassed", TEST_CASE_1);
-			2'b01: $display("[info-rtl] test case 2%35s : \tpassed", TEST_CASE_2);
-			2'b10: $display("[info-rtl] test case 3%35s : \tpassed", TEST_CASE_3);
-			2'b11: $display("[info-rtl] test case 4%35s : \tpassed", TEST_CASE_4);
-			3'b100: $display("[info-rtl] test case 5%35s : \tpassed", TEST_CASE_5);
+			0: $display("[info-rtl] test case 1%35s : \tpassed", TEST_CASE_1);
+			1: $display("[info-rtl] test case 2%35s : \tpassed", TEST_CASE_2);
+			2: $display("[info-rtl] test case 3%35s : \tpassed", TEST_CASE_3);
+			3: $display("[info-rtl] test case 4%35s : \tpassed", TEST_CASE_4);
+			4: $display("[info-rtl] test case 5%35s : \tpassed", TEST_CASE_5);
 			endcase
 		else
 			case(test_case)
-			2'b00: $display("[info-rtl] test case 1%35s : \tfailed", TEST_CASE_1);
-			2'b01: $display("[info-rtl] test case 2%35s : \tfailed", TEST_CASE_2);
-			2'b10: $display("[info-rtl] test case 3%35s : \tfailed", TEST_CASE_3);
-			2'b11: $display("[info-rtl] test case 4%35s : \tfailed", TEST_CASE_4);
-			3'b100: $display("[info-rtl] test case 5%35s : \tfailed", TEST_CASE_5);
+			0: $display("[info-rtl] test case 1%35s : \tfailed", TEST_CASE_1);
+			1: $display("[info-rtl] test case 2%35s : \tfailed", TEST_CASE_2);
+			2: $display("[info-rtl] test case 3%35s : \tfailed", TEST_CASE_3);
+			3: $display("[info-rtl] test case 4%35s : \tfailed", TEST_CASE_4);
+			4: $display("[info-rtl] test case 5%35s : \tfailed", TEST_CASE_5);
 			endcase
 			
 		test_check_buffer   = 1'b0;
@@ -465,54 +464,54 @@ begin
         $dumpvars(0, fifo_testbench);
     `endif
 
+		$display("\n[info-rtl] simulation begins now\n");
+
     	clk_in              = 1'b0;
     	reset_in            = 1'b0;
     	
     	test_end_flag       = 1'b1;
         test_check_buffer   = 1'b0;
-        test_case           = 2'b00;
-
-		$display("\n[info-rtl] simulation begins now\n");
+        test_case           = 0;
     	
 #10     reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
 
 //test case 1
-#10     test_case           = 2'b00;     
+#10     test_case           = 0;     
 #10     test_end_flag       = 1'b0;
 
 //test case 2
 #500    reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
 
-#10     test_case           = 2'b01;     
+#10     test_case           = 1;     
 #10     test_end_flag       = 1'b0;
 
 //test case 3
 #500    reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
 
-#10     test_case           = 2'b10;     
+#10     test_case           = 2;     
 #10     test_end_flag       = 1'b0;
 
 //test case 4
 #500    reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
 
-#10     test_case           = 2'b11;     
+#10     test_case           = 3;     
 #10     test_end_flag       = 1'b0;
 
 //test case 5
 #500    reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
 
-#10     test_case           = 3'b100;     
+#10     test_case           = 4;     
 #10     test_end_flag       = 1'b0;
 
 #3000   $display("\n[info-rtl] simulation comes to the end\n");
         $finish;
 end
 
-always begin #5 clk_in <= ~clk_in; end
+always begin #2.5 clk_in <= ~clk_in; end
 
 endmodule

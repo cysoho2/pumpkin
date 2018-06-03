@@ -52,7 +52,8 @@ sub pumpkin_init
 	
 	%pumpkin_parameter_hash =
 	(
-		'device'                        => 'xc7vx690tffg1761',
+		#'device'                        => 'xczu2eg-sfva625-1-e',
+		'device'                        => 'xc7vx690tffg1761-1',
 		'default_test_scale'            => 'unit_test',
 		'default_test_arch'             => 'arm64',
 		'default_test_mode'             => 'post-implementation',
@@ -68,6 +69,8 @@ sub pumpkin_init
 		'timing_rpt_filename'           => 'timing.log',
 		'util_rpt_filename'             => 'util.log',
 		'report_dir'                    => 'report',
+
+		'timing_def_filename' 			=> 'timing_def.h',
 		
 		'c_x64_compiler'                => 'gcc',
 		'cpp_x64_compiler'              => 'g++',
@@ -277,6 +280,9 @@ sub task_begin
 		my $final_constr_path           = "$build_dir/$pumpkin_parameter_hash{'autogen_constr_filename'}";
 		
 		my $cycle_time                  = $pumpkin_parameter_hash{'default_cycle_time'};
+
+		my $timing_def_path = &create_timing_file();
+		push @rtl_filelist, $timing_def_path;
 		
 		die "[error-script] the device file for $pumpkin_parameter_hash{'device'} doesn't exist" if !-e $device_constr_path;
 
@@ -295,7 +301,7 @@ sub task_begin
 					$test_name,
 					$waveform_path, $timing_rpt_path, $util_rpt_path,
 					$constr_generator_path, $device_constr_path, $final_constr_path,
-					"$pumpkin_parameter_hash{'device'}"."-1", $cycle_time,
+					"$pumpkin_parameter_hash{'device'}", $cycle_time,
 					$topmodule_test, $topmodule_src, $test_mode, $test_type, $test_dump, 
 					$build_dir, (@rtl_filelist, @testbench_filelist));
 
@@ -303,6 +309,15 @@ sub task_begin
 			`cp $synth_log_path $report_dir/$pumpkin_parameter_hash{synth_log_filename}` if -e $synth_log_path;
 			`cp $impl_log_path  $report_dir/$pumpkin_parameter_hash{impl_log_filename}`  if -e $impl_log_path;
 			`cp $sim_log_path   $report_dir/$pumpkin_parameter_hash{sim_log_filename}`   if -e $sim_log_path;
+
+			if(&check_timing($timing_rpt_path) eq 'pass')
+			{
+				say "\n[info-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is met";
+			}
+			else
+			{
+				say "\n[info-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
+			}
 		}
 		# invoke icarus for mac
 		else
@@ -403,6 +418,24 @@ sub vivado_wrapper
 	system $vivado_cmd;
 
 	return ($sim_log_path, $synth_log_path, $impl_log_path);
+}
+
+sub check_timing
+{
+	my ($timing_rpt_path) = @_;
+
+	die "[error-script] fail to open $timing_rpt_path"
+	if !open log_handle, "<$timing_rpt_path";
+
+	while(my $current_line = <log_handle>)
+	{
+		if($current_line =~ 'All user specified timing constraints are met.')
+		{
+			return 'pass';
+		}
+	}
+
+	return 'failed';
 }
 
 sub arm_dumper_build
@@ -523,6 +556,8 @@ sub test_name_enumerate
 				'topmodule_src'  => $+{topmodule_src}
 			};
 		}
+
+		close unit_config;
 	}
 	else
 	{
@@ -531,6 +566,25 @@ sub test_name_enumerate
 }
 
 ############################# generic subroutines #########################
+
+sub create_timing_file
+{
+	my $timing_def_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'timing_def_filename'}";
+	system "rm $timing_def_path" if(-e $timing_def_path);
+
+	die "[error-script] unable to delete old timing def file $timing_def_path" if -e $timing_def_path;
+
+	die "[error-script] fail to open $timing_def_path"
+	if !open timing_handle, ">$timing_def_path";
+
+	printf timing_handle "`timescale 1ns/100ps\n";
+	printf timing_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
+	printf timing_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+
+	close timing_handle;
+
+	return $timing_def_path;
+}
 
 sub compilation_wrapper
 {
