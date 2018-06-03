@@ -74,6 +74,5 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 
 7. (Probably) Required Packages
 
-- sudo apt-get install libswitch-perl
 - sudo apt-get install gtkwave
-- sudo apt-get install iverilog
+- sudo apt-get install iverilog (MacOSX)
