@@ -47,13 +47,13 @@ say "\n";
 sub pumpkin_init
 {
 	say "\n";
-	say " ******* Pumpkin auto worker script v1.5";
+	say " ******* Pumpkin auto worker script v1.6";
 	say "\n";
 	
 	%pumpkin_parameter_hash =
 	(
-		#'device'                        => 'xczu2eg-sfva625-1-e',
-		'device'                        => 'xc7vx690tffg1761-1',
+		'device'                        => 'xczu2eg-sfva625-1-e',
+		#'device'                        => 'xc7vx690tffg1761-1',
 		'default_test_scale'            => 'unit_test',
 		'default_test_arch'             => 'arm64',
 		'default_test_mode'             => 'post-implementation',
@@ -70,7 +70,7 @@ sub pumpkin_init
 		'util_rpt_filename'             => 'util.log',
 		'report_dir'                    => 'report',
 
-		'timing_def_filename' 			=> 'timing_def.h',
+		'sim_config_filename' 			=> 'sim_config.h',
 		
 		'c_x64_compiler'                => 'gcc',
 		'cpp_x64_compiler'              => 'g++',
@@ -281,8 +281,8 @@ sub task_begin
 		
 		my $cycle_time                  = $pumpkin_parameter_hash{'default_cycle_time'};
 
-		my $timing_def_path = &create_timing_file();
-		push @rtl_filelist, $timing_def_path;
+		my $sim_config_path = &create_sim_config_file();
+		push @rtl_filelist, $sim_config_path;
 		
 		die "[error-script] the device file for $pumpkin_parameter_hash{'device'} doesn't exist" if !-e $device_constr_path;
 
@@ -567,23 +567,23 @@ sub test_name_enumerate
 
 ############################# generic subroutines #########################
 
-sub create_timing_file
+sub create_sim_config_file
 {
-	my $timing_def_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'timing_def_filename'}";
-	system "rm $timing_def_path" if(-e $timing_def_path);
+	my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'sim_config_filename'}";
+	system "rm $sim_config_path" if(-e $sim_config_path);
 
-	die "[error-script] unable to delete old timing def file $timing_def_path" if -e $timing_def_path;
+	die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
 
-	die "[error-script] fail to open $timing_def_path"
-	if !open timing_handle, ">$timing_def_path";
+	die "[error-script] fail to open $sim_config_path"
+	if !open config_handle, ">$sim_config_path";
 
-	printf timing_handle "`timescale 1ns/100ps\n";
-	printf timing_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
-	printf timing_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+	printf config_handle "`timescale 1ns/100ps\n";
+	printf config_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
+	printf config_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
 
-	close timing_handle;
+	close config_handle;
 
-	return $timing_def_path;
+	return $sim_config_path;
 }
 
 sub compilation_wrapper
