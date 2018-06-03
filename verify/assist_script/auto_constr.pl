@@ -50,19 +50,24 @@ sub script_init
 
     %device_info_hash =
     (
-        'xc7z010clg400' =>
+        'xc7z010clg400-1' =>
         {
             'clk_in' => 'L16'
         },
 
-        'xc7vx690tffg1761' =>
+        'xc7vx690tffg1761-1' =>
         {
             'clk_in' => 'AK34'
         },
 
-        'xc7v2000tfhg1761' =>
+        'xc7v2000tfhg1761-1' =>
         {
             'clk_in' => 'AK34'
+        },
+
+        'xczu2eg-sfva625-1-e' =>
+        {
+            'clk_in' => 'C4'
         }
     )
 }

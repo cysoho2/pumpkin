@@ -67,8 +67,8 @@
 --  | Status  : Production
 --  | Details : Updated from Engineering Sample to Production
 ------------------------------------------------------------------------
-                                                                                                
-#Pin   Pin Name                            Memory Byte Group  Bank  I/O Type  Super Logic Region 
+
+!Pin  Pin_Name                            Memory_Byte_Group  Bank  I/O_Type  Super_Logic_Region 
 R12   DXN                                 NA                 NA    NA        NA                 
 M13   VCCADC                              NA                 NA    NA        NA                 
 M12   GNDADC                              NA                 NA    NA        NA                 
@@ -694,5 +694,5 @@ T17   VCC_PSINTLP                         NA                 NA    NA        NA
 M15   VCC_PSPLL                           NA                 NA    NA        NA                 
 M16   VCC_PSPLL                           NA                 NA    NA        NA                 
 M17   VCC_PSPLL                           NA                 NA    NA        NA                 
-                                                                                                
+
 #Total Number of Pins 625                                                                                           

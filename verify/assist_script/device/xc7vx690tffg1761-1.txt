@@ -1,6 +1,6 @@
 # Device/Package xc7vx690tffg1761 12/21/2011 15:15:51                                                                                                   
-                                                                                                   
-# Pin Pin Name                      Memory Byte Group  Bank  VCCAUX Group  Super Logic Region  I/O Type  No-Connect
+
+!Pin  Pin_Name                      Memory_Byte_Group  Bank  VCCAUX_Group  Super_Logic_Region  I/O_Type  No-Connect
 AC20  DXN_0                         NA                 0     NA            NA                  CONFIG    NA
 Y21   VCCADC_0                      NA                 0     NA            NA                  CONFIG    NA
 Y20   GNDADC_0                      NA                 0     NA            NA                  CONFIG    NA
@@ -1761,5 +1761,5 @@ W9    NC                            NA                 NA    NA            NA   
 W10   NC                            NA                 NA    NA            NA                  NA        NA
 AC9   NC                            NA                 NA    NA            NA                  NA        NA
 AC10  NC                            NA                 NA    NA            NA                  NA        NA
-                                                                                                         
+
 # Total Number of Pins Generated, 1760                                                                                                   

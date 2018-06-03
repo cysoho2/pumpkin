@@ -1,4 +1,4 @@
-`timescale 10ns/1ns
+`include "timing_def.h"
 `include "parameters.h"
 
 module fifo_testbench();
@@ -512,6 +512,6 @@ begin
         $finish;
 end
 
-always begin #5 clk_in <= ~clk_in; end
+always begin #2.5 clk_in <= ~clk_in; end
 
 endmodule
