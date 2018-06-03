@@ -1,4 +1,4 @@
-`include "timing_def.h"
+`include "sim_config.h"
 `include "parameters.h"
 
 module fifo_testbench();
@@ -22,7 +22,7 @@ reg                                             reset_in;
 reg     [31:0]                                  clk_ctr;
 
 integer                                    		test_case;
-reg     [32:0]                                  test_ctr;
+reg     [31:0]                                  test_ctr;
 reg                                             test_stage;
 reg                                             test_wait;
 reg                                             test_end_flag;
