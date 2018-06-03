@@ -19,6 +19,8 @@ set sim_mode [lindex $argv 12]
 set sim_type [lindex $argv 13]
 set dumpon [lindex $argv 14]
 
+set parallel_thread 8
+
 #reading file list
 set i 15
 while {$i < $argc} {
@@ -53,7 +55,7 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
 	create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2016" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
 	
 	#synthesis
-	launch_runs -jobs 4 -verbose "synth_run"
+	launch_runs -jobs $parallel_thread -verbose "synth_run"
 	wait_on_run "synth_run"
 	if {[get_property PROGRESS [get_runs "synth_run"]] != "100%"} {
 		error "[error-script] synthesis failed"
@@ -66,7 +68,7 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
 		create_run -part $device -constrset constrs_1 -flow "Vivado Implementation 2016" -strategy "Vivado Implementation Defaults" -verbose -parent_run "synth_run" -name "impl_run"
 
 		#implementation
-		launch_runs -jobs 4 -verbose "impl_run"
+		launch_runs -jobs $parallel_thread -verbose "impl_run"
 		wait_on_run "impl_run"
 		if {[get_property PROGRESS [get_runs "impl_run"]] != "100%"} {
 			error "[error-script] implementation failed"

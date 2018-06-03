@@ -464,14 +464,15 @@ begin
         $dumpfile("sim_waves.fst");
         $dumpvars(0, fifo_testbench);
     `endif
-        
-    	$display("\n[info-rtl] simulation begins now\n");
+
     	clk_in              = 1'b0;
     	reset_in            = 1'b0;
     	
     	test_end_flag       = 1'b1;
         test_check_buffer   = 1'b0;
         test_case           = 2'b00;
+
+		$display("\n[info-rtl] simulation begins now\n");
     	
 #10     reset_in            = 1'b1;
 #10     reset_in            = 1'b0;
