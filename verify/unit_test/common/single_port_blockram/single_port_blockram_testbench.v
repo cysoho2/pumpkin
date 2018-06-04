@@ -1,5 +1,5 @@
-`timescale 10ns/1ns
 `include "parameters.h"
+`include "sim_config.h"
 
 module single_port_blockram_testbench();
 
@@ -41,42 +41,44 @@ begin
 
         $display("[info-testbench] %m testbench reset completed\n");
      
-        #1 test_case_num        = test_case_num + 1;
-        test_input_1            = { {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b0}} };
+        #(`HALF_CYCLE_DELAY) test_case_num        = test_case_num + 1;
+        test_input_1                             = { {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b0}} };
 
-        access_en_in            = 1;
-        write_en_in             = 1;
-        access_set_addr_in      = NUMBER_SETS - 1;
-        write_element_in        = test_input_1;
+        access_en_in                             = 1;
+        write_en_in                              = 1;
+        #(`FULL_CYCLE_DELAY) access_set_addr_in  = NUMBER_SETS - 1;
+        write_element_in                         = test_input_1;
 
-        #2 write_en_in          = 0;
+        #(`FULL_CYCLE_DELAY) write_en_in         = 0;
         
-        #2 test_result_1        = read_element_out;
-        test_result_2           = 0;
-        test_judge              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
+        #(`FULL_CYCLE_DELAY) test_result_1       = read_element_out;
+        test_result_2                            = 0;
+        test_judge                               = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
 
-        $display("[info-testbench] No.%2d test (basic write-read access) %s", test_case_num, test_judge ? "pass" : "fail");
 
-        #1 test_case_num        = test_case_num + 1;
-        test_input_1            = { {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b0}}, {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b1}} };
+        $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "basic write-read access", test_judge ? "passed" : "failed");
 
-        access_en_in            = 1;
-        write_en_in             = 0;
-        access_set_addr_in      = NUMBER_SETS - 1;
-        write_element_in        = test_input_1;
 
-        #2 write_en_in          = 0;
+        #(`HALF_CYCLE_DELAY) test_case_num        = test_case_num + 1;
+        test_input_1                             = { {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b0}}, {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b1}} };
+
+        access_en_in                             = 1;
+        write_en_in                              = 0;
+        access_set_addr_in                       = NUMBER_SETS - 1;
+        write_element_in                         = test_input_1;
+
+        #(`FULL_CYCLE_DELAY) write_en_in         = 0;
         
-        #2 test_result_2        = read_element_out;
-        test_judge              = (test_result_2 === test_result_1) && (test_result_2 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
+        #(`FULL_CYCLE_DELAY) test_result_2       = read_element_out;
+        test_judge                               = (test_result_2 === test_result_1) && (test_result_2 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
 
-        $display("[info-testbench] No.%2d test (write enable verify) %s", test_case_num, test_judge ? "pass" : "fail");
+        $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "write enable verify", test_judge ? "passed" : "failed");
 
-        #3000 $display("\n[info-testbench] simulation for %m comes to the end\n");
+        #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-testbench] simulation for %m comes to the end\n");
         $finish;
 end
 
-always begin #1 clk_in <= ~clk_in; end
+always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
 single_port_blockram
 #(
