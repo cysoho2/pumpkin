@@ -280,9 +280,6 @@ sub task_begin
 		my $final_constr_path           = "$build_dir/$pumpkin_parameter_hash{'autogen_constr_filename'}";
 		
 		my $cycle_time                  = $pumpkin_parameter_hash{'default_cycle_time'};
-
-		my $sim_config_path = &create_sim_config_file();
-		push @rtl_filelist, $sim_config_path;
 		
 		die "[error-script] the device file for $pumpkin_parameter_hash{'device'} doesn't exist" if !-e $device_constr_path;
 
@@ -296,6 +293,9 @@ sub task_begin
 		# invoke vivado for linux
 		if($pumpkin_parameter_hash{'running_on_mac'} == 0)
 		{
+			my $sim_config_path = &create_sim_config_file();
+			push @rtl_filelist, $sim_config_path;
+			
 			my ($sim_log_path, $synth_log_path, $impl_log_path) = 
 			&vivado_wrapper(
 					$test_name,
@@ -325,6 +325,9 @@ sub task_begin
 			chdir $build_dir;
 			$pumpkin_parameter_hash{'waveform_filename'} = "sim_waves.fst";
 			$waveform_path = "$build_dir/$pumpkin_parameter_hash{'waveform_filename'}";
+
+			my $sim_config_path = &create_sim_config_file();
+			push @rtl_filelist, $sim_config_path;
 
 			say "[info-script] invoking icarus compiler ...";
 			
@@ -580,6 +583,11 @@ sub create_sim_config_file
 	printf config_handle "`timescale 1ns/100ps\n";
 	printf config_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
 	printf config_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+
+	if($pumpkin_parameter_hash{'running_on_mac'} == 1)
+	{
+		printf config_handle "`define DUMP_FILENAME \"$pumpkin_parameter_hash{'waveform_filename'}\"\n";
+	}
 
 	close config_handle;
 

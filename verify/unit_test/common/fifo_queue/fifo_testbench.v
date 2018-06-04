@@ -460,7 +460,7 @@ end
 initial
 begin
     `ifdef DUMP
-        $dumpfile("sim_waves.fst");
+        $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, fifo_testbench);
     `endif
 
@@ -508,7 +508,7 @@ begin
 #10     test_case           = 4;     
 #10     test_end_flag       = 1'b0;
 
-#3000   $display("\n[info-rtl] simulation comes to the end\n");
+#`FULL_CYCLE_DELAY   $display("\n[info-rtl] simulation comes to the end\n");
         $finish;
 end
 
