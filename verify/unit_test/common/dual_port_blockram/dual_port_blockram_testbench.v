@@ -94,7 +94,7 @@ begin
     #(`FULL_CYCLE_DELAY) write_element_in  = test_input_1;
     #(`FULL_CYCLE_DELAY) write_en_in       = 1;
     
-    #(`FULL_CYCLE_DELAY) test_result_1     = read_element_out;
+    #(`FULL_CYCLE_DELAY * 2) test_result_1 = read_element_out;
     
     #(`FULL_CYCLE_DELAY * 5) write_en_in   = 0;
     read_en_in                             = 0;
