@@ -28,6 +28,12 @@ reg                                        test_judge;
 
 initial
 begin
+    
+    `ifdef DUMP
+        $dumpfile(`DUMP_FILENAME);
+        $dumpvars(0, dual_port_blockram_testbench);
+    `endif
+    
     $display("\n[info-testbench] simulation for %m begins now");
     
     /**
@@ -174,23 +180,23 @@ always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
 dual_port_blockram
 #(
-        .SINGLE_ELEMENT_SIZE_IN_BITS    (SINGLE_ELEMENT_SIZE_IN_BITS),
-        .NUMBER_SETS                    (NUMBER_SETS),
-        .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
+    .SINGLE_ELEMENT_SIZE_IN_BITS    (SINGLE_ELEMENT_SIZE_IN_BITS),
+    .NUMBER_SETS                    (NUMBER_SETS),
+    .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
 )
 
 dual_port_blockram
 (
-        .clk_in                         (clk_in),
-    
-        .read_en_in                     (read_en_in),
-        .read_set_addr_in               (read_set_addr_in),
-        .read_element_out               (read_element_out),
+    .clk_in                         (clk_in),
 
-        .write_en_in                    (write_en_in),
-        .write_set_addr_in              (write_set_addr_in),
-        .write_element_in               (write_element_in),
-        .evict_element_out              (evict_element_out)
+    .read_en_in                     (read_en_in),
+    .read_set_addr_in               (read_set_addr_in),
+    .read_element_out               (read_element_out),
+
+    .write_en_in                    (write_en_in),
+    .write_set_addr_in              (write_set_addr_in),
+    .write_element_in               (write_element_in),
+    .evict_element_out              (evict_element_out)
 );
 
 endmodule
