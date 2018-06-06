@@ -52,8 +52,8 @@ sub pumpkin_init
 	
 	%pumpkin_parameter_hash =
 	(
-		'device'                        => 'xczu2eg-sfva625-1-e',
-		#'device'                        => 'xc7vx690tffg1761-1',
+		#'device'                        => 'xczu2eg-sfva625-1-e',
+		'device'                        => 'xc7v2000tfhg1761-1',
 		'default_test_scale'            => 'unit_test',
 		'default_test_arch'             => 'arm64',
 		'default_test_mode'             => 'post-implementation',
@@ -580,7 +580,7 @@ sub create_sim_config_file
 	die "[error-script] fail to open $sim_config_path"
 	if !open config_handle, ">$sim_config_path";
 
-	printf config_handle "`timescale 1ns/100ps\n";
+	printf config_handle "`timescale 100ps/100ps\n";
 	printf config_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
 	printf config_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
 
