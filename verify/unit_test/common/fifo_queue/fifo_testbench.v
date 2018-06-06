@@ -464,7 +464,7 @@ begin
         $dumpvars(0, fifo_testbench);
     `endif
 
-		$display("\n[info-rtl] simulation begins now\n");
+		$display("[info-testbench] %m testbench reset completed\n");
 
     	clk_in              = 1'b0;
     	reset_in            = 1'b0;
