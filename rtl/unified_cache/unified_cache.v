@@ -85,18 +85,18 @@ priority_arbiter
 )
 input_arbiter
 (
-        .reset_in                       (reset_in),
-        .clk_in                         (clk_in),
+    .reset_in                       (reset_in),
+    .clk_in                         (clk_in),
 
-        // the arbiter considers priority from right(high) to left(low)
-        .request_packed_in              (input_packet_to_input_arbiter_flatted),
-        .request_valid_packed_in        (input_packet_valid_to_input_arbiter_flatted),
-        .request_critical_packed_in     (input_packet_critical_to_input_arbiter_flatted),
-        .issue_ack_out                  (input_arbiter_to_input_queue_ack_flatted),
-        
-        .request_out                    (access_packet_from_input_arbiter),
-        .request_valid_out              (access_packet_valid_from_input_arbiter),
-        .issue_ack_in                   (ack_to_input_arbiter)
+    // the arbiter considers priority from right(high) to left(low)
+    .request_packed_in              (input_packet_to_input_arbiter_flatted),
+    .request_valid_packed_in        (input_packet_valid_to_input_arbiter_flatted),
+    .request_critical_packed_in     (input_packet_critical_to_input_arbiter_flatted),
+    .issue_ack_out                  (input_arbiter_to_input_queue_ack_flatted),
+    
+    .request_out                    (access_packet_from_input_arbiter),
+    .request_valid_out              (access_packet_valid_from_input_arbiter),
+    .issue_ack_in                   (ack_to_input_arbiter)
 );
 
 assign to_mem_packet_out = access_packet_from_input_arbiter;

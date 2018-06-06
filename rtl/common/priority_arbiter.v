@@ -7,9 +7,9 @@ module priority_arbiter
         input                                                            reset_in,
         input                                                            clk_in,
     
-        input      [SINGLE_REQUEST_WIDTH_IN_BITS * NUM_REQUESTS - 1 : 0] request_packed_in,
-        input      [NUM_REQUESTS                                - 1 : 0] request_valid_packed_in,
-        input      [NUM_REQUESTS                                - 1 : 0] request_critical_packed_in,
+        input      [SINGLE_REQUEST_WIDTH_IN_BITS * NUM_REQUESTS - 1 : 0] request_flatted_in,
+        input      [NUM_REQUESTS                                - 1 : 0] request_valid_flatted_in,
+        input      [NUM_REQUESTS                                - 1 : 0] request_critical_flatted_in,
         output reg [NUM_REQUESTS                                - 1 : 0] issue_ack_out,
 
         output reg [SINGLE_REQUEST_WIDTH_IN_BITS                - 1 : 0] request_out,
@@ -29,15 +29,15 @@ wire [SINGLE_REQUEST_WIDTH_IN_BITS - 1 : 0] request_packed_separation [NUM_REQUE
 genvar gen;
 for(gen = 0; gen < NUM_REQUESTS; gen = gen + 1)
 begin
-        assign request_packed_separation[gen] = request_packed_in[(gen+1) * SINGLE_REQUEST_WIDTH_IN_BITS - 1 : gen * SINGLE_REQUEST_WIDTH_IN_BITS];
+        assign request_packed_separation[gen] = request_flatted_in[(gen+1) * SINGLE_REQUEST_WIDTH_IN_BITS - 1 : gen * SINGLE_REQUEST_WIDTH_IN_BITS];
 end
 
 // shift the request valid/critical packeded wire
-wire [NUM_REQUESTS - 1 : 0] request_valid_packed_shift_left;
-wire [NUM_REQUESTS - 1 : 0] request_critical_packed_shift_left;
+wire [NUM_REQUESTS - 1 : 0] request_valid_flatted_shift_left;
+wire [NUM_REQUESTS - 1 : 0] request_critical_flatted_shift_left;
 
-assign request_valid_packed_shift_left     = (request_valid_packed_in >> last_send_index + 1) | (request_valid_packed_in << (NUM_REQUESTS - last_send_index - 1));
-assign request_critical_packed_shift_left  = (request_critical_packed_in >> last_send_index + 1) | (request_critical_packed_in << (NUM_REQUESTS - last_send_index - 1));
+assign request_valid_flatted_shift_left     = (request_valid_flatted_in >> last_send_index + 1) | (request_valid_flatted_in << (NUM_REQUESTS - last_send_index - 1));
+assign request_critical_flatted_shift_left  = (request_critical_flatted_in >> last_send_index + 1) | (request_critical_flatted_in << (NUM_REQUESTS - last_send_index - 1));
 
 // find the first valid requests
 reg [NUM_REQUESTS_LOG2 - 1 : 0] valid_sel;
@@ -49,7 +49,7 @@ begin : Find_First_Valid_Way
         
         for(valid_find_index = 0; valid_find_index < NUM_REQUESTS; valid_find_index = valid_find_index + 1)
         begin
-                if(request_valid_packed_shift_left[valid_find_index])
+                if(request_valid_flatted_shift_left[valid_find_index])
                 begin
                         if(last_send_index + valid_find_index + 1 >= NUM_REQUESTS)
                                 valid_sel <= last_send_index + valid_find_index + 1 - NUM_REQUESTS;
@@ -70,7 +70,7 @@ begin : Find_First_Critical_Way
         
         for(critical_find_index = 0; critical_find_index < NUM_REQUESTS; critical_find_index = critical_find_index + 1)
         begin
-                if(request_critical_packed_shift_left[critical_find_index] & request_valid_packed_shift_left[critical_find_index])
+                if(request_critical_flatted_shift_left[critical_find_index] & request_valid_flatted_shift_left[critical_find_index])
                 begin
                         if(last_send_index + critical_find_index + 1 >= NUM_REQUESTS)
                                 critical_sel <= last_send_index + critical_find_index + 1 - NUM_REQUESTS;
@@ -108,7 +108,7 @@ begin
         // move on to the next request
         else if( (issue_ack_in & request_valid_out) | ~request_valid_out)
         begin
-                if(request_critical_packed_in[critical_sel] & (|request_critical_packed_in) & request_valid_packed_in[critical_sel] )
+                if(request_critical_flatted_in[critical_sel] & (|request_critical_flatted_in) & request_valid_flatted_in[critical_sel] )
                 begin
                         request_out       <= request_packed_separation[critical_sel];
                         request_valid_out <= 1'b1;
@@ -117,7 +117,7 @@ begin
                         last_send_index   <= critical_sel;
                 end
 
-                else if(request_valid_packed_in[valid_sel])
+                else if(request_valid_flatted_in[valid_sel])
                 begin
                         request_out       <= request_packed_separation[valid_sel];
                         request_valid_out <= 1'b1;
