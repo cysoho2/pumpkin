@@ -2,8 +2,8 @@
 
 module mux_decoded_8
 #(
-	 parameter NUMBER_WAYS = 8,
-	 parameter SINGLE_ELEMENT_SIZE_IN_BITS = 4
+	parameter NUMBER_WAYS = 8,
+	parameter SINGLE_ELEMENT_SIZE_IN_BITS = 4
 )
 (
 	input      [SINGLE_ELEMENT_SIZE_IN_BITS * NUMBER_WAYS - 1 : 0] way_packed_in,
@@ -28,7 +28,7 @@ always@*
 begin
 	casex(sel_in) 
 
-        `encoder_case(0);
+    `encoder_case(0);
 	`encoder_case(1);
 	`encoder_case(2);
 	`encoder_case(3);
