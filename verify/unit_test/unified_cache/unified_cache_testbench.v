@@ -1,18 +1,18 @@
-`timescale 10ns/1ns
+`include "sim_config.h"
 `include "parameters.h"
 
 `define MEM_SIZE 32
 
 module unified_cache_testbench();
 
-reg     [(`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES) - 1 : 0]    sim_main_memory        [(`MEM_SIZE) - 1 : 0];
-reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]                         inst_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
-reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]                         data_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
-
 reg             clk_in;
 reg             reset_in;
 
 reg     [31:0]  clk_ctr;
+
+reg     [(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS)   - 1 : 0]    sim_main_memory        [(`MEM_SIZE)   - 1 : 0];
+reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]    inst_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
+reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]    data_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
 
 wire    [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         inst_packet_to_cache;
 wire                                                            inst_packet_ack_from_cache;
