@@ -16,11 +16,9 @@
 `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES               64
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 
-`define INST_REQUEST_QUEUE_SIZE                         4 // must be a power of 2
-`define DATA_REQUEST_QUEUE_SIZE                         4 // must be a power of 2
+`define INPUT_QUEUE_SIZE                                4 // must be a power of 2
 `define WRITEBACK_BUFFER_SIZE                           4 // must be a power of 2
 `define MISS_BUFFER_SIZE 								32
-`define FETCH_BUFFER_SIZE 								32
 `define RETURN_QUEUE_SIZE 								16
 
 // Unified Cache - Misc.
@@ -35,12 +33,7 @@
 `define UNIFIED_CACHE_TAG_POS_HI                        (`UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS + `UNIFIED_CACHE_INDEX_LEN_IN_BITS + `UNIFIED_CACHE_TAG_LEN_IN_BITS - 1)
 `define UNIFIED_CACHE_TAG_POS_LO                        (`UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS + `UNIFIED_CACHE_INDEX_LEN_IN_BITS)
 
-
-`define INST_REQUEST_QUEUE_PTR_WIDTH_IN_BITS            ($clog2(INST_REQUEST_QUEUE_SIZE))
-`define DATA_REQUEST_QUEUE_PTR_WIDTH_IN_BITS            ($clog2(DATA_REQUEST_QUEUE_SIZE))
-`define WRITEBACK_BUFFER_PTR_WIDTH_IN_BITS              ($clog2(WRITEBACK_BUFFER_SIZE))
-
-`define UNIFIED_CACHE_PACKET_TYPE_WIDTH                 4 // must be > 4
+`define UNIFIED_CACHE_PACKET_TYPE_WIDTH                 4 // must be greater than 4
 `define MEM_PACKET_TYPE_WIDTH                           (`UNIFIED_CACHE_PACKET_TYPE_WIDTH)
 
 `define TYPE_INST_LOAD                                	(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b1000
