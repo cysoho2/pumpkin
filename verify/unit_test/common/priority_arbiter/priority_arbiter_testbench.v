@@ -38,10 +38,12 @@ reg                                                     test_judge;
 reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_input_value;
 reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_output_value;
 
-reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_buffer[31:0];
+reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_buffer[9:0];
 reg     [31:0]                                          test_ctr;
 reg     [31:0]                                          test_write_ctr;
 reg     [31:0]                                          test_read_ctr;
+
+reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_temp_buffer;
 reg     [31:0]                                          test_temp_write_ctr;
 reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_temp_write_to_arb;
     
@@ -71,35 +73,7 @@ always @(posedge clk_in or posedge reset_in)
 begin
         if(reset_in)
         begin
-                clk_ctr                                 <= 0;
-                
-                request_0_to_arb                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}} + 1'b1;
-                request_0_valid_to_arb                  <= 1'b0;
-                request_0_critical_to_arb               <= 1'b0;
-
-                request_1_to_arb                        <= {{(SINGLE_REQUEST_WIDTH_IN_BITS/2){1'b1}},{(SINGLE_REQUEST_WIDTH_IN_BITS/2){1'b0}}};
-                request_1_valid_to_arb                  <= 1'b0;
-                request_1_critical_to_arb               <= 1'b0;
-
-                request_2_to_arb                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b1}};
-                request_2_valid_to_arb                  <= 1'b0;
-                request_2_critical_to_arb               <= 1'b0;
-
-                issue_ack_to_arb                        <= {(NUM_REQUESTS){1'b0}};
-                
-                test_check_flag                         <= 1'b0;
-                test_judge                              <= 1'b0;
-                test_ctr                                <= 32'b0;
-                test_write_ctr                          <= 32'b0;
-                test_read_ctr                           <= 32'b0;
-                
-                #(`FULL_CYCLE_DELAY)
-                test_buffer[0]                          <= request_0_to_arb;
-                test_buffer[1]                          <= request_1_to_arb;
-                test_buffer[2]                          <= request_2_to_arb;
-                                
-                test_write_ctr                          <= 3;
-                test_read_ctr                           <= 0;
+ 
         end
         
         
@@ -226,7 +200,7 @@ begin
         
         if(test_case == 2 & ~test_check_flag & ~test_end_flag)
         begin
-                if(test_write_ctr == 32)
+                if(test_write_ctr == 10)
                 begin
                         test_check_flag                 = 1'b1;
                 end  
@@ -287,8 +261,8 @@ begin
                 begin
                         issue_ack_to_arb                <= 1'b1;
                                
-                        test_buffer[test_read_ctr]      = test_buffer[test_read_ctr] ^ request_from_arb;
-                        test_read_ctr                   = test_read_ctr + 1;
+                        test_buffer[test_read_ctr]      <= test_buffer[test_read_ctr] ^ request_from_arb;
+                        #(`FULL_CYCLE_DELAY) test_read_ctr = test_read_ctr + 1;
                 end
                        
                 else
@@ -325,14 +299,14 @@ begin
         begin
                 clk_ctr <= clk_ctr + 1'b1;
             
-                if(test_write_ctr == 32)
+                if(test_write_ctr == 10)
                 begin
-                        test_check_flag = 1'b1;
+                        test_check_flag                  = 1'b1;
                 end 
                                 
-                if((test_write_ctr == 15) & ~request_0_critical_to_arb)
+                if((test_write_ctr == 4) & ~request_0_critical_to_arb)
                 begin
-                        request_0_critical_to_arb = 1'b1;
+                        request_0_critical_to_arb        = 1'b1;
                 end             
        
                 // request 0
@@ -397,7 +371,7 @@ begin
                         test_buffer[test_read_ctr]       = test_buffer[test_read_ctr] ^ request_from_arb;
                         test_read_ctr                    = test_read_ctr + 1;
                                       
-                        if (test_read_ctr == 14)
+                        if (test_read_ctr == 4)
                                 test_buffer[test_read_ctr - 1] = 1'b0;
                 end
                               
@@ -431,12 +405,12 @@ begin
         
         if (test_case == 4 & ~test_check_flag & ~test_end_flag)
         begin        
-                if(test_write_ctr == 32)
+                if(test_write_ctr == 10)
                 begin
                         test_check_flag                 = 1'b1;
                 end 
         
-                if(test_write_ctr == 16)
+                if(test_write_ctr == 4)
                 begin
                         request_0_critical_to_arb       = 1'b1;
                         request_1_critical_to_arb       = 1'b1;
@@ -482,7 +456,7 @@ begin
                         request_2_to_arb                        = request_2_to_arb + 1'b1;
                         request_2_valid_to_arb                  = 1'b1;
                                                 
-                        if(test_write_ctr < 16)
+                        if(~request_0_critical_to_arb)
                         begin                              
                                 test_buffer[test_write_ctr]     = request_2_to_arb;
                                 test_write_ctr                  = test_write_ctr + 1'b1;
@@ -538,12 +512,12 @@ begin
         if (test_case == 5 & ~test_check_flag & ~test_end_flag)
         begin
          
-                if(test_write_ctr == 32)
+                if(test_write_ctr == 10)
                 begin
                         test_check_flag = 1'b1;
                 end 
         
-                if(test_write_ctr == 16)
+                if(test_write_ctr == 5)
                 begin
                         request_0_critical_to_arb = 1'b1;
                         request_1_critical_to_arb = 1'b1;
@@ -631,6 +605,48 @@ begin
         end
 end
 
+always @(*)
+begin
+        if(reset_in)
+        begin
+                               clk_ctr                                 <= 0;
+                
+                request_0_to_arb                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}} + 1'b1;
+                request_0_valid_to_arb                  <= 1'b0;
+                request_0_critical_to_arb               <= 1'b0;
+
+                request_1_to_arb                        <= {{(SINGLE_REQUEST_WIDTH_IN_BITS/2){1'b1}},{(SINGLE_REQUEST_WIDTH_IN_BITS/2){1'b0}}};
+                request_1_valid_to_arb                  <= 1'b0;
+                request_1_critical_to_arb               <= 1'b0;
+
+                request_2_to_arb                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b1}};
+                request_2_valid_to_arb                  <= 1'b0;
+                request_2_critical_to_arb               <= 1'b0;
+
+                test_check_flag                         <= 1'b0;
+                issue_ack_to_arb                        <= {(NUM_REQUESTS){1'b1}};
+                #(`FULL_CYCLE_DELAY * 24)
+                
+                test_judge                              <= 1'b0;
+                test_ctr                                <= 32'b0;
+                test_write_ctr                          <= 32'b0;
+                test_read_ctr                           <= 32'b0;
+                test_temp_buffer                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+                
+                #(`FULL_CYCLE_DELAY * 3)
+                test_buffer[0]                          <= request_1_to_arb;
+                test_buffer[1]                          <= request_2_to_arb;
+                test_buffer[2]                          <= request_0_to_arb;
+                                
+                test_write_ctr                          <= 3;
+                test_read_ctr                           <= 0;
+                
+                reset_in                                = 1'b0;
+                #(`FULL_CYCLE_DELAY)
+                test_end_flag                           = 1'b0;
+        end
+end
+
 initial
 begin
         $display("\n[info-rtl] simulation begins now\n");
@@ -642,36 +658,36 @@ begin
         test_end_flag               = 1'b1;
         
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
     
         #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-        #(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
         #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "invalid request", test_judge? "passed": "failed");
 
         #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-        #(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
         #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "basic request", test_judge? "passed": "failed");
 
         #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-        #(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
         #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "1 critical requests", test_judge? "passed": "failed");
 
         #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-        #(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
         #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "2 critical requests", test_judge? "passed": "failed");
         
         #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
         #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-        #(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+        //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
         #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "3 critical requests", test_judge? "passed": "failed");
 
         #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-rtl] simulation comes to the end\n");
