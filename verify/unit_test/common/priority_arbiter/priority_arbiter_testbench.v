@@ -43,9 +43,6 @@ reg     [31:0]                                          test_ctr;
 reg     [31:0]                                          test_write_ctr;
 reg     [31:0]                                          test_read_ctr;
 
-reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_temp_buffer;
-reg     [31:0]                                          test_temp_write_ctr;
-reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_temp_write_to_arb;
 
 priority_arbiter
 #(
@@ -628,7 +625,6 @@ begin
         test_ctr                                <= 32'b0;
         test_write_ctr                          <= 32'b0;
         test_read_ctr                           <= 32'b0;
-        test_temp_buffer                        <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
 
         #(`FULL_CYCLE_DELAY * 3)
         test_buffer[0]                          <= request_1_to_arb;
@@ -661,36 +657,25 @@ begin
     test_end_flag               = 1'b1;
 
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
 
     #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-    //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "invalid request", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-    //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "basic request", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-    //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "1 critical requests", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-    //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "2 critical requests", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
-    //#(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
-    //#(`FULL_CYCLE_DELAY)        test_end_flag   = 1'b0;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "3 critical requests", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-rtl] simulation comes to the end\n");
