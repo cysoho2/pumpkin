@@ -11,10 +11,10 @@ module associative_data_array
 
         input                                                          access_en_in,
         input                                                          write_en_in,
-        
+
         input  [SET_PTR_WIDTH_IN_BITS       - 1 : 0]                   access_set_addr_in,
         input  [NUMBER_WAYS                 - 1 : 0]                   way_select_in,
-        
+
         output [SINGLE_ELEMENT_SIZE_IN_BITS - 1 : 0]                   read_single_element_out,
         output [SINGLE_ELEMENT_SIZE_IN_BITS * NUMBER_WAYS - 1 : 0]     read_set_element_out,
         input  [SINGLE_ELEMENT_SIZE_IN_BITS - 1 : 0]                   write_single_element_in
@@ -28,7 +28,7 @@ generate
 
         for(gen = 0; gen < NUMBER_WAYS; gen = gen + 1)
         begin
-                
+
                 single_port_blockram
                 #(.SINGLE_ELEMENT_SIZE_IN_BITS(SINGLE_ELEMENT_SIZE_IN_BITS), .NUMBER_SETS(NUMBER_SETS), .SET_PTR_WIDTH_IN_BITS(SET_PTR_WIDTH_IN_BITS))
                 data_way
@@ -37,15 +37,15 @@ generate
 
                         .access_en_in           (access_en_in & way_select_in[gen]),
                         .write_en_in            (write_en_in  & way_select_in[gen]),
-                        
+
                         .access_set_addr_in     (access_set_addr_in),
 
                         .write_element_in       (write_single_element_in),
                         .read_element_out       (data_to_mux[(gen+1) * SINGLE_ELEMENT_SIZE_IN_BITS - 1 : gen * SINGLE_ELEMENT_SIZE_IN_BITS])
                 );
 
-        end  
- 
+        end
+
 endgenerate
 
 reg [NUMBER_WAYS - 1 : 0] way_select_stage;
@@ -55,7 +55,7 @@ begin
         begin
                 way_select_stage        <= {(NUMBER_WAYS){1'b0}};
         end
-        
+
         else
         begin
                 way_select_stage        <= way_select_in;

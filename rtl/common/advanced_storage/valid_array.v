@@ -11,10 +11,10 @@ module valid_array
 
         input                                                           access_en_in,
         input      [SET_PTR_WIDTH_IN_BITS    - 1 : 0]                   access_set_addr_in,
-        
+
         input                                                           write_en_in,
         input      [NUMBER_WAYS              - 1 : 0]                   write_way_select_in,
-        
+
         output     [SINGLE_ELEMENT_SIZE_IN_BITS * NUMBER_WAYS - 1 : 0]  read_set_valid_out
 );
 
@@ -23,7 +23,7 @@ generate
 
         for(gen = 0; gen < NUMBER_WAYS; gen = gen + 1)
         begin
-                
+
                 single_port_lutram
                 #(
                         .SINGLE_ELEMENT_SIZE_IN_BITS(SINGLE_ELEMENT_SIZE_IN_BITS),
@@ -37,15 +37,15 @@ generate
 
                         .access_en_in           (access_en_in & write_way_select_in[gen]),
                         .write_en_in            (write_en_in  & write_way_select_in[gen]),
-                        
+
                         .access_set_addr_in     (access_set_addr_in),
 
                         .write_element_in       (write_en_in  & write_way_select_in[gen]),
                         .read_element_out       (read_set_valid_out[(gen+1) * SINGLE_ELEMENT_SIZE_IN_BITS - 1 : gen * SINGLE_ELEMENT_SIZE_IN_BITS])
                 );
 
-        end  
- 
+        end
+
 endgenerate
 
 endmodule

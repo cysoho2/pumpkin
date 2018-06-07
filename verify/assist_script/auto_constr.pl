@@ -321,7 +321,7 @@ sub device_constr_parse
             $pin_hash{$pin} = 1;
         }
     };
-    
+
     close package_file_handle;
 
     return scalar keys %pin_hash

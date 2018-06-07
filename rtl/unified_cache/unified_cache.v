@@ -29,7 +29,6 @@ module unified_cache
 
 wire  [(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]                    input_packet_packed [NUM_INPUT_PORT - 1 : 0];
 wire  [NUM_INPUT_PORT - 1 : 0]                                          is_input_queue_full_flatted;
-wire  [NUM_INPUT_PORT - 1 : 0]                                          input_queue_ack_flatted_out;
 
 wire  [(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]                    input_packet_to_input_arbiter_packed [NUM_INPUT_PORT - 1 : 0];
 wire  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]   input_packet_to_input_arbiter_flatted;
@@ -43,6 +42,9 @@ genvar gen;
 
 for(gen = 0; gen < NUM_INPUT_PORT; gen = gen + 1)
 begin
+
+    assign input_packet_packed[gen] = input_packet_flatted_in[(gen + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
+                                                               gen      * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)];
     
     fifo_queue
     #(
@@ -60,7 +62,7 @@ begin
 
         .request_in                     (input_packet_packed[gen]),
         .request_valid_in               (input_packet_packed[gen][`UNIFIED_CACHE_PACKET_VALID_POS]),
-        .issue_ack_out                  (input_queue_ack_flatted_out[gen]),
+        .issue_ack_out                  (input_packet_ack_flatted_out[gen]),
         
         .request_out                    (input_packet_to_input_arbiter_packed[gen]),
         .request_valid_out              (input_packet_valid_to_input_arbiter_flatted[gen]),
@@ -77,6 +79,7 @@ end
 endgenerate
 
 wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] access_packet_from_input_arbiter;
+wire                                              ack_to_input_arbiter = to_mem_packet_ack_in;
 
 priority_arbiter
 #(
@@ -89,9 +92,9 @@ input_arbiter
     .clk_in                         (clk_in),
 
     // the arbiter considers priority from right(high) to left(low)
-    .request_packed_in              (input_packet_to_input_arbiter_flatted),
-    .request_valid_packed_in        (input_packet_valid_to_input_arbiter_flatted),
-    .request_critical_packed_in     (input_packet_critical_to_input_arbiter_flatted),
+    .request_flatted_in             (input_packet_to_input_arbiter_flatted),
+    .request_valid_flatted_in       (input_packet_valid_to_input_arbiter_flatted),
+    .request_critical_flatted_in    (input_packet_critical_to_input_arbiter_flatted),
     .issue_ack_out                  (input_arbiter_to_input_queue_ack_flatted),
     
     .request_out                    (access_packet_from_input_arbiter),
@@ -100,6 +103,5 @@ input_arbiter
 );
 
 assign to_mem_packet_out = access_packet_from_input_arbiter;
-assign to_mem_packet_ack_in = ack_to_input_arbiter;
 
 endmodule

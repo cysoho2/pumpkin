@@ -12,8 +12,9 @@ Tested can be performed with a RTL simulator or on a real FPGA board.
 
 #Required Tools
 
-* vivado simulator
-* gtkwave
+* vivado simulator (Linux)
+* gtkwave (Linux/MacOSX)
+* iverilog (MacOSX)
 
 #Cautions 
     

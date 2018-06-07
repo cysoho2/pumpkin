@@ -24,8 +24,8 @@ set parallel_thread 8
 #reading file list
 set i 15
 while {$i < $argc} {
-	lappend files [lindex $argv $i]
-	incr i 1
+    lappend files [lindex $argv $i]
+    incr i 1
 }
 
 #setting up the sim project
@@ -33,15 +33,15 @@ create_project $project_name . -part $device
 set project_dir [file dirname [info script]]
 
 if {[string equal [get_filesets -quiet sources_1] ""]} {
-	create_fileset -srcset sources_1
+    create_fileset -srcset sources_1
 }
 
 if {[string equal [get_filesets -quiet sim_1] ""]} {
-	create_fileset -srcset sim_1
+    create_fileset -srcset sim_1
 }
 
 if {[string equal [get_filesets -quiet constrs_1] ""]} {
-	create_fileset -srcset constrs_1
+    create_fileset -srcset constrs_1
 }
 
 add_files -norecurse -fileset sources_1 $files
@@ -52,71 +52,71 @@ set_property "top" $topmodule_test [get_filesets sim_1]
 
 #setting up the synthesis and implementation run
 if {[string equal -nocase -length 5 $sim_mode "post-"]} {
-	create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2016" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
-	
-	#synthesis
-	launch_runs -jobs $parallel_thread -verbose "synth_run"
-	wait_on_run "synth_run"
-	if {[get_property PROGRESS [get_runs "synth_run"]] != "100%"} {
-		error "[error-script] synthesis failed"
-	} else {
-		exec $constr_generator_path $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraints_path $final_constraints_path $files
-		add_files -norecurse -fileset constrs_1 $final_constraints_path
-	}
+    create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2016" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
 
-	if {[string equal -nocase $sim_mode "post-implementation"]} {
-		create_run -part $device -constrset constrs_1 -flow "Vivado Implementation 2016" -strategy "Vivado Implementation Defaults" -verbose -parent_run "synth_run" -name "impl_run"
+    #synthesis
+    launch_runs -jobs $parallel_thread -verbose "synth_run"
+    wait_on_run "synth_run"
+    if {[get_property PROGRESS [get_runs "synth_run"]] != "100%"} {
+        error "[error-script] synthesis failed"
+    } else {
+        exec $constr_generator_path $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraints_path $final_constraints_path $files
+        add_files -norecurse -fileset constrs_1 $final_constraints_path
+    }
 
-		#implementation
-		launch_runs -jobs $parallel_thread -verbose "impl_run"
-		wait_on_run "impl_run"
-		if {[get_property PROGRESS [get_runs "impl_run"]] != "100%"} {
-			error "[error-script] implementation failed"
-		}
-		
-	}
-	
-	# open design
-	if {[string equal -nocase $sim_mode "post-synthesis"]} {
-			open_run -name "synth_design" -verbose "synth_run"
-	} elseif {[string equal -nocase $sim_mode "post-implementation"]} {
-			open_run -name "impl_design" -verbose "impl_run"
-	}
-	
-	report_utilization -verbose -hierarchical -hierarchical_depth 1000 -file $util_rpt_file_path
-	report_timing_summary -check_timing_verbose -verbose -warn_on_violation -max_paths 10 -file $timing_rpt_file_path
+    if {[string equal -nocase $sim_mode "post-implementation"]} {
+        create_run -part $device -constrset constrs_1 -flow "Vivado Implementation 2016" -strategy "Vivado Implementation Defaults" -verbose -parent_run "synth_run" -name "impl_run"
+
+        #implementation
+        launch_runs -jobs $parallel_thread -verbose "impl_run"
+        wait_on_run "impl_run"
+        if {[get_property PROGRESS [get_runs "impl_run"]] != "100%"} {
+            error "[error-script] implementation failed"
+        }
+
+    }
+
+    # open design
+    if {[string equal -nocase $sim_mode "post-synthesis"]} {
+            open_run -name "synth_design" -verbose "synth_run"
+    } elseif {[string equal -nocase $sim_mode "post-implementation"]} {
+            open_run -name "impl_design" -verbose "impl_run"
+    }
+
+    report_utilization -verbose -hierarchical -hierarchical_depth 1000 -file $util_rpt_file_path
+    report_timing_summary -check_timing_verbose -verbose -warn_on_violation -max_paths 10 -file $timing_rpt_file_path
 }
 
 if {[string equal -nocase $sim_type "none"]} {
 } else {
-		# cancel simulation autorun
-		set_property -name {xsim.simulate.runtime} -value {0ns} -objects [get_filesets sim_1]
-		
-		# sim
-		if {[string equal -nocase -length 5 $sim_mode "post-"]} {
-			launch_simulation -simset sim_1 -mode $sim_mode -type $sim_type
-		} else {
-			launch_simulation -simset sim_1 -mode $sim_mode
-		}
+        # cancel simulation autorun
+        set_property -name {xsim.simulate.runtime} -value {0ns} -objects [get_filesets sim_1]
 
-		if {[string equal -nocase $dumpon "on"]} {
-			# dump vcd
-			open_vcd $waveform_path
-			start_vcd
-			log_vcd
-		} else {}
-	
-		# run
-		run -all
-	
-		if {[string equal -nocase $dumpon "on"]} {	
-			#dump close
-			flush_vcd
-			close_vcd
-		} else {}
-		
-		close_sim
-	}
+        # sim
+        if {[string equal -nocase -length 5 $sim_mode "post-"]} {
+            launch_simulation -simset sim_1 -mode $sim_mode -type $sim_type
+        } else {
+            launch_simulation -simset sim_1 -mode $sim_mode
+        }
+
+        if {[string equal -nocase $dumpon "on"]} {
+            # dump vcd
+            open_vcd $waveform_path
+            start_vcd
+            log_vcd
+        } else {}
+
+        # run
+        run -all
+
+        if {[string equal -nocase $dumpon "on"]} {
+            #dump close
+            flush_vcd
+            close_vcd
+        } else {}
+
+        close_sim
+    }
 
 #exit
 close_project
