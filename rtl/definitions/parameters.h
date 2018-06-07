@@ -63,6 +63,6 @@
 `define MEM_PACKET_VALID_POS                            (`MEM_PACKET_DATA_POS_HI  + 1)
 `define MEM_PACKET_IS_WRITE_POS                         (`MEM_PACKET_VALID_POS    + 1)
 `define MEM_PACKET_TYPE_POS_LO                          (`MEM_PACKET_IS_WRITE_POS + 1)
-`define MEM_PACKET_TYPE_POS_HI                          (`MEM_PACKET_TYPE_POS_LO  + `MEM_PACKET_TYPE_WIDTH - 1)                      
+`define MEM_PACKET_TYPE_POS_HI                          (`MEM_PACKET_TYPE_POS_LO  + `MEM_PACKET_TYPE_WIDTH - 1)
 
 `define MEM_PACKET_WIDTH_IN_BITS                        (`MEM_PACKET_TYPE_POS_HI  - `MEM_PACKET_ADDR_POS_LO + 1)

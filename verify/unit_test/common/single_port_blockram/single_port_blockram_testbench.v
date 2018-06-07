@@ -28,7 +28,7 @@ begin
         $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, single_port_blockram_testbench);
     `endif
-        
+
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      = 0;
 
@@ -45,7 +45,7 @@ begin
     test_judge                                  = 0;
 
     $display("[info-testbench] %m testbench reset completed\n");
-    
+
     #(`HALF_CYCLE_DELAY) test_case_num          = test_case_num + 1;
     test_input_1                                = { {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ELEMENT_SIZE_IN_BITS/2){1'b0}} };
 
@@ -55,7 +55,7 @@ begin
     #(`FULL_CYCLE_DELAY) access_set_addr_in     = NUMBER_SETS - 1;
 
     #(`FULL_CYCLE_DELAY) write_en_in            = 0;
-    
+
     #(`FULL_CYCLE_DELAY * 2) test_result_1      = read_element_out;
     test_result_2                               = 0;
     test_judge                                  = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
@@ -73,7 +73,7 @@ begin
     write_element_in                            = test_input_1;
 
     #(`FULL_CYCLE_DELAY) write_en_in            = 0;
-    
+
     #(`FULL_CYCLE_DELAY) test_result_2          = read_element_out;
     test_judge                                  = (test_result_2 === test_result_1) && (test_result_2 !== {(SINGLE_ELEMENT_SIZE_IN_BITS){1'bx}});
 

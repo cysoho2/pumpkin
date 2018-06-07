@@ -50,7 +50,7 @@ output wire [C_M_AXI_ADDR_WIDTH-1 : 0]          M_AXI_AWADDR,
 output wire [7 : 0]                             M_AXI_AWLEN,
 // Burst size. This signal indicates the size of each transfer in the burst
 output wire [2 : 0]                             M_AXI_AWSIZE,
-// Burst type. The burst type and the size information, 
+// Burst type. The burst type and the size information,
 // determine how the address for each transfer within the burst is calculated.
 output wire [1 : 0]                             M_AXI_AWBURST,
 // Lock type. Provides additional information about the
@@ -110,7 +110,7 @@ output wire [C_M_AXI_ADDR_WIDTH-1 : 0]          M_AXI_ARADDR,
 output wire [7 : 0]                             M_AXI_ARLEN,
 // Burst size. This signal indicates the size of each transfer in the burst
 output wire [2 : 0]                             M_AXI_ARSIZE,
-// Burst type. The burst type and the size information, 
+// Burst type. The burst type and the size information,
 // determine how the address for each transfer within the burst is calculated.
 output wire [1 : 0]                             M_AXI_ARBURST,
 // Lock type. Provides additional information about the
@@ -152,8 +152,8 @@ input wire                                      M_AXI_RVALID,
 output wire                                     M_AXI_RREADY
 );
 
-// function called clogb2 that returns an integer which has the 
-// value of the ceiling of the log base 2.                      
+// function called clogb2 that returns an integer which has the
+// value of the ceiling of the log base 2.
 function integer clogb2 (input integer bit_depth);
 begin
 for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
@@ -161,7 +161,7 @@ for(clogb2=0; bit_depth>0; clogb2=clogb2+1)
 end
 endfunction
 
-// C_TRANSACTIONS_NUM is the width of the index counter for 
+// C_TRANSACTIONS_NUM is the width of the index counter for
 // number of write or read transaction.
 localparam integer C_TRANSACTIONS_NUM = clogb2(C_M_AXI_BURST_LEN-1);
 
@@ -170,20 +170,20 @@ localparam integer C_TRANSACTIONS_NUM = clogb2(C_M_AXI_BURST_LEN-1);
 localparam integer C_MASTER_LENGTH = 12;
 // total number of burst transfers is master length divided by burst length and burst size
 localparam integer C_NO_BURSTS_REQ = C_MASTER_LENGTH-clogb2((C_M_AXI_BURST_LEN*C_M_AXI_DATA_WIDTH/8)-1);
-// Example State machine to initialize counter, initialize write transactions, 
-// initialize read transactions and comparison of read data with the 
+// Example State machine to initialize counter, initialize write transactions,
+// initialize read transactions and comparison of read data with the
 // written data words.
-parameter [1:0] IDLE = 2'b00, // This state initiates AXI4Lite transaction 
-    // after the state machine changes state to INIT_WRITE 
+parameter [1:0] IDLE = 2'b00, // This state initiates AXI4Lite transaction
+    // after the state machine changes state to INIT_WRITE
     // when there is 0 to 1 transition on INIT_AXI_TXN
 INIT_WRITE   = 2'b01, // This state initializes write transaction,
-    // once writes are done, the state machine 
-    // changes state to INIT_READ 
+    // once writes are done, the state machine
+    // changes state to INIT_READ
 INIT_READ = 2'b10, // This state initializes read transaction
-    // once reads are done, the state machine 
-    // changes state to INIT_COMPARE 
-INIT_COMPARE = 2'b11; // This state issues the status of comparison 
-    // of the written data with the read data   
+    // once reads are done, the state machine
+    // changes state to INIT_COMPARE
+INIT_COMPARE = 2'b11; // This state issues the status of comparison
+    // of the written data with the read data
 
 reg [1:0] mst_exec_state;
 
@@ -242,8 +242,8 @@ assign M_AXI_AWSIZE     = clogb2((C_M_AXI_DATA_WIDTH/8)-1);
 // INCR burst type is usually used, except for keyhole bursts
 assign M_AXI_AWBURST    = 2'b01;
 assign M_AXI_AWLOCK     = 1'b0;
-// Update value to 4'b0011 if coherent accesses to be used via the Zynq ACP port. 
-// Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache. 
+// Update value to 4'b0011 if coherent accesses to be used via the Zynq ACP port.
+// Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache.
 assign M_AXI_AWCACHE    = 4'b0010;
 assign M_AXI_AWPROT     = 3'h0;
 assign M_AXI_AWQOS      = 4'h0;
@@ -269,7 +269,7 @@ assign M_AXI_ARSIZE     = clogb2((C_M_AXI_DATA_WIDTH/8)-1);
 assign M_AXI_ARBURST    = 2'b01;
 assign M_AXI_ARLOCK     = 1'b0;
 // Update value to 4'b0011 if coherent accesses to be used via the Zynq ACP port.
-// Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache. 
+// Not Allocated, Modifiable, not Bufferable. Not Bufferable since this example is meant to test memory, not intermediate cache.
 assign M_AXI_ARCACHE    = 4'b0010;
 assign M_AXI_ARPROT     = 3'h0;
 assign M_AXI_ARQOS      = 4'h0;
@@ -304,14 +304,14 @@ end
 //Write Address Channel
 //--------------------
 
-// The purpose of the write address channel is to request the address and 
+// The purpose of the write address channel is to request the address and
 // command information for the entire transaction.  It is a single beat
 // of information.
 
 // The AXI4 Write address channel in this example will continue to initiate
 // write commands as fast as it is allowed by the slave/interconnect.
 // The address will be incremented on each accepted address transaction,
-// by burst_size_byte to point to the next address. 
+// by burst_size_byte to point to the next address.
 
 always @(posedge M_AXI_ACLK)
 begin
@@ -335,7 +335,7 @@ begin
                 axi_awvalid <= axi_awvalid;
 end
 
-// Next address after AWREADY indicates previous address acceptance    
+// Next address after AWREADY indicates previous address acceptance
 always @(posedge M_AXI_ACLK)
 begin
         if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
@@ -347,7 +347,7 @@ begin
         begin
                 axi_awaddr <= axi_awaddr + burst_size_bytes;
         end
-        
+
         else
         axi_awaddr <= axi_awaddr;
 end
@@ -372,7 +372,7 @@ end
 
 // In this example they are kept in sync by using the same address increment
 // and burst sizes. Then the AW and W channels have their transactions measured
-// with threshold counters as part of the user logic, to make sure neither 
+// with threshold counters as part of the user logic, to make sure neither
 // channel gets too far ahead of each other.
 
 // Forward movement occurs when the write channel is valid and ready
@@ -395,7 +395,7 @@ begin
         /* If WREADY and too many writes, throttle WVALID
         Once asserted, VALIDs cannot be deasserted, so WVALID
         must wait until burst is complete with WLAST */
-        
+
         else if (wnext && axi_wlast)
                 axi_wvalid <= 1'b0;
         else
@@ -442,7 +442,7 @@ begin
         begin
                 write_index <= write_index + 1;
         end
-        
+
         else
                 write_index <= write_index;
 end
@@ -470,15 +470,15 @@ end
 // to memory. BREADY will occur when all of the data and the write address
 // has arrived and been accepted by the slave.
 
-// The write issuance (number of outstanding write addresses) is started by 
+// The write issuance (number of outstanding write addresses) is started by
 // the Address Write transfer, and is completed by a BREADY/BRESP.
 
-// While negating BREADY will eventually throttle the AWREADY signal, 
+// While negating BREADY will eventually throttle the AWREADY signal,
 // it is best not to throttle the whole data channel this way.
 
 // The BRESP bit [1] is used indicate any errors from the interconnect or
-// slave for the entire write burst. This example will capture the error 
-// into the ERROR output. 
+// slave for the entire write burst. This example will capture the error
+// into the ERROR output.
 
 always @(posedge M_AXI_ACLK)
 begin
@@ -561,7 +561,7 @@ end
 // Read Data (and Response) Channel
 //--------------------------------
 
-// Forward movement occurs when the channel is valid and ready   
+// Forward movement occurs when the channel is valid and ready
 assign rnext = M_AXI_RVALID && axi_rready;
 
 // Burst length counter. Uses extra counter register bit to indicate
@@ -578,7 +578,7 @@ begin
         begin
                 read_index <= read_index + 1;
         end
-        
+
         else
                 read_index <= read_index;
 end
@@ -601,7 +601,7 @@ begin
                 begin
                         axi_rready <= 1'b0;
                 end
-             
+
                 else
                 begin
                         axi_rready <= 1'b1;
@@ -623,7 +623,7 @@ begin
         begin
                 read_mismatch <= 1'b1;
         end
-        
+
         else
                 read_mismatch <= 1'b0;
 end
@@ -651,7 +651,7 @@ end
 // Example design error register
 //----------------------------------
 
-// Register and hold any data mismatches, or read/write interface errors 
+// Register and hold any data mismatches, or read/write interface errors
 
 always @(posedge M_AXI_ACLK)
 begin
@@ -664,7 +664,7 @@ begin
         begin
                 error_reg <= 1'b1;
         end
-        
+
         else
           error_reg <= error_reg;
 end
@@ -679,18 +679,18 @@ end
 // However, there are times when the flow of data needs to be throtted by
 // the user application. This example application requires that data is
 // not read before it is written and that the write channels do not
-// advance beyond an arbitrary threshold (say to prevent an 
+// advance beyond an arbitrary threshold (say to prevent an
 // overrun of the current read address by the write address).
 
-// From AXI4 Specification, 13.13.1: "If a master requires ordering between 
-// read and write transactions, it must ensure that a response is received 
+// From AXI4 Specification, 13.13.1: "If a master requires ordering between
+// read and write transactions, it must ensure that a response is received
 // for the previous transaction before issuing the next transaction."
 
 // This example accomplishes this user application throttling through:
 // -Reads wait for writes to fully complete
-// -Address writes wait when not read + issued transaction counts pass 
+// -Address writes wait when not read + issued transaction counts pass
 // a parameterized threshold
-// -Writes wait when a not read + active data burst count pass 
+// -Writes wait when a not read + active data burst count pass
 // a parameterized threshold
 
 // write_burst_counter counter keeps track with the number of burst transaction initiated
@@ -733,7 +733,7 @@ begin
                         // read_burst_counter[C_NO_BURSTS_REQ] <= 1'b1;
                 end
         end
-        
+
         else
                 read_burst_counter <= read_burst_counter;
 end
@@ -751,7 +751,7 @@ begin
                 compare_done             <= 1'b0;
                 ERROR                    <= 1'b0;
         end
-        
+
         else
         begin
                 // state transition
@@ -766,12 +766,12 @@ begin
                         ERROR <= 1'b0;
                         compare_done <= 1'b0;
                 end
-                
+
                 else
                 begin
                         mst_exec_state  <= IDLE;
                 end
-  
+
                 INIT_WRITE:
                 // This state is responsible to issue start_single_write pulse to
                 // initiate a write transaction. Write transactions will be
@@ -785,7 +785,7 @@ begin
                 else
                 begin
                         mst_exec_state  <= INIT_WRITE;
-   
+
                         if (~axi_awvalid && ~start_single_burst_write && ~burst_write_active)
                         begin
                                 start_single_burst_write <= 1'b1;
@@ -815,7 +815,7 @@ begin
                         begin
                                 start_single_burst_read <= 1'b1;
                         end
-                        
+
                         else
                         begin
                                 start_single_burst_read <= 1'b0; //Negate to generate a pulse
@@ -832,7 +832,7 @@ begin
                         mst_exec_state <= IDLE;
                         compare_done <= 1'b1;
                 end
-              
+
                 default :
                 begin
                         mst_exec_state  <= IDLE;
@@ -907,7 +907,7 @@ begin
         //else if (M_AXI_BVALID && axi_bready && (write_burst_counter == {(C_NO_BURSTS_REQ-1){1}}) && axi_wlast)
         else if (M_AXI_RVALID && axi_rready && (read_index == C_M_AXI_BURST_LEN-1) && (read_burst_counter[C_NO_BURSTS_REQ]))
                 reads_done <= 1'b1;
-        
+
         else
                 reads_done <= reads_done;
 end
