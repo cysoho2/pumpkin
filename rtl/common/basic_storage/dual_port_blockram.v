@@ -1,7 +1,7 @@
 module dual_port_blockram
 #(
         parameter SINGLE_ELEMENT_SIZE_IN_BITS = 64,
-        parameter NUMBER_SETS                 = 64,
+        parameter NUMBER_SET                  = 64,
         parameter SET_PTR_WIDTH_IN_BITS       = 6
 )
 (
@@ -17,7 +17,7 @@ module dual_port_blockram
         output reg [SINGLE_ELEMENT_SIZE_IN_BITS - 1 : 0] evict_element_out
 );
 
-(* ram_style = "block" *) reg [SINGLE_ELEMENT_SIZE_IN_BITS - 1 : 0] blockram [NUMBER_SETS - 1 : 0];
+(* ram_style = "block" *) reg [SINGLE_ELEMENT_SIZE_IN_BITS - 1 : 0] blockram [NUMBER_SET - 1 : 0];
 
 always @(posedge clk_in)
 begin

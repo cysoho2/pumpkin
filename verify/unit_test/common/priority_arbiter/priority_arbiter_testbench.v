@@ -3,7 +3,7 @@
 
 module priority_arbiter_testbench();
 
-parameter NUM_REQUESTS  = 3;
+parameter NUM_REQUEST  = 3;
 parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64;
 
 reg                                                     clk_in;
@@ -49,7 +49,7 @@ reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          test_temp_write_to_arb;
 
 priority_arbiter
 #(
-    .NUM_REQUESTS                                   (NUM_REQUESTS),
+    .NUM_REQUEST                                   (NUM_REQUEST),
     .SINGLE_REQUEST_WIDTH_IN_BITS                   (SINGLE_REQUEST_WIDTH_IN_BITS)
  )
 
@@ -621,7 +621,7 @@ begin
         request_2_critical_to_arb               <= 1'b0;
 
         test_check_flag                         <= 1'b0;
-        issue_ack_to_arb                        <= {(NUM_REQUESTS){1'b1}};
+        issue_ack_to_arb                        <= {(NUM_REQUEST){1'b1}};
         #(`FULL_CYCLE_DELAY * 24)
 
         test_judge                              <= 1'b0;
