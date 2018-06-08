@@ -33,6 +33,11 @@ module find_first_one_index_testbench();
 
     initial
     begin
+	    `ifdef DUMP
+        	$dumpfile(`DUMP_FILENAME);
+            $dumpvars(0, find_first_one_index_testbench);
+	    `endif
+
         $display("\n[info-rtl] simulation begins now\n");
         
         clk_in                                  = 1'b0;
