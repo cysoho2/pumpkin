@@ -22,56 +22,83 @@ module tri_port_regfile
     output reg [NUMBER_ENTRY              - 1 : 0]          entry_valid_flatted_out
 );
 
+wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                    entry_packed [NUMBER_ENTRY - 1 : 0];
+
 generate
 genvar gen;
 
-    reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] entry;
-    reg                                     entry_valid;
-
-    always @(posedge clk_in, posedge reset_in)
+    for(gen = 0; gen < NUMBER_ENTRY; gen = gen + 1)
     begin
-        if(reset_in)
+
+        reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] entry;
+        reg                                     entry_valid;
+
+        assign entry_packed[gen] = entry;
+
+        always @(posedge clk_in, posedge reset_in)
         begin
-            entry       <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
-            entry_valid <= 0;
-        end
-
-        else
-        begin
-
-            // write entry
-            if(write_en_in && write_entry_addr_decoded_in[gen])
+            if(reset_in)
             begin
-                entry       <= write_entry_in;
-                if(~entry_valid)
-                    entry_valid <= 1'b1;
-                else entry_valid <= entry_valid;
-            end
-
-            // read entry
-            if(read_en_in && read_entry_addr_decoded_in[gen])
-            begin
-                read_entry_out <= entry;
+                entry       <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+                entry_valid <= 0;
             end
 
             else
             begin
-                read_entry_out <= 0;
-            end
 
-            // cam
-            if(cam_en_in)
-            begin
-                cam_result_decoded_out[gen] = (entry_valid & (entry == cam_entry_in)) ? 1'b1 : 1'b0;
-            end
+                // write entry
+                if(write_en_in && write_entry_addr_decoded_in[gen])
+                begin
+                    entry       <= write_entry_in;
+                    if(~entry_valid)
+                        entry_valid <= 1'b1;
+                    else entry_valid <= entry_valid;
+                end
 
-            else
-            begin
-                cam_result_decoded_out[gen] = 1'b0;
+                // cam
+                if(cam_en_in)
+                begin
+                    cam_result_decoded_out[gen] = (entry_valid & (entry == cam_entry_in)) ? 1'b1 : 1'b0;
+                end
+
+                else
+                begin
+                    cam_result_decoded_out[gen] = 1'b0;
+                end
             end
         end
     end
 
 endgenerate
+
+wire [31:0] read_index;
+
+find_first_one_index
+#(
+    .VECTOR_LENGTH(NUMBER_ENTRY)
+)
+find_read_index
+(
+    .vector_input(read_entry_addr_decoded_in),
+    .first_one_index(read_index)
+);
+
+always@(posedge clk_in, posedge reset_in)
+begin
+    if(reset)
+    begin
+        read_entry_out <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+    end
+
+    else if(read_en_in)
+    begin
+        read_entry_out <= entry_packed[read_index];
+    end
+
+    else
+    begin
+        read_entry_out <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+    end
+end
 
 endmodule
