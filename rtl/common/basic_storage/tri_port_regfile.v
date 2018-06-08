@@ -17,9 +17,7 @@ module tri_port_regfile
 
     input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          write_entry_in,
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          read_entry_out,
-    output reg [NUMBER_ENTRY              - 1 : 0]          cam_result_decoded_out,
-
-    output reg [NUMBER_ENTRY              - 1 : 0]          entry_valid_flatted_out
+    output reg [NUMBER_ENTRY              - 1 : 0]          cam_result_decoded_out
 );
 
 wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                    entry_packed [NUMBER_ENTRY - 1 : 0];
@@ -31,7 +29,6 @@ genvar gen;
     begin
 
         reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] entry;
-        reg                                     entry_valid;
 
         assign entry_packed[gen] = entry;
 
@@ -39,8 +36,7 @@ genvar gen;
         begin
             if(reset_in)
             begin
-                entry       <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
-                entry_valid <= 0;
+                entry <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
             end
 
             else
@@ -49,16 +45,13 @@ genvar gen;
                 // write entry
                 if(write_en_in && write_entry_addr_decoded_in[gen])
                 begin
-                    entry       <= write_entry_in;
-                    if(~entry_valid)
-                        entry_valid <= 1'b1;
-                    else entry_valid <= entry_valid;
+                    entry <= write_entry_in;
                 end
 
                 // cam
                 if(cam_en_in)
                 begin
-                    cam_result_decoded_out[gen] = (entry_valid & (entry == cam_entry_in)) ? 1'b1 : 1'b0;
+                    cam_result_decoded_out[gen] = entry == cam_entry_in ? 1'b1 : 1'b0;
                 end
 
                 else
