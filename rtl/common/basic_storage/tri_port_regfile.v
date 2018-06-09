@@ -78,7 +78,7 @@ find_read_index
 
 always@(posedge clk_in, posedge reset_in)
 begin
-    if(reset)
+    if(reset_in)
     begin
         read_entry_out <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
     end
