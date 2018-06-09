@@ -6,7 +6,7 @@ module find_first_one_index
 )
 (
     input       [VECTOR_LENGTH - 1 : 0] vector_input,
-    output reg  [31                : 0] first_one_index
+    output reg  [31 : 0]                first_one_index
 );
 
 always@(*)
@@ -15,7 +15,7 @@ begin
 
     default:
     begin
-            first_one_index <= 0;
+        first_one_index <= 0;
     end
 
     `encoder_case(1);
