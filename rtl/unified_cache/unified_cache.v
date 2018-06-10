@@ -3,6 +3,7 @@
 module unified_cache
 #(
     parameter NUM_INPUT_PORT                     = 2,
+    parameter NUM_BANK                           = 4,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = 70,
     parameter MEM_PACKET_WIDTH_IN_BITS           = 70
 )
@@ -36,7 +37,7 @@ wire  [NUM_INPUT_PORT - 1 : 0]                                          input_pa
 wire  [NUM_INPUT_PORT - 1 : 0]                                          input_packet_critical_to_input_arbiter_flatted;
 wire  [NUM_INPUT_PORT - 1 : 0]                                          input_arbiter_to_input_queue_ack_flatted;
 
-// generate auto-connection between mulitple ports and input_arbiter
+// generate auto-connection between mulitple ports and banks
 generate
 genvar gen;
 
@@ -75,15 +76,38 @@ begin
     
     assign input_packet_critical_to_input_arbiter_flatted[gen] = is_input_queue_full_flatted[gen];
 end
+endgenerate
 
+// generate cache banks
+generate
+for(gen = 0; gen < NUM_BANK; gen = gen + 1)
+begin
+    unified_cache_bank
+    #(
+        .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
+        .MEM_PACKET_WIDTH_IN_BITS(MEM_PACKET_WIDTH_IN_BITS),
+        .BANK_NUM(gen)
+    )
+    cache_bank
+    (
+        .request_flatted_in             (input_packet_to_input_arbiter_flatted),
+        .request_valid_flatted_in       (input_packet_valid_to_input_arbiter_flatted),
+        .request_critical_flatted_in    (input_packet_critical_to_input_arbiter_flatted),
+        .issue_ack_out                  (input_arbiter_to_input_queue_ack_flatted),
+    );
+end
 endgenerate
 
 wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] access_packet_from_input_arbiter;
 wire                                              ack_to_input_arbiter = to_mem_packet_ack_in;
 
+
+
+
+
 priority_arbiter
 #(
-    .NUM_REQUESTS(NUM_INPUT_PORT),
+    .NUM_REQUEST(NUM_INPUT_PORT),
     .SINGLE_REQUEST_WIDTH_IN_BITS(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
 )
 input_arbiter
