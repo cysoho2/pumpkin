@@ -59,19 +59,19 @@ module find_first_one_index_testbench();
         $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "not found", test_judge ? "passed" : "failed");
 
                              test_case_num      = test_case_num + 1'b1;
-        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_1)-1){1'b0}}, {{1'b1}}, {(TEST_INDEX_1){1'b0}} };
+        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_1)-1){1'b0}}, {{1'b1}}};
                              vector_input       = test_input_1;
         #(`FULL_CYCLE_DELAY) test_judge         = (TEST_INDEX_1 == first_one_index) & one_is_found;
         $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "first num", test_judge ? "passed" : "failed");
 
                              test_case_num      = test_case_num + 1'b1;
-        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_1)-1){1'b0}}, {{1'b1}}, {(TEST_INDEX_2){1'b0}} };
+        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_2)-1){1'b0}}, {{1'b1}}, {(TEST_INDEX_2){1'b0}} };
                              vector_input       = test_input_1;
         #(`FULL_CYCLE_DELAY) test_judge         = (TEST_INDEX_2 == first_one_index);
         $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "middle num", test_judge ? "passed" : "failed");
 
                              test_case_num      = test_case_num + 1'b1;
-        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_1)-1){1'b0}}, {{1'b1}}, {(TEST_INDEX_3){1'b0}} };
+        #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_3)-1){1'b0}}, {{1'b1}}, {(TEST_INDEX_3){1'b0}} };
                              vector_input       = test_input_1;
         #(`FULL_CYCLE_DELAY) test_judge         = (TEST_INDEX_3 == first_one_index);
         $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "edge num", test_judge ? "passed" : "failed");
