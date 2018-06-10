@@ -46,7 +46,6 @@ begin
 
     $display("[info-testbench] %m testbench reset completed\n");
 
-    #(`HALF_CYCLE_DELAY) test_case_num          = test_case_num + 1;
     test_input_1                                = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
 
     access_en_in                                = 1;

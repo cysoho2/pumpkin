@@ -64,7 +64,7 @@ genvar gen;
 
 endgenerate
 
-wire [31:0] read_index;
+wire [$clog2(NUMBER_ENTRY):0] read_index;
 
 find_first_one_index
 #(
