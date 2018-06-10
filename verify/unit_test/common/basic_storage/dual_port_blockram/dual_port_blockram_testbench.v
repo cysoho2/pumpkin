@@ -63,7 +63,6 @@ begin
      *  pass : the data is read should equal the data is written
      **/
 
-    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
     test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
 
     read_en_in                              = 1;
