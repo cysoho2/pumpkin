@@ -68,12 +68,14 @@ wire [31:0] read_index;
 
 find_first_one_index
 #(
-    .VECTOR_LENGTH(NUMBER_ENTRY)
+    .VECTOR_LENGTH(NUMBER_ENTRY),
+    .MAX_OUTPUT_WIDTH($clog2(NUMBER_ENTRY)+1)
 )
 find_read_index
 (
-    .vector_input(read_entry_addr_decoded_in),
-    .first_one_index(read_index)
+    .vector_in(read_entry_addr_decoded_in),
+    .first_one_index_out(read_index),
+    .one_is_found_out()
 );
 
 always@(posedge clk_in, posedge reset_in)
