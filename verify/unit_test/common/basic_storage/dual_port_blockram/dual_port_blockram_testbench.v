@@ -11,11 +11,11 @@ reg                                         reset_in;
 reg                                         clk_in;
 
 reg                                         read_en_in;
-reg  [SET_PTR_WIDTH_IN_BITS       - 1 : 0]  read_set_addr_in;
+reg  [SET_PTR_WIDTH_IN_BITS     - 1 : 0]    read_set_addr_in;
 wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    read_entry_out;
 
 reg                                         write_en_in;
-reg  [SET_PTR_WIDTH_IN_BITS       - 1 : 0]  write_set_addr_in;
+reg  [SET_PTR_WIDTH_IN_BITS     - 1 : 0]    write_set_addr_in;
 reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    write_entry_in;
 wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    evict_entry_out;
 
@@ -63,6 +63,7 @@ begin
      *  pass : the data is read should equal the data is written
      **/
 
+    #(`FULL_CYCLE_DELAY)
     test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
 
     read_en_in                              = 1;
@@ -88,7 +89,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY * 3) test_case_num  = test_case_num + 1;
-    test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
+    #(`FULL_CYCLE_DELAY)     test_input_1   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
 
     read_en_in                              = 1;
     write_set_addr_in                       = NUMBER_SET - test_case_num;
