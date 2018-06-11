@@ -4,8 +4,7 @@ module unified_cache
 #(
     parameter NUM_INPUT_PORT                     = 2,
     parameter NUM_BANK                           = 4,
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = 70,
-    parameter MEM_PACKET_WIDTH_IN_BITS           = 70
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = 70
 )
 (
     input                                                                               reset_in,
