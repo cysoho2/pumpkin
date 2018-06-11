@@ -75,8 +75,8 @@ begin
 
 
     /**
-        *  test case 1
-        **/
+    *  test case 0
+    **/
 
     else if(test_case == 1 & ~test_check_flag & ~test_end_flag)
     begin
@@ -191,7 +191,7 @@ always @(posedge clk_in)
 begin
 
     /**
-    *  test case 2
+    *  test case 1
     **/
 
     if(test_case == 2 & ~test_check_flag & ~test_end_flag)
@@ -287,7 +287,7 @@ always @(posedge clk_in)
 begin
 
     /**
-    *  test case 3
+    *  test case 2
     **/
 
     if (test_case == 3 & ~test_check_flag & ~test_end_flag)
@@ -395,7 +395,7 @@ end
 always @(posedge clk_in)
 begin
     /**
-    *  test case 4
+    *  test case 3
     **/
 
     if (test_case == 4 & ~test_check_flag & ~test_end_flag)
@@ -500,7 +500,7 @@ always @(posedge clk_in)
 begin
 
     /**
-        *  test case 5
+        *  test case 4
         **/
 
     if (test_case == 5 & ~test_check_flag & ~test_end_flag)
@@ -658,7 +658,6 @@ begin
 
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
 
-    #(`FULL_CYCLE_DELAY)        test_case = test_case + 1'b1;
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
     #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "invalid request", test_judge? "passed": "failed");
 

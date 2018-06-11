@@ -21,23 +21,24 @@ reg                                             clk_in;
 reg                                             reset_in;
 reg     [31:0]                                  clk_ctr;
 
-integer                                    		test_case;
+integer                                    	    test_case;
 reg     [31:0]                                  test_ctr;
 reg                                             test_stage;
 reg                                             test_wait;
 reg                                             test_end_flag;
 reg                                             test_check_buffer;
+reg                                             test_judge;
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]      test_buffer[QUEUE_SIZE - 1:0];
 
 wire                                            is_empty;
-wire		                                	is_full;
+wire		                                    is_full;
 
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]      request_in;
 reg                                             request_valid_in;
 wire                                            issue_ack_from_fifo;
 wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]      request_out;
 wire                                            request_valid_out;
-reg     	                                	issue_ack_to_fifo;
+reg     	                                    issue_ack_to_fifo;
 
 fifo_queue
 #
@@ -434,23 +435,15 @@ begin
                 i = QUEUE_SIZE;
         end
 
-        if (i == QUEUE_SIZE)
+        test_judge = i == QUEUE_SIZE;
             case(test_case)
-            0: $display("[info-rtl] test case 1%35s : \tpassed", TEST_CASE_1);
-            1: $display("[info-rtl] test case 2%35s : \tpassed", TEST_CASE_2);
-            2: $display("[info-rtl] test case 3%35s : \tpassed", TEST_CASE_3);
-            3: $display("[info-rtl] test case 4%35s : \tpassed", TEST_CASE_4);
-            4: $display("[info-rtl] test case 5%35s : \tpassed", TEST_CASE_5);
+            0: $display("[info-rtl] test case %d%35s : \t%s", test_case, TEST_CASE_1, test_judge? "passed" : "failed");
+            1: $display("[info-rtl] test case %d%35s : \t%s", test_case, TEST_CASE_2, test_judge? "passed" : "failed");
+            2: $display("[info-rtl] test case %d%35s : \t%s", test_case, TEST_CASE_3, test_judge? "passed" : "failed");
+            3: $display("[info-rtl] test case %d%35s : \t%s", test_case, TEST_CASE_4, test_judge? "passed" : "failed");
+            4: $display("[info-rtl] test case %d%35s : \t%s", test_case, TEST_CASE_5, test_judge? "passed" : "failed");
             endcase
-        else
-            case(test_case)
-            0: $display("[info-rtl] test case 1%35s : \tfailed", TEST_CASE_1);
-            1: $display("[info-rtl] test case 2%35s : \tfailed", TEST_CASE_2);
-            2: $display("[info-rtl] test case 3%35s : \tfailed", TEST_CASE_3);
-            3: $display("[info-rtl] test case 4%35s : \tfailed", TEST_CASE_4);
-            4: $display("[info-rtl] test case 5%35s : \tfailed", TEST_CASE_5);
-            endcase
-
+        
         test_check_buffer   = 1'b0;
         test_end_flag       = 1'b1;
     end
@@ -476,36 +469,35 @@ begin
 #`FULL_CYCLE_DELAY           reset_in            = 1'b1;
 #`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
+//test case 0
+#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
+
 //test case 1
-#`FULL_CYCLE_DELAY           test_case           = 0;
+#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
+#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
+
+#`FULL_CYCLE_DELAY           test_case           = test_case + 1'b1;
 #`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 2
 #(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
 #`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#`FULL_CYCLE_DELAY           test_case           = 1;
+#`FULL_CYCLE_DELAY           test_case           = test_case + 1'b1;
 #`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 3
 #(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
 #`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#`FULL_CYCLE_DELAY           test_case           = 2;
+#`FULL_CYCLE_DELAY           test_case           = test_case + 1'b1;
 #`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 //test case 4
 #(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
 #`FULL_CYCLE_DELAY           reset_in            = 1'b0;
 
-#`FULL_CYCLE_DELAY           test_case           = 3;
-#`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
-
-//test case 5
-#(`FULL_CYCLE_DELAY * 50)    reset_in            = 1'b1;
-#`FULL_CYCLE_DELAY           reset_in            = 1'b0;
-
-#`FULL_CYCLE_DELAY           test_case           = 4;
+#`FULL_CYCLE_DELAY           test_case           = test_case + 1'b1;
 #`FULL_CYCLE_DELAY           test_end_flag       = 1'b0;
 
 
