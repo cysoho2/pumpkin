@@ -78,7 +78,7 @@ begin
     *  test case 0
     **/
 
-    else if(test_case == 1 & ~test_check_flag & ~test_end_flag)
+    else if(test_case == 0 & ~test_check_flag & ~test_end_flag)
     begin
         if(clk_ctr == 256)
         begin
@@ -194,7 +194,7 @@ begin
     *  test case 1
     **/
 
-    if(test_case == 2 & ~test_check_flag & ~test_end_flag)
+    if(test_case == 1 & ~test_check_flag & ~test_end_flag)
     begin
         if(test_write_ctr == 10)
         begin
@@ -290,7 +290,7 @@ begin
     *  test case 2
     **/
 
-    if (test_case == 3 & ~test_check_flag & ~test_end_flag)
+    if (test_case == 2 & ~test_check_flag & ~test_end_flag)
     begin
         clk_ctr <= clk_ctr + 1'b1;
 
@@ -398,7 +398,7 @@ begin
     *  test case 3
     **/
 
-    if (test_case == 4 & ~test_check_flag & ~test_end_flag)
+    if (test_case == 3 & ~test_check_flag & ~test_end_flag)
     begin
         if(test_write_ctr == 10)
         begin
@@ -503,7 +503,7 @@ begin
         *  test case 4
         **/
 
-    if (test_case == 5 & ~test_check_flag & ~test_end_flag)
+    if (test_case == 4 & ~test_check_flag & ~test_end_flag)
     begin
 
         if(test_write_ctr == 10)

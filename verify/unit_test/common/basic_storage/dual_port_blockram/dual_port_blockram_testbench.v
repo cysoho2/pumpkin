@@ -91,7 +91,7 @@ begin
     #(`FULL_CYCLE_DELAY * 3) test_case_num  = test_case_num + 1;
     #(`FULL_CYCLE_DELAY)     test_input_1   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
 
-    read_en_in                              = 1;
+    #(`FULL_CYCLE_DELAY) read_en_in         = 1;
     write_set_addr_in                       = NUMBER_SET - test_case_num;
     read_set_addr_in                        = NUMBER_SET - test_case_num;
 
