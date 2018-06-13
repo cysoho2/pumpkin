@@ -20,6 +20,8 @@
 `define WRITEBACK_BUFFER_SIZE                           4 // must be a power of 2
 `define MISS_BUFFER_SIZE 								32
 `define RETURN_QUEUE_SIZE 								16
+`define NUM_CACHE_BANK                                  4
+
 `define MAX_NUM_INPUT_PORT                              16
 
 // Unified Cache - Misc.
@@ -60,4 +62,4 @@
 `define UNIFIED_CACHE_PACKET_IS_WRITE_POS               (`UNIFIED_CACHE_PACKET_VALID_POS    + 1)
 `define UNIFIED_CACHE_PACKET_CACHEABLE_POS              (`UNIFIED_CACHE_PACKET_IS_WRITE_POS + 1)
 
-`define UNIFIED_CACHE_PACKET_WIDTH_IN_BITS              (`UNIFIED_CACHE_PACKET_IS_WRITE_POS - `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 1)
+`define UNIFIED_CACHE_PACKET_WIDTH_IN_BITS              (`UNIFIED_CACHE_PACKET_CACHEABLE_POS - `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 1)

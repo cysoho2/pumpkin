@@ -3,6 +3,7 @@
 module unified_cache_bank
 #(
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = 70,
+    parameter NUM_INPUT_PORT                     = 2,
     parameter BANK_NUM                           = 0
 )
 (

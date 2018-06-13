@@ -28,11 +28,11 @@ reg     [1:0]                                                   way2_packet_inde
 wire    [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way2_packet_from_cache;
 reg                                                             way2_packet_ack_to_cache;
 
-reg     [(`MEM_PACKET_WIDTH_IN_BITS) - 1 : 0]                   mem_packet_to_cache;
+reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         mem_packet_to_cache;
 wire                                                            mem_packet_ack_from_cache;
 
-wire     [(`MEM_PACKET_WIDTH_IN_BITS) - 1 : 0]                  mem_packet_from_cache;
-reg      [(`MEM_PACKET_WIDTH_IN_BITS) - 1 : 0]                  cache_packet_pending;
+wire     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        mem_packet_from_cache;
+reg      [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        cache_packet_pending;
 reg                                                             mem_packet_ack_to_cache;
 
 assign way1_packet_to_cache = way1_packet_issue[way1_packet_index];
@@ -149,16 +149,16 @@ begin
         cache_packet_pending    <= 0;
     end
     
-    else if(mem_packet_from_cache[`MEM_PACKET_VALID_POS] & clk_ctr % 6 == 0 & ~mem_packet_ack_to_cache)
+    else if(mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & clk_ctr % 6 == 0 & ~mem_packet_ack_to_cache)
     begin
         mem_packet_ack_to_cache <= 1;
         cache_packet_pending    <=
         {   
-                /*type*/{mem_packet_from_cache[`MEM_PACKET_TYPE_POS_HI : `MEM_PACKET_TYPE_POS_LO]},
+                /*type*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]},
                 /*write*/{1'b0},
                 /*valid*/{1'b1},
-                /*data*/{sim_main_memory[mem_packet_from_cache[mem_packet_from_cache[`MEM_PACKET_ADDR_POS_HI : `MEM_PACKET_ADDR_POS_LO]]]},
-                /*addr*/{mem_packet_from_cache[`MEM_PACKET_ADDR_POS_HI : `MEM_PACKET_ADDR_POS_LO]}
+                /*data*/{sim_main_memory[mem_packet_from_cache[mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]]]},
+                /*addr*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]}
         };
     end
 
@@ -182,12 +182,12 @@ begin
         mem_packet_to_cache     <= cache_packet_pending;
     end
 
-    else if(mem_packet_to_cache[`MEM_PACKET_VALID_POS] & ~mem_packet_ack_from_cache)
+    else if(mem_packet_to_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & ~mem_packet_ack_from_cache)
     begin
         mem_packet_to_cache     <= mem_packet_to_cache;
     end
 
-    else if(mem_packet_to_cache[`MEM_PACKET_VALID_POS] & mem_packet_ack_from_cache)
+    else if(mem_packet_to_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & mem_packet_ack_from_cache)
     begin
         mem_packet_to_cache     <= 0; 
     end
@@ -250,8 +250,8 @@ end
 unified_cache
 #(
     .NUM_INPUT_PORT(2),
-    .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
-    .MEM_PACKET_WIDTH_IN_BITS(`MEM_PACKET_WIDTH_IN_BITS)
+    .NUM_BANK(4),
+    .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
 )
 unified_cache
 (
