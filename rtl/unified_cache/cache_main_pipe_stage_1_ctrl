@@ -1,6 +1,6 @@
 `include "parameters.h"
 
-/*module cache_main_pipe_stage_1_ctrl
+module cache_main_pipe_stage_1_ctrl
 #(
     parameter BANK_NUM                           = 0,
     parameter NUM_INPUT_PORT                     = 2,
@@ -14,5 +14,4 @@
 
 );
 
-endmodule*/
-
+endmodule

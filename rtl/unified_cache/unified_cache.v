@@ -9,7 +9,9 @@ module unified_cache
     parameter NUM_SET                            = 64,
     parameter NUM_BANK                           = 4,
     parameter NUM_WAY                            = 4,
-    parameter BLOCK_SIZE_IN_BYTES                = 4
+    parameter BLOCK_SIZE_IN_BYTES                = 4,
+
+    parameter BANK_BITS                          = $clog2(NUM_SET / NUM_BANK)
 )
 (
     input                                                                               reset_in,
@@ -106,12 +108,13 @@ generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin
     
-    wire [NUM_INPUT_PORT - 1 : 0] is_right_bank;
+    wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
+    wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
+    
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-         assign is_right_bank[port_index] =  input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH]
-                                                ==
-                                            port_index;
+        assign full_addr[port_index] = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
+        assign is_right_bank[port_index] = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
     end
 
     unified_cache_bank
