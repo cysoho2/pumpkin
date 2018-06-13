@@ -3,6 +3,7 @@
 module unified_cache
 #(
     parameter NUM_INPUT_PORT                     = 2,
+    parameter PORT_ID_WIDTH                      = $clog2(NUM_INPUT_PORT) + 1,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     
     parameter NUM_BANK                           = 4,
