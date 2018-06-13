@@ -1,4 +1,3 @@
-`include "sim_config.h"
 `include "parameters.h"
 
 module unified_cache
@@ -6,9 +5,9 @@ module unified_cache
     parameter NUM_INPUT_PORT                     = 2,
     parameter PORT_ID_WIDTH                      = $clog2(NUM_INPUT_PORT) + 1,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-    
-    parameter NUM_BANK                           = 4,
+
     parameter NUM_SET                            = 64,
+    parameter NUM_BANK                           = 4,
     parameter NUM_WAY                            = 4,
     parameter BLOCK_SIZE_IN_BYTES                = 4
 )
@@ -49,10 +48,10 @@ genvar port_index, bank_index;
 for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
 begin
 
-    assign input_packet_packed[port_index] = 
+    assign input_packet_packed[port_index] =
            input_packet_flatted_in[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
                                     port_index      * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)];
-    
+
     fifo_queue
     #(
         .QUEUE_SIZE                     (`INPUT_QUEUE_SIZE),
@@ -70,7 +69,7 @@ begin
         .request_in                     (input_packet_packed[port_index]),
         .request_valid_in               (input_packet_packed[port_index][`UNIFIED_CACHE_PACKET_VALID_POS]),
         .issue_ack_out                  (input_packet_ack_flatted_out[port_index]),
-        
+
         .request_out                    (input_packet_to_cache_packed[port_index]),
         .request_valid_out              (input_packet_valid_to_cache_flatted[port_index]),
         .issue_ack_in                   (cache_to_input_queue_ack_merged[port_index])
@@ -79,7 +78,7 @@ begin
     assign input_packet_to_cache_flatted[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
                                                port_index * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)]
             = input_packet_to_cache_packed[port_index];
-    
+
     assign input_packet_critical_to_cache_flatted[port_index] = is_input_queue_full_flatted[port_index];
 end
 endgenerate
@@ -106,32 +105,29 @@ wire  [NUM_BANK                                      - 1 : 0] return_request_ack
 generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin
+    
+    wire [NUM_INPUT_PORT - 1 : 0] is_right_bank;
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-
-        wire [NUM_BANK - 1 : 0] is_right_port;
-        for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
-        begin
-            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH]
+         assign is_right_bank[port_index] =  input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH]
                                                 ==
-                                                port_index;
-        end
+                                            port_index;
     end
-    
+
     unified_cache_bank
     #(
         .NUM_INPUT_PORT                     (NUM_INPUT_PORT),
         .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
-        
-        .BANK_NUM                           (bank_index),
+
         .NUM_SET                            (NUM_SET),
+        .BANK_NUM                           (bank_index),
         .NUM_WAY                            (NUM_WAY),
         .BLOCK_SIZE_IN_BYTES                (BLOCK_SIZE_IN_BYTES)
     )
     cache_bank
     (
         .request_flatted_in                 (input_packet_to_cache_flatted),
-        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted),
+        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted | is_right_bank),
         .request_critical_flatted_in        (input_packet_critical_to_cache_flatted),
         .issue_ack_out                      (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
                                                                                   bank_index * NUM_INPUT_PORT]),
@@ -193,7 +189,7 @@ to_mem_arbiter
     .request_valid_flatted_in       ({miss_request_valid_flatted, writeback_request_valid_flatted}),
     .request_critical_flatted_in    ({miss_request_critical_flatted, writeback_request_critical_flatted}),
     .issue_ack_out                  ({miss_request_ack_flatted, writeback_request_ack_flatted}),
-    
+
     .request_out                    (to_mem_packet_out),
     .request_valid_out              (),
     .issue_ack_in                   (to_mem_packet_ack_in)
@@ -239,7 +235,7 @@ generate
             .request_valid_flatted_in       (return_request_valid_flatted | is_right_port),
             .request_critical_flatted_in    (return_request_critical_flatted),
             .issue_ack_out                  (return_request_ack_flatted[(port_index+1) * NUM_BANK -1 : port_index * NUM_BANK]),
-            
+
             .request_out                    (output_packet_flatted_out[(port_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
                                                                            port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
             .request_valid_out              (),

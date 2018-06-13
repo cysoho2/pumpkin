@@ -49,7 +49,7 @@ sub pumpkin_init
 	say "\n";
 	say " ******* Pumpkin auto worker script v1.6";
 	say "\n";
-	
+
 	%pumpkin_parameter_hash =
 	(
 		#'device'                        => 'xczu2eg-sfva625-1-e',
@@ -60,7 +60,7 @@ sub pumpkin_init
 		'default_test_type'             => 'timing',
 		'default_test_dump'             => 'off',
 		'default_cycle_time'            => 5, # counting in nano second
-		
+
 		'waveform_filename'             => 'sim_waves.vcd',
 		'autogen_constr_filename'       => 'auto_constraints.xdc',
 		'sim_log_filename'              => 'sim.log',
@@ -71,7 +71,7 @@ sub pumpkin_init
 		'report_dir'                    => 'report',
 
 		'sim_config_filename' 			=> 'sim_config.h',
-		
+
 		'c_x64_compiler'                => 'gcc',
 		'cpp_x64_compiler'              => 'g++',
 		'c_arm_compiler'                => 'aarch64-linux-gnu-gcc',
@@ -116,7 +116,7 @@ sub pumpkin_init
 
 	foreach my $test_name (keys %unit_test_info_hash)
 	{
-		die "the test sources dir of $test_name doesn't exist at $unit_test_info_hash{$test_name}{'test_src_dir'}" 
+		die "the test sources dir of $test_name doesn't exist at $unit_test_info_hash{$test_name}{'test_src_dir'}"
 		if !-e $unit_test_info_hash{$test_name}{'test_src_dir'}
 	}
 
@@ -133,7 +133,7 @@ sub pumpkin_init
 sub cmd_parsing
 {
     say '[info-script] parsing arguments ...';
-        
+
 	if(@ARGV < 1)
 	{
 		die '[error-script] no enough parameters for the pumpkin script';
@@ -159,10 +159,10 @@ sub cmd_parsing
 					}
 					else
 					{
-						my $target_queue_ref = $test_scale =~ 'full' ? 
-												\%full_test_queue_hash: 
+						my $target_queue_ref = $test_scale =~ 'full' ?
+												\%full_test_queue_hash:
 												\%unit_test_queue_hash;
-						
+
 						${$target_queue_ref}{$test_name}=
 						{
 							'mode'           => $test_mode,
@@ -182,7 +182,7 @@ sub cmd_parsing
 			elsif($current_arg =~ /-clean/)
 			{
 				say "[info-script] cleaning working temp dir ...\n";
-					
+
 				`rm -irf $pumpkin_path_hash{'working_temp_dir'}/*`
 				if -e $pumpkin_path_hash{'working_temp_dir'};
 			}
@@ -199,10 +199,10 @@ sub cmd_parsing
 				or '-implementation' =~ $current_arg)
 			{
 				$current_arg =~ /-(?<mode>\w+)/i;
-				$test_mode = 'behavioral' =~ $+{mode} ? 
+				$test_mode = 'behavioral' =~ $+{mode} ?
 								'behavioral':
-										( 
-											'post-synthesis' =~ $+{mode} ? 
+										(
+											'post-synthesis' =~ $+{mode} ?
 											'post-synthesis':
 											'post-implementation'
 										);
@@ -226,7 +226,7 @@ sub task_begin
 {
 	my ($test_name, $test_scale, $test_arch, $test_options_ref)     = @_;
 	my $build_dir = "$pumpkin_path_hash{'working_temp_dir'}/" . "${test_scale}_" . "$test_name";
-	
+
 	if(-e $build_dir)
 	{
 		system("rm -irf $build_dir");
@@ -235,18 +235,18 @@ sub task_begin
 
 	if($test_scale =~ 'full_test')
 	{
-		my $compiler_cmd                = $test_arch =~ 'arm' ? 
+		my $compiler_cmd                = $test_arch =~ 'arm' ?
 											$pumpkin_parameter_hash{'cpp_arm_compiler'}:
 											$pumpkin_parameter_hash{'cpp_x64_compiler'};
-		
+
 		my $compilation_flags           = " -o3 -wall -g";
 		my $compilation_log_path        = "$build_dir/compilation.log";
 		my @filelist;
 
 		my $elf_filename = "$build_dir/$test_name";
-		find(sub{generic_files_collect($pumpkin_parameter_hash{'src_verify_ext_format'}, \@filelist);}, 
+		find(sub{generic_files_collect($pumpkin_parameter_hash{'src_verify_ext_format'}, \@filelist);},
 			"$pumpkin_path_hash{'src_verify_dir'}/$test_scale/$test_name");
-		
+
 		$compiler_cmd .= " @filelist -o $elf_filename".$compilation_flags;
 		$compiler_cmd .= ' -dx64' if !$test_arch =~ 'arm';
 		$compiler_cmd .= " 2>> $compilation_log_path";
@@ -257,14 +257,14 @@ sub task_begin
 		my $dumper_path = &arm_dumper_build();
 		&arm_dumper_run($dumper_path, $elf_filename, $build_dir);
 	}
-	
+
 	# unit test
 	elsif($test_scale =~ 'unit_test')
 	{
 		my @rtl_filelist; my @testbench_filelist;
 		my $test_src_dir = ${$test_options_ref}{'test_src_dir'};
 
-		find(sub{generic_files_collect($pumpkin_parameter_hash{'src_rtl_ext_format'}, \@rtl_filelist);}, 
+		find(sub{generic_files_collect($pumpkin_parameter_hash{'src_rtl_ext_format'}, \@rtl_filelist);},
 			"$pumpkin_path_hash{'pumpkin_root_dir'}/rtl");
 		find(sub{generic_files_collect($pumpkin_parameter_hash{'src_rtl_ext_format'}, \@testbench_filelist);},
 			$test_src_dir);
@@ -274,13 +274,13 @@ sub task_begin
 		my $test_dump                   = ${$test_options_ref}{'dump'};
 		my $topmodule_test              = ${$test_options_ref}{'topmodule_test'};
 		my $topmodule_src               = ${$test_options_ref}{'topmodule_src'};
-		
+
 		my $constr_generator_path       = $pumpkin_path_hash{'constr_generator_path'};
 		my $device_constr_path          = "$pumpkin_path_hash{'device_constr_dir'}/$pumpkin_parameter_hash{'device'}.txt";
 		my $final_constr_path           = "$build_dir/$pumpkin_parameter_hash{'autogen_constr_filename'}";
-		
+
 		my $cycle_time                  = $pumpkin_parameter_hash{'default_cycle_time'};
-		
+
 		die "[error-script] the device file for $pumpkin_parameter_hash{'device'} doesn't exist" if !-e $device_constr_path;
 
 		my $report_dir = "$build_dir/$pumpkin_parameter_hash{'report_dir'}";
@@ -295,14 +295,14 @@ sub task_begin
 		{
 			my $sim_config_path = &create_sim_config_file();
 			push @rtl_filelist, $sim_config_path;
-			
-			my ($sim_log_path, $synth_log_path, $impl_log_path) = 
+
+			my ($sim_log_path, $synth_log_path, $impl_log_path) =
 			&vivado_wrapper(
 					$test_name,
 					$waveform_path, $timing_rpt_path, $util_rpt_path,
 					$constr_generator_path, $device_constr_path, $final_constr_path,
 					"$pumpkin_parameter_hash{'device'}", $cycle_time,
-					$topmodule_test, $topmodule_src, $test_mode, $test_type, $test_dump, 
+					$topmodule_test, $topmodule_src, $test_mode, $test_type, $test_dump,
 					$build_dir, (@rtl_filelist, @testbench_filelist));
 
 			# copy back the logs
@@ -330,14 +330,14 @@ sub task_begin
 			push @rtl_filelist, $sim_config_path;
 
 			say "[info-script] invoking icarus compiler ...";
-			
+
 			my $icarus_cmd = "iverilog -o $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'} -s $topmodule_test"
 						 ." -I$pumpkin_path_hash{'src_rtl_dir'}/definitions";
 			   $icarus_cmd .= " -DDUMP" if $test_dump eq 'on';
 			   $icarus_cmd .= " @rtl_filelist @testbench_filelist";
 			#say "[info-script] icarus cmd is - $icarus_cmd";
 			system $icarus_cmd;
-			
+
 			if(-e "$build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}")
 			{
 				say "[info-script] invoking icarus simulator ...";
@@ -374,24 +374,24 @@ sub vivado_wrapper
 {
 	my (
 			$test_name,
-			
+
 			$waveform_path,
 			$timing_rpt_path,
 			$util_rpt_path,
-			
+
 			$constr_generator_path,
 			$device_constr_path,
 			$final_constr_path,
-			
+
 			$device_name,
 			$cycle_time,
-			
+
 			$topmodule_test,
 			$topmodule_src,
 			$test_mode,
 			$test_type,
 			$test_dump,
-			
+
 			$build_dir, @combined_filelist
 	) = @_;
 
@@ -401,7 +401,7 @@ sub vivado_wrapper
 	my $sim_dir             = "$build_dir/${test_name}.sim/sim_1/$sim_dirname_mode/"."$sim_dirname_type";
 
 	my $sim_log_path   = $sim_dir.'simulate.log';
-	my $synth_log_path = "$build_dir/${test_name}.runs/synth_run/runme.log";    
+	my $synth_log_path = "$build_dir/${test_name}.runs/synth_run/runme.log";
 	my $impl_log_path  = "$build_dir/${test_name}.runs/impl_run/runme.log";
 
 	chdir $build_dir;
@@ -412,11 +412,11 @@ sub vivado_wrapper
 		$vivado_cmd .= " $device_name $cycle_time";
 		$vivado_cmd .= " $topmodule_test $topmodule_src $test_mode $test_type $test_dump";
 		$vivado_cmd .= " @combined_filelist";
-	
+
 	#say "[info-script] the vivado cmd line is - $vivado_cmd";
 	say "[info-script] invoking vivado ...";
 	say "[info-script] vivado cmd is - $vivado_cmd";
-	
+
 	# invoke vivado
 	system $vivado_cmd;
 
@@ -442,7 +442,7 @@ sub check_timing
 }
 
 sub arm_dumper_build
-{       
+{
 	my @filelist;                   #stores all of the src files of dumper
 	my $src_dir                     = "$pumpkin_path_hash{'src_verify_dir'}/elf_dumper";
 	my $elf_dir                     = "$pumpkin_path_hash{'working_temp_dir'}/arm_dumper";
@@ -472,7 +472,7 @@ sub arm_dumper_build
 sub arm_dumper_run
 {
 	my ($dumper_path, $elf_to_dump, $dump_dir) = @_;
-	
+
 	my $dump_bin_filename         = "$dump_dir/arm.bin";
 	my $dump_addr_filename        = "$dump_dir/load_addr_arm.h";
 	my $dump_run_log_filename     = "$dump_dir/arm_dumper_run.log";
@@ -484,7 +484,7 @@ sub arm_dumper_run
 	say "[info-script] starting to collect the instruction statistics of $elf_to_dump ...";
 	my @objdump_output = split(/\n/,`$pumpkin_parameter_hash{'arm_objdump'} -d $elf_to_dump`);
 	my %static_instruction;
-	
+
 	die "[error-script] fail to open $dump_run_log_filename"
 	if !open log_handle, ">$dump_run_log_filename";
 
@@ -505,7 +505,7 @@ sub arm_dumper_run
 	{
 		printf log_handle "%10s %10d\n", $_, $static_instruction{$_};
 	}
-	
+
 	close log_handle;
 }
 
@@ -526,10 +526,10 @@ sub test_name_enumerate
 {
 	my ($test_scale) = @_;
 	say "[info-script] enumrating the test cases of $test_scale ...";
-	
+
 	# enumerate full test case
 	if($test_scale =~ 'full')
-	{	
+	{
 		my @src_dir = split(/\n/, `find $pumpkin_path_hash{'src_verify_dir'}/full_test -maxdepth 1 -mindepth 1 -type d`);
 		foreach my $current_dir (@src_dir)
 		{
@@ -542,7 +542,7 @@ sub test_name_enumerate
 	{
 		die "[error-script] unable to open $pumpkin_path_hash{'unit_test_config_path'}"
 		if !open unit_config, "<$pumpkin_path_hash{'unit_test_config_path'}";
-		
+
 		while(my $line = <unit_config>)
 		{
 			next unless $line =~ / \A! \s+
@@ -552,7 +552,7 @@ sub test_name_enumerate
 									(?<topmodule_src>\w+)
 									/gx;
 
-			$unit_test_info_hash{$+{test_name}} = 
+			$unit_test_info_hash{$+{test_name}} =
 			{
 				'test_src_dir'   => "$pumpkin_path_hash{'unit_test_dir'}/".$+{test_src_dir},
 				'topmodule_test' => $+{topmodule_test},
@@ -581,18 +581,18 @@ sub create_sim_config_file
 	if !open config_handle, ">$sim_config_path";
 
 	printf config_handle "`ifndef SIMULATION\n";
-	printf config_handle "`define SIMULATION\n";
-	printf config_handle "`timescale 10ns/100ps\n";
-	printf config_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
-	printf config_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+    printf config_handle "    `define SIMULATION\n";
+	printf config_handle "    `timescale 10ns/100ps\n";
+	printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
+	printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
 
 	if($pumpkin_parameter_hash{'running_on_mac'} == 1)
 	{
-		printf config_handle "`define DUMP_FILENAME \"$pumpkin_parameter_hash{'waveform_filename'}\"\n";
+		printf config_handle "    `define DUMP_FILENAME \"$pumpkin_parameter_hash{'waveform_filename'}\"\n";
 	}
 
 	printf config_handle "`else\n";
-	printf config_handle "`endif\n";
+    printf config_handle "`endif\n";
 
 	close config_handle;
 
@@ -619,7 +619,7 @@ sub compilation_wrapper
 	close log_handle;
 
 	my $compilaton_failed = system($compiler_cmd);
-	$compilaton_failed ? 
+	$compilaton_failed ?
 	die "[info-script] compilation error occured, please check $compilation_log_path\n":
 	say "[info-script] compilation is successful\n";
 

@@ -2,11 +2,11 @@
 
 module unified_cache_bank
 #(
-    parameter BANK_NUM                           = 0,
     parameter NUM_INPUT_PORT                     = 2,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
 
     parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
+    parameter BANK_NUM                           = 0,
     parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
     parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
 )
