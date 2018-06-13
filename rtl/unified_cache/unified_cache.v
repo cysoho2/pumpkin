@@ -206,7 +206,7 @@ generate
         wire [NUM_BANK - 1 : 0] is_right_port;
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
         begin
-            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH]
+            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + PORT_ID_WIDTH) +: UNIFIED_CACHE_PACKET_PORT_ID_WIDTH]
                                                 ==
                                                 port_index;
         end

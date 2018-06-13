@@ -6,6 +6,7 @@ module single_port_lutram
 )
 (
     input                                               clk_in,
+    input                                               reset_in,
 
     input                                               access_en_in,
     input                                               write_en_in,
@@ -15,11 +16,20 @@ module single_port_lutram
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      read_entry_out
 );
 
-(* ram_style = "block" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] blockram [NUMBER_SET - 1 : 0];
+integer index;
+reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUMBER_SET - 1 : 0];
 
-always @(posedge clk_in)
+always @(posedge clk_in or posedge reset_in)
 begin
-    if(access_en_in)
+    if(reset_in)
+    begin
+        for(index = 0; index < NUMBER_SET; index = index + 1)
+        begin
+            lutram[index] <= 0;
+        end
+    end
+ 
+    else if(access_en_in)
     begin
         if(write_en_in)
         begin
