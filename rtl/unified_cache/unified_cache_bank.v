@@ -36,7 +36,13 @@ module unified_cache_bank
     input                                                                  return_request_ack_in
 );
 
-/*
+wire                                              is_miss_queue_full;
+wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] miss_replay_request;
+wire                                              miss_replay_request_ack;
+
+wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] access_packet;
+wire                                              access_packet_ack;
+
 priority_arbiter
 #(
     .NUM_REQUEST(NUM_INPUT_PORT + 1), // input requests + miss replay
@@ -48,14 +54,16 @@ to_mem_arbiter
     .clk_in                         (clk_in),
 
     // the arbiter considers priority from right(high) to left(low)
-    .request_flatted_in             ({miss_request_flatted, writeback_request_flatted}),
-    .request_valid_flatted_in       ({miss_request_valid_flatted, writeback_request_valid_flatted}),
-    .request_critical_flatted_in    ({miss_request_critical_flatted, writeback_request_critical_flatted}),
-    .issue_ack_out                  ({miss_request_ack_flatted, writeback_request_ack_flatted}),
+    .request_flatted_in             ({request_flatted_in, miss_replay_request}),
+    .request_valid_flatted_in       ({request_valid_flatted_in, miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS]}),
+    .request_critical_flatted_in    ({request_critical_flatted_in, is_miss_queue_full}),
+    .issue_ack_out                  ({issue_ack_out, miss_replay_request_ack}),
     
-    .request_out                    (to_mem_packet_out),
+    .request_out                    (access_packet),
     .request_valid_out              (),
-    .issue_ack_in                   (to_mem_packet_ack_in)
-);*/
+    .issue_ack_in                   (access_packet_ack)
+);
+
+//main_pipe_stage_1_ctrl
 
 endmodule

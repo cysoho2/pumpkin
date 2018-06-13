@@ -5,10 +5,10 @@ module unified_cache
     parameter NUM_INPUT_PORT                     = 2,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     
-    parameter NUM_BANK                           = `UNIFIED_CACHE_NUM_BANK,
-    parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
-    parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
-    parameter BLOCK_SIZE                         = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
+    parameter NUM_BANK                           = 4,
+    parameter NUM_SET                            = 64,
+    parameter NUM_WAY                            = 4,
+    parameter BLOCK_SIZE                         = 64
 )
 (
     input                                                                               reset_in,
