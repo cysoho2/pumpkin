@@ -4,7 +4,7 @@
 module tri_port_regfile_testbench();
 
     parameter SINGLE_ENTRY_SIZE_IN_BITS                         = 8;
-    parameter NUMBER_ENTRY                                      = 4;
+    parameter NUM_ENTRY                                         = 4;
     
     reg                                                         reset_in;
     reg                                                         clk_in;
@@ -13,13 +13,13 @@ module tri_port_regfile_testbench();
     reg                                                         write_en_in;
     reg                                                         cam_en_in;
 
-    reg     [NUMBER_ENTRY   - 1 : 0]                            read_entry_addr_decoded_in;
-    reg     [NUMBER_ENTRY   - 1 : 0]                            write_entry_addr_decoded_in;
+    reg     [NUM_ENTRY   - 1 : 0]                               read_entry_addr_decoded_in;
+    reg     [NUM_ENTRY   - 1 : 0]                               write_entry_addr_decoded_in;
     reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 cam_entry_in;
 
     reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 write_entry_in;
     wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 read_entry_out;
-    wire    [NUMBER_ENTRY              - 1 : 0]                 cam_result_decoded_out;     
+    wire    [NUM_ENTRY              - 1 : 0]                    cam_result_decoded_out;     
 
     integer                                                     test_case_num;
     reg                                                         test_judge;
@@ -31,7 +31,7 @@ module tri_port_regfile_testbench();
     #
     (
         .SINGLE_ENTRY_SIZE_IN_BITS                              (SINGLE_ENTRY_SIZE_IN_BITS),
-        .NUMBER_ENTRY                                           (NUMBER_ENTRY)
+        .NUM_ENTRY                                              (NUM_ENTRY)
     )
     
     tri_port_regfile
@@ -51,8 +51,6 @@ module tri_port_regfile_testbench();
         .read_entry_out                                         (read_entry_out),
         .cam_result_decoded_out                                 (cam_result_decoded_out)
     );
-
-    
     
     initial
     begin

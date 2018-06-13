@@ -1,8 +1,8 @@
 module single_port_lutram
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64,
-    parameter NUMBER_SET                    = 64,
-    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUMBER_SET)
+    parameter NUM_SET                       = 64,
+    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET)
 )
 (
     input                                               clk_in,
@@ -10,20 +10,20 @@ module single_port_lutram
 
     input                                               access_en_in,
     input                                               write_en_in,
-    input      [SET_PTR_WIDTH_IN_BITS       - 1 : 0]    access_set_addr_in,
+    input      [SET_PTR_WIDTH_IN_BITS     - 1 : 0]      access_set_addr_in,
 
     input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      write_entry_in,
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      read_entry_out
 );
 
 integer index;
-reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUMBER_SET - 1 : 0];
+reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
 
 always @(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        for(index = 0; index < NUMBER_SET; index = index + 1)
+        for(index = 0; index < NUM_SET; index = index + 1)
         begin
             lutram[index] <= 0;
         end

@@ -6,9 +6,10 @@ module unified_cache_bank
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
 
     parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
-    parameter BANK_NUM                           = 0,
     parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
-    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
+    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
+
+    parameter BANK_NUM                           = 0
 )
 (
     input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0] request_flatted_in,
@@ -70,5 +71,18 @@ cache_main_pipe_stage_1_ctrl
 (
 
 );*/
+
+associative_single_port_array
+#(
+    .SINGLE_ENTRY_SIZE_IN_BITS  (1),
+    .NUM_SET                    (NUM_SET),
+    .NUM_WAY                    (NUM_WAY),
+    .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+    .STORAGE_TYPE               ("LUTRAM")
+)
+valid_array
+(
+
+);
 
 endmodule

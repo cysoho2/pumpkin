@@ -4,7 +4,7 @@
 module dual_port_blockram_testbench();
 
 parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
-parameter NUMBER_SET                    = 64;
+parameter NUM_SET                       = 64;
 parameter SET_PTR_WIDTH_IN_BITS         = 6;
 
 reg                                         reset_in;
@@ -69,8 +69,8 @@ begin
     read_en_in                              = 1;
     write_en_in                             = 1;
 
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUMBER_SET - test_case_num;
-    read_set_addr_in                        = NUMBER_SET - test_case_num;
+    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
+    read_set_addr_in                        = NUM_SET - test_case_num;
 
     write_entry_in                          = test_input_1;
     #(`FULL_CYCLE_DELAY) write_en_in        = 0;
@@ -92,8 +92,8 @@ begin
     #(`FULL_CYCLE_DELAY)     test_input_1   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
 
     #(`FULL_CYCLE_DELAY) read_en_in         = 1;
-    write_set_addr_in                       = NUMBER_SET - test_case_num;
-    read_set_addr_in                        = NUMBER_SET - test_case_num;
+    write_set_addr_in                       = NUM_SET - test_case_num;
+    read_set_addr_in                        = NUM_SET - test_case_num;
 
     #(`HALF_CYCLE_DELAY) write_entry_in     = {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}};
 
@@ -121,8 +121,8 @@ begin
     read_en_in                              = 1;
     write_en_in                             = 1;
 
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUMBER_SET - test_case_num;
-    read_set_addr_in                        = NUMBER_SET - test_case_num;
+    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
+    read_set_addr_in                        = NUM_SET - test_case_num;
 
     write_entry_in                          = test_input_1;
 
@@ -154,8 +154,8 @@ begin
     read_en_in                              = 1;
     write_en_in                             = 1;
 
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUMBER_SET - test_case_num;
-    read_set_addr_in                        = NUMBER_SET - test_case_num;
+    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
+    read_set_addr_in                        = NUM_SET - test_case_num;
 
     write_entry_in                          = test_input_1;
 
@@ -181,7 +181,7 @@ always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 dual_port_blockram
 #(
     .SINGLE_ENTRY_SIZE_IN_BITS      (SINGLE_ENTRY_SIZE_IN_BITS),
-    .NUMBER_SET                     (NUMBER_SET),
+    .NUM_SET                        (NUM_SET),
     .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
 )
 

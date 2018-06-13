@@ -1,7 +1,7 @@
 module dual_port_blockram
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS   = 64,
-    parameter NUMBER_SET                  = 64,
+    parameter NUM_SET                     = 64,
     parameter SET_PTR_WIDTH_IN_BITS       = 6
 )
 (
@@ -12,12 +12,12 @@ module dual_port_blockram
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      read_entry_out,
 
     input                                               write_en_in,
-    input      [SET_PTR_WIDTH_IN_BITS       - 1 : 0]    write_set_addr_in,
+    input      [SET_PTR_WIDTH_IN_BITS     - 1 : 0]      write_set_addr_in,
     input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      write_entry_in,
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      evict_entry_out
 );
 
-(* ram_style = "block" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] blockram [NUMBER_SET - 1 : 0];
+(* ram_style = "block" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
 
 always @(posedge clk_in)
 begin

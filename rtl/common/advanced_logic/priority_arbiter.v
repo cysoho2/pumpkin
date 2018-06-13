@@ -1,20 +1,20 @@
 module priority_arbiter
 #(
-    parameter NUM_REQUEST                 = 3,
+    parameter NUM_REQUEST                  = 3,
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64
 )
 (
-    input                                                            reset_in,
-    input                                                            clk_in,
+    input                                                               reset_in,
+    input                                                               clk_in,
 
-    input      [SINGLE_REQUEST_WIDTH_IN_BITS * NUM_REQUEST - 1 : 0] request_flatted_in,
-    input      [NUM_REQUEST                                - 1 : 0] request_valid_flatted_in,
-    input      [NUM_REQUEST                                - 1 : 0] request_critical_flatted_in,
-    output reg [NUM_REQUEST                                - 1 : 0] issue_ack_out,
+    input      [SINGLE_REQUEST_WIDTH_IN_BITS * NUM_REQUEST - 1 : 0]     request_flatted_in,
+    input      [NUM_REQUEST                                - 1 : 0]     request_valid_flatted_in,
+    input      [NUM_REQUEST                                - 1 : 0]     request_critical_flatted_in,
+    output reg [NUM_REQUEST                                - 1 : 0]     issue_ack_out,
 
-    output reg [SINGLE_REQUEST_WIDTH_IN_BITS                - 1 : 0] request_out,
-    output reg                                                       request_valid_out,
-    input                                                            issue_ack_in
+    output reg [SINGLE_REQUEST_WIDTH_IN_BITS                - 1 : 0]    request_out,
+    output reg                                                          request_valid_out,
+    input                                                               issue_ack_in
 );
 // vivado 2016.4 doesn't support $ceil function, may add in the future
 parameter [31:0] NUM_REQUEST_LOG2_LOW = $clog2(NUM_REQUEST);

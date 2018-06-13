@@ -46,7 +46,7 @@ reg     [31:0]                                          test_read_ctr;
 
 priority_arbiter
 #(
-    .NUM_REQUEST                                   (NUM_REQUEST),
+    .NUM_REQUEST                                    (NUM_REQUEST),
     .SINGLE_REQUEST_WIDTH_IN_BITS                   (SINGLE_REQUEST_WIDTH_IN_BITS)
  )
 

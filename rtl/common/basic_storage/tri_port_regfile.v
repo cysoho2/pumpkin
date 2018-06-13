@@ -1,7 +1,7 @@
 module tri_port_regfile
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS = 8,
-    parameter NUMBER_ENTRY              = 4
+    parameter NUM_ENTRY                 = 4
 )
 (
     input                                                   reset_in,
@@ -11,21 +11,21 @@ module tri_port_regfile
     input                                                   write_en_in,
     input                                                   cam_en_in,
 
-    input      [NUMBER_ENTRY   - 1 : 0]                     read_entry_addr_decoded_in,
-    input      [NUMBER_ENTRY   - 1 : 0]                     write_entry_addr_decoded_in,
+    input      [NUM_ENTRY   - 1 : 0]                        read_entry_addr_decoded_in,
+    input      [NUM_ENTRY   - 1 : 0]                        write_entry_addr_decoded_in,
     input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          cam_entry_in,
 
     input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          write_entry_in,
     output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          read_entry_out,
-    output reg [NUMBER_ENTRY              - 1 : 0]          cam_result_decoded_out
+    output reg [NUM_ENTRY              - 1 : 0]             cam_result_decoded_out
 );
 
-wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                    entry_packed [NUMBER_ENTRY - 1 : 0];
+wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                    entry_packed [NUM_ENTRY - 1 : 0];
 
 generate
 genvar gen;
 
-    for(gen = 0; gen < NUMBER_ENTRY; gen = gen + 1)
+    for(gen = 0; gen < NUM_ENTRY; gen = gen + 1)
     begin
 
         reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] entry;
@@ -64,12 +64,12 @@ genvar gen;
 
 endgenerate
 
-wire [$clog2(NUMBER_ENTRY):0] read_index;
+wire [$clog2(NUM_ENTRY):0] read_index;
 
 find_first_one_index
 #(
-    .VECTOR_LENGTH(NUMBER_ENTRY),
-    .MAX_OUTPUT_WIDTH($clog2(NUMBER_ENTRY)+1)
+    .VECTOR_LENGTH(NUM_ENTRY),
+    .MAX_OUTPUT_WIDTH($clog2(NUM_ENTRY)+1)
 )
 find_read_index
 (
