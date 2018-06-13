@@ -8,7 +8,7 @@ module unified_cache_bank
 
     parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
     parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
-    parameter BLOCK_SIZE                         = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
+    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
 )
 (
     input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0] request_flatted_in,

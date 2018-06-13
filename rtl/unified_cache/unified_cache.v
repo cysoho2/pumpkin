@@ -9,7 +9,7 @@ module unified_cache
     parameter NUM_BANK                           = 4,
     parameter NUM_SET                            = 64,
     parameter NUM_WAY                            = 4,
-    parameter BLOCK_SIZE                         = 64
+    parameter BLOCK_SIZE_IN_BYTES                = 4
 )
 (
     input                                                                               reset_in,
@@ -113,7 +113,7 @@ begin
         .BANK_NUM                           (bank_index),
         .NUM_SET                            (NUM_SET),
         .NUM_WAY                            (NUM_WAY),
-        .BLOCK_SIZE                         (BLOCK_SIZE)
+        .BLOCK_SIZE_IN_BYTES                (BLOCK_SIZE_IN_BYTES)
     )
     cache_bank
     (
