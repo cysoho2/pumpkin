@@ -1,7 +1,7 @@
 `include "parameters.h"
 `include "sim_config.h"
 
-module single_port_blockram_testbench();
+module single_port_lutram_testbench();
 
 parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
 parameter NUMBER_SET                    = 64;
@@ -14,6 +14,7 @@ reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_result_2;
 reg                                             test_judge;
 
 reg     clk_in;
+reg     reset_in;
 reg     access_en_in;
 reg     write_en_in;
 
@@ -31,6 +32,9 @@ begin
 
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      = 0;
+    reset_in                                    = 0;
+    #(`FULL_CYCLE_DELAY) reset_in               = 0;
+    reset_in                                    = 0;    
 
     test_case_num                               = 0;
     test_input_1                                = 0;
@@ -84,15 +88,16 @@ end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
-single_port_blockram
+single_port_lutram
 #(
     .SINGLE_ENTRY_SIZE_IN_BITS      (SINGLE_ENTRY_SIZE_IN_BITS),
     .NUMBER_SET                     (NUMBER_SET),
     .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
 )
-single_port_blockram
+single_port_lutram
 (
     .clk_in                         (clk_in),
+    .reset_in                       (reset_in),
 
     .access_en_in                   (access_en_in),
     .write_en_in                    (write_en_in),

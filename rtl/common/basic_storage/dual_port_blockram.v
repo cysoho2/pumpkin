@@ -1,6 +1,6 @@
 module dual_port_blockram
 #(
-    parameter SINGLE_ENTRY_SIZE_IN_BITS = 64,
+    parameter SINGLE_ENTRY_SIZE_IN_BITS   = 64,
     parameter NUMBER_SET                  = 64,
     parameter SET_PTR_WIDTH_IN_BITS       = 6
 )

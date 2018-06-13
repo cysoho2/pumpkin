@@ -33,12 +33,12 @@ begin
     begin
         if(write_en_in)
         begin
-            blockram[access_set_addr_in] <= write_entry_in;
+            lutram[access_set_addr_in] <= write_entry_in;
         end
 
         else
         begin
-            read_entry_out <= blockram[access_set_addr_in];
+            read_entry_out <= lutram[access_set_addr_in];
         end
     end
 end
