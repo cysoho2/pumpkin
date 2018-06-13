@@ -3,9 +3,12 @@
 module unified_cache
 #(
     parameter NUM_INPUT_PORT                     = 2,
-    parameter NUM_BANK                           = `NUM_CACHE_BANK,
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS
-
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    
+    parameter NUM_BANK                           = `UNIFIED_CACHE_NUM_BANK,
+    parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
+    parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
+    parameter BLOCK_SIZE                         = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
 )
 (
     input                                                                               reset_in,
@@ -80,7 +83,7 @@ end
 endgenerate
 
 wire  [NUM_INPUT_PORT * NUM_BANK                     - 1 : 0] cache_to_input_queue_ack_flatted;
-wire  [NUM_INPUT_PORT                                - 1 : 0] from_mem_packet_ack_flatted;
+wire  [NUM_BANK                                      - 1 : 0] from_mem_packet_ack_flatted;
 
 wire  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS * NUM_BANK - 1 : 0] miss_request_flatted;
 wire  [NUM_BANK                                      - 1 : 0] miss_request_valid_flatted;
@@ -103,8 +106,13 @@ for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin
     unified_cache_bank
     #(
+        .NUM_INPUT_PORT                     (NUM_INPUT_PORT),
         .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
-        .BANK_NUM                           (bank_index)
+        
+        .BANK_NUM                           (bank_index),
+        .NUM_SET                            (NUM_SET),
+        .NUM_WAY                            (NUM_WAY),
+        .BLOCK_SIZE                         (BLOCK_SIZE)
     )
     cache_bank
     (
@@ -151,14 +159,14 @@ generate
             assign cache_to_input_queue_ack_packed [port_index][bank_index] =
                    cache_to_input_queue_ack_flatted[bank_index * port_index + port_index];
         end
+
+        assign cache_to_input_queue_ack_merged[port_index] = |(cache_to_input_queue_ack_packed[port_index]);
     end
 endgenerate
 
-assign cache_to_input_queue_ack_merged[port_index] = |(cache_to_input_queue_ack_packed[port_index]);
-
 priority_arbiter
 #(
-    .NUM_REQUEST(NUM_INPUT_PORT),
+    .NUM_REQUEST(NUM_BANK * 2),
     .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
 )
 to_mem_arbiter
@@ -204,7 +212,7 @@ generate
 
         priority_arbiter
         #(
-            .NUM_REQUEST(NUM_INPUT_PORT),
+            .NUM_REQUEST(NUM_BANK),
             .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
         )
         return_arbiter
