@@ -1,3 +1,4 @@
+`include "sim_config.h"
 `include "parameters.h"
 
 module unified_cache
@@ -105,6 +106,18 @@ wire  [NUM_BANK                                      - 1 : 0] return_request_ack
 generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin
+    for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
+    begin
+
+        wire [NUM_BANK - 1 : 0] is_right_port;
+        for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
+        begin
+            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH]
+                                                ==
+                                                port_index;
+        end
+    end
+    
     unified_cache_bank
     #(
         .NUM_INPUT_PORT                     (NUM_INPUT_PORT),

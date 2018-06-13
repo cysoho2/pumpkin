@@ -64,6 +64,6 @@ to_mem_arbiter
     .issue_ack_in                   (access_packet_ack)
 );
 
-//main_pipe_stage_1_ctrl
+//cache_main_pipe_stage_1_ctrl
 
 endmodule

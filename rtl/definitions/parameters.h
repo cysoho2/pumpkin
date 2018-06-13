@@ -1,3 +1,8 @@
+`include "sim_config.h"
+
+`ifndef PARAMETERS
+`define PARAMETERS
+
 // General - Architecture
 `define BYTE_LEN_IN_BITS                                8
 `define CPU_DATA_LEN_IN_BITS                            64
@@ -13,7 +18,11 @@
 // Unified Cache - Architecture
 `define UNIFIED_CACHE_SIZE_IN_BYTES                     128 * 1024 // Bytes, must be a power of 2
 `define UNIFIED_CACHE_SET_ASSOCIATIVITY                 4 // must be a power of 2
-`define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES               64
+`ifdef SIMULATION
+    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4
+`else
+    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           64
+`endif
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets                    
 
@@ -63,3 +72,6 @@
 `define UNIFIED_CACHE_PACKET_CACHEABLE_POS              (`UNIFIED_CACHE_PACKET_IS_WRITE_POS + 1)
 
 `define UNIFIED_CACHE_PACKET_WIDTH_IN_BITS              (`UNIFIED_CACHE_PACKET_CACHEABLE_POS - `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 1)
+
+`else
+`endif

@@ -1,0 +1,18 @@
+`include "parameters.h"
+
+/*module cache_main_pipe_stage_1_ctrl
+#(
+    parameter BANK_NUM                           = 0,
+    parameter NUM_INPUT_PORT                     = 2,
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+
+    parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
+    parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
+    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
+)
+(
+
+);
+
+endmodule*/
+

@@ -580,6 +580,8 @@ sub create_sim_config_file
 	die "[error-script] fail to open $sim_config_path"
 	if !open config_handle, ">$sim_config_path";
 
+	printf config_handle "`ifndef SIMULATION\n";
+	printf config_handle "`define SIMULATION\n";
 	printf config_handle "`timescale 10ns/100ps\n";
 	printf config_handle "`define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
 	printf config_handle "`define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
@@ -588,6 +590,9 @@ sub create_sim_config_file
 	{
 		printf config_handle "`define DUMP_FILENAME \"$pumpkin_parameter_hash{'waveform_filename'}\"\n";
 	}
+
+	printf config_handle "`else\n";
+	printf config_handle "`endif\n";
 
 	close config_handle;
 
