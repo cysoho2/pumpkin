@@ -20,6 +20,27 @@ module cache_main_pipe_stage_1_ctrl
 
 );
 
+reg  bank_lock;
+wire issue_grant = access_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & (~bank_lock | (bank_lock & bank_lock_release))
+
+always@(posedge clk_in or posedge reset_in)
+begin
+    if(reset_in)
+    begin
+        bank_lock <= 1'b0;
+    end
+    
+    else if()
+    begin
+        bank_lock <= 1'b1;
+
+    end
+
+    else
+    begin
+
+    end
+end
 
 
 endmodule
