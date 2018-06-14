@@ -216,7 +216,6 @@ begin
     `endif
     
     $display("\n[info-testbench] simulation for %m begins now");
-    //$display("\n[info-testbench] the cache packet width is %d\n", `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS);
     //$readmemh(`MEM_FILE_PATH, sim_main_memory);
                             clk_in   = 1'b0;
                             reset_in = 1'b0;
