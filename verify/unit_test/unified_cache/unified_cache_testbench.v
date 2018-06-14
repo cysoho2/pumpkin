@@ -13,6 +13,7 @@ reg     [31:0]                                                  clk_ctr;
 reg     [(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS)   - 1 : 0]         sim_main_memory        [(`MEM_SIZE)   - 1 : 0];
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way2_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
+reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         correct_result_mem     [(`MEM_SIZE)/2 - 1 : 0];
 
 wire    [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_to_cache;
 wire                                                            way1_packet_ack_from_cache;
@@ -96,47 +97,47 @@ begin
                 way2_packet_ack_to_cache <= 1'b0;
         end
         
-        // way1 packet 
-        if(way1_packet_ack_from_cache)
-        begin
-                way1_packet_index <= way1_packet_index + 1'b1;
-        end
+//        // way1 packet 
+//        if(way1_packet_ack_from_cache)
+//        begin
+//                way1_packet_index <= way1_packet_index + 1'b1;
+//        end
 
-        else
-        begin
-                way1_packet_index <= way1_packet_index;
-        end
+//        else
+//        begin
+//                way1_packet_index <= way1_packet_index;
+//        end
 
-        if(clk_ctr % 5 == 0 & way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS])
-        begin
-                way1_packet_ack_to_cache <= 1'b1;
-        end
+//        if(clk_ctr % 5 == 0 & way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS])
+//        begin
+//                way1_packet_ack_to_cache <= 1'b1;
+//        end
         
-        else
-        begin
-                way1_packet_ack_to_cache <= 1'b0;
-        end
+//        else
+//        begin
+//                way1_packet_ack_to_cache <= 1'b0;
+//        end
 
-        // way2 packet
-        if(way2_packet_ack_from_cache)
-        begin
-                way2_packet_index <= way2_packet_index + 1'b1;
-        end
+//        // way2 packet
+//        if(way2_packet_ack_from_cache)
+//        begin
+//                way2_packet_index <= way2_packet_index + 1'b1;
+//        end
 
-        else
-        begin
-                way2_packet_index <= way2_packet_index;
-        end
+//        else
+//        begin
+//                way2_packet_index <= way2_packet_index;
+//        end
 
-        if(clk_ctr % 6 == 0 & way2_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS])
-        begin
-                way2_packet_ack_to_cache <= 1'b1;
-        end
+//        if(clk_ctr % 6 == 0 & way2_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS])
+//        begin
+//                way2_packet_ack_to_cache <= 1'b1;
+//        end
         
-        else
-        begin
-                way2_packet_ack_to_cache <= 1'b0;
-        end
+//        else
+//        begin
+//                way2_packet_ack_to_cache <= 1'b0;
+//        end
     end
 end
 
@@ -154,11 +155,14 @@ begin
         mem_packet_ack_to_cache <= 1;
         cache_packet_pending    <=
         {   
+                /*addr*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]},
+                /*data*/{sim_main_memory[mem_packet_from_cache[mem_packet_from_cache[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]]]},
                 /*type*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]},
-                /*write*/{1'b0},
-                /*valid*/{1'b1},
-                /*data*/{sim_main_memory[mem_packet_from_cache[mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]]]},
-                /*addr*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]}
+                /*byte mask*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]},
+                /*port*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]},
+                /*valid*/{1'b0},
+                /*write*/{1'b1},
+                /*cacheable*/{1'b0}
         };
     end
 
@@ -223,26 +227,32 @@ begin
 #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
 #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
 
-        sim_main_memory[0] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}};
-        sim_main_memory[1] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 1;
-        sim_main_memory[2] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 2;
-        sim_main_memory[3] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 3;
-        sim_main_memory[4] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 4;
-        sim_main_memory[5] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 5;
-        sim_main_memory[6] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 6;
-        sim_main_memory[7] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 7;
+//        sim_main_memory[0] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}};
+//        sim_main_memory[1] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 1;
+//        sim_main_memory[2] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 2;
+//        sim_main_memory[3] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 3;
+//        sim_main_memory[4] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 4;
+//        sim_main_memory[5] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 5;
+//        sim_main_memory[6] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 6;
+//        sim_main_memory[7] = {((`BYTE_LEN_IN_BITS) * (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)){1'h0}} + 7;
 
-        way1_packet_issue[0] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0001} };
-        way1_packet_issue[1] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0002} };
-        way1_packet_issue[2] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0003} };
-        way1_packet_issue[3] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0004} };
+//        way1_packet_issue[0] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0001} };
+//        way1_packet_issue[1] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0002} };
+//        way1_packet_issue[2] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0003} };
+//        way1_packet_issue[3] = {/*type*/ 3'b000, /*write*/1'b0, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h0004} };
 
-        way2_packet_issue[0] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1001} };
-        way2_packet_issue[1] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1002} };
-        way2_packet_issue[2] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1003} };
-        way2_packet_issue[3] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1004} };
+//        way2_packet_issue[0] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1001} };
+//        way2_packet_issue[1] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1002} };
+//        way2_packet_issue[2] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1003} };
+//        way2_packet_issue[3] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1004} };
 
-#(`FULL_CYCLE_DELAY * 300)  $display("\n[info-testbench] simulation for %m comes to the end\n");
+
+    $readmemh("sim_main_memory", sim_main_memory);
+    //$readmemh("unified_cache_test/case_0/way1_request_pool", way1_packet_issue);
+    //$readmemh("", way2_packet_issue);
+    //$readmemh("unified_cache_test/case_0/way1_correct_result_mem", correct_result_mem); 
+
+#(`FULL_CYCLE_DELAY * 3000)  $display("\n[info-testbench] simulation for %m comes to the end\n");
                             $finish;
 
 end
