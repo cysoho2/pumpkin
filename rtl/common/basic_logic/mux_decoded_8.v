@@ -6,7 +6,7 @@ module mux_decoded_8
 (
     input      [SINGLE_ENTRY_SIZE_IN_BITS * NUMBER_WAY - 1 : 0]  way_flatted_in,
     input      [NUMBER_WAY                             - 1 : 0]  sel_in,
-    output reg [SINGLE_ENTRY_SIZE_IN_BITS              - 1 : 0]  way_flatted_out
+    output     [SINGLE_ENTRY_SIZE_IN_BITS              - 1 : 0]  way_flatted_out
 );
 
 wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] data_to_mux [NUMBER_WAY - 1 : 0];
