@@ -41,12 +41,16 @@ module unified_cache_bank
 generate
     if(SWITCH == "ON")
     begin
-        wire                                              is_miss_queue_full;
+        wire                                              is_miss_queue_about_to_full;
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] miss_replay_request;
         wire                                              miss_replay_request_ack;
 
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] access_packet;
         wire                                              access_packet_ack;
+
+        wire                                              request_critical_lower_flatted = is_miss_queue_about_to_full ?
+                                                                                           ~request_critical_flatted_in :
+                                                                                           request_critical_flatted_in;
 
         priority_arbiter
         #(
@@ -59,9 +63,9 @@ generate
             .clk_in                         (clk_in),
 
             // the arbiter considers priority from right(high) to left(low)
-            .request_flatted_in             ({request_flatted_in, miss_replay_request}),
-            .request_valid_flatted_in       ({request_valid_flatted_in, miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS]}),
-            .request_critical_flatted_in    ({request_critical_flatted_in, is_miss_queue_full}),
+            .request_flatted_in             ({miss_replay_request, request_flatted_in}),
+            .request_valid_flatted_in       ({miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS], request_valid_flatted_in}),
+            .request_critical_flatted_in    ({is_miss_queue_about_to_full, request_critical_flatted_in}),
             .issue_ack_out                  ({issue_ack_out, miss_replay_request_ack}),
 
             .request_out                    (access_packet),

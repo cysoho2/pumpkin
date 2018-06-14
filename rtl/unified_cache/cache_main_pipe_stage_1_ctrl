@@ -21,25 +21,60 @@ module cache_main_pipe_stage_1_ctrl
 );
 
 reg  bank_lock;
-wire issue_grant = access_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & (~bank_lock | (bank_lock & bank_lock_release))
+wire issue_grant = access_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & (~bank_lock | (bank_lock & bank_lock_release));
 
 always@(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        bank_lock <= 1'b0;
+        bank_lock           <= 1'b0;
+        access_packet_ack   <= 1'b0;
     end
     
-    else if()
+    else if(issue_grant)
     begin
-        bank_lock <= 1'b1;
+        bank_lock           <= 1'b1;
+        access_packet_ack   <= 1'b0;
+    end
 
+    else if(bank_lock & bank_lock_release)
+    begin
+        bank_lock           <= 1'b0;
+        access_packet_ack   <= 1'b1;
     end
 
     else
     begin
-
+        bank_lock           <= bank_lock;
+        access_packet_ack   <= 1'b0;
     end
+end
+
+wire access_full_addr = access_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
+
+always@*
+begin
+    if(issue_grant) // ready to issue request
+    begin
+        // to valid, history, dirty, tag array
+        access_en_to_main_array_out              <= 1'b1;
+        write_en_to_main_array_out               <= 1'b0;
+        way_select_to_main_array_out             <= {(NUM_WAY){1'b1}};
+        access_set_addr_to_main_array_out        <= access_full_addr[`UNIFIED_CACHE_INDEX_POS_HI : `UNIFIED_CACHE_INDEX_POS_HI];
+        write_single_entry_to_main_array_out     <= 1'b0;
+
+        // to cam side buffer
+        read_en_to_side_buffer                   <= 1
+        write_en_in                    (),
+        read_entry_addr_decoded_in     (),
+        write_entry_addr_decoded_in    (),
+        cam_en_in                      (),
+        cam_entry_in                   (),
+        write_entry_in                 (),
+    end
+
+    else
+    
 end
 
 
