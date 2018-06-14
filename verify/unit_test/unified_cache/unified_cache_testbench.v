@@ -235,10 +235,12 @@ begin
     $readmemb({`MEM_IMAGE_DIR, "/unified_cache/case_0/way1_correct_result_mem"}, correct_result_mem);
     
      //case 1
-     #(`FULL_CYCLE_DELAY * 3000)test_judge  <= 1;
+     #(`FULL_CYCLE_DELAY * 6000)test_judge  <= 1;
      
      #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;
      #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+     
+     way1_cycle                           <= 2;
      
      test_case                              <= test_case + 1'b1;
      $readmemb({`MEM_IMAGE_DIR, "/unified_cache/case_1/way1_request_pool_write"}, way1_packet_issue);
