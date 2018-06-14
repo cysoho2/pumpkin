@@ -1,4 +1,4 @@
-`timescale 10ns/1ns
+/*`timescale 10ns/1ns
 `include "sim_addr.h"
 `include "parameters.h"
 
@@ -64,4 +64,3 @@ end
 
 always begin #1 clk_in <= ~clk_in; end;
 
-endmodule
