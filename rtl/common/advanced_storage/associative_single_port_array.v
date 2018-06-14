@@ -83,7 +83,7 @@ always @(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        way_select_stage <= {(NUM_WAYS){1'b0}};
+        way_select_stage <= {(NUM_WAY){1'b0}};
     end
 
     else
