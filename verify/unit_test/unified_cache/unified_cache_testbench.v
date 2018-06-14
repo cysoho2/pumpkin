@@ -9,6 +9,7 @@ reg                                                             clk_in;
 reg                                                             reset_in;
 
 reg     [31:0]                                                  clk_ctr;
+reg     [1023:0]                                                mem_image_path;
 
 reg     [(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS)   - 1 : 0]         sim_main_memory        [(`MEM_SIZE)   - 1 : 0];
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_issue      [(`MEM_SIZE)/2 - 1 : 0];
@@ -246,8 +247,8 @@ begin
 //        way2_packet_issue[2] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1003} };
 //        way2_packet_issue[3] = {/*type*/ 3'b100, /*write*/1'b1, /*valid*/1'b1, /*data*/{(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}, /*addr*/{`CPU_DATA_LEN_IN_BITS'h1004} };
 
-
-    $readmemh("sim_main_memory", sim_main_memory);
+    mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/sim_main_mem"};
+    $readmemh(mem_image_path, sim_main_memory);
     //$readmemh("unified_cache_test/case_0/way1_request_pool", way1_packet_issue);
     //$readmemh("", way2_packet_issue);
     //$readmemh("unified_cache_test/case_0/way1_correct_result_mem", correct_result_mem); 
