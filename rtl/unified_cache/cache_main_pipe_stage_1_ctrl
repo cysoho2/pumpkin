@@ -11,7 +11,15 @@ module cache_main_pipe_stage_1_ctrl
     parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES
 )
 (
+    input                                               reset_in,
+    input                                               clk_in,
+    
+    input [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  access_packet,
+    output                                              access_packet_ack,
+    input                                               bank_lock_release;
 
 );
+
+
 
 endmodule

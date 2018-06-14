@@ -56,8 +56,8 @@ begin
 
     fifo_queue
     #(
-        .QUEUE_SIZE                     (`INPUT_QUEUE_SIZE),
-        .QUEUE_PTR_WIDTH_IN_BITS        ($clog2(`INPUT_QUEUE_SIZE)),
+        .QUEUE_SIZE                     (`UNIFIED_CACHE_INPUT_QUEUE_SIZE),
+        .QUEUE_PTR_WIDTH_IN_BITS        ($clog2(`UNIFIED_CACHE_INPUT_QUEUE_SIZE)),
         .SINGLE_ENTRY_WIDTH_IN_BITS     (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
     )
     input_queue

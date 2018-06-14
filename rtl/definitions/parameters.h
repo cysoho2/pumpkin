@@ -30,10 +30,10 @@
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets                    
 
-`define INPUT_QUEUE_SIZE                                4 // must be a power of 2
-`define WRITEBACK_BUFFER_SIZE                           4 // must be a power of 2
-`define MISS_BUFFER_SIZE 								32
-`define RETURN_QUEUE_SIZE 								16
+`define UNIFIED_CACHE_INPUT_QUEUE_SIZE                  4 // must be a power of 2
+`define UNIFIED_CACHE_WRITEBACK_BUFFER_SIZE             4 // must be a power of 2
+`define UNIFIED_CACHE_MISS_BUFFER_SIZE 				    8
+`define UNIFIED_CACHE_RETURN_QUEUE_SIZE 				16
 
 `define MAX_NUM_INPUT_PORT                              16
 
