@@ -113,8 +113,8 @@ begin
     
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-        assign full_addr[port_index] = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
-        assign is_right_bank[port_index] = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
+        assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
+        assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
     end
 
     unified_cache_bank
@@ -129,8 +129,11 @@ begin
     )
     cache_bank
     (
+        .clk_in                             (clk_in),
+        .reset_in                           (reset_in),
+        
         .request_flatted_in                 (input_packet_to_cache_flatted),
-        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted | is_right_bank),
+        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted & is_right_bank),
         .request_critical_flatted_in        (input_packet_critical_to_cache_flatted),
         .issue_ack_out                      (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
                                                                                   bank_index * NUM_INPUT_PORT]),
@@ -235,7 +238,7 @@ generate
 
             // the arbiter considers priority from right(high) to left(low)
             .request_flatted_in             (return_request_flatted),
-            .request_valid_flatted_in       (return_request_valid_flatted | is_right_port),
+            .request_valid_flatted_in       (return_request_valid_flatted & is_right_port),
             .request_critical_flatted_in    (return_request_critical_flatted),
             .issue_ack_out                  (return_request_ack_flatted[(port_index+1) * NUM_BANK -1 : port_index * NUM_BANK]),
 
