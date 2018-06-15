@@ -37,9 +37,9 @@
 char mem[MEM_SIZE][UNIFIED_CACHE_BLOCK_SIZE_IN_BITS + 1];
 
 void create_sim_main_memory(char* path);
-void create_request_read(char* path_request, char* path_correct, int *addresses, char mem[MEM_SIZE][UNIFIED_CACHE_BLOCK_SIZE_IN_BITS + 1]);
+void create_request_read(char* path_request, char* path_correct, int *addresses);
 int itoa_bin(unsigned int data, int length, char *str);
-void create_request_write(char *path_request_write, char *path_request_read, char *path_correct, int *addresses);
+void create_request_write(char *path_request_write, char *path_correct, int *addresses);
 
 main()
 {
@@ -67,12 +67,13 @@ main()
     srand((unsigned int) time(NULL));
     for (i = 0; i < MEM_SIZE; i++)
     {
-	printf("%d", rand());
-        index = 1+(int)((63 - i)*rand()/(RAND_MAX+1.0));
+        index = (int)((63.0 - i)*rand()/(RAND_MAX+1.0));
 	    
-	    temp = addresses[index];
-	    addresses[index] = addresses[i];	
-    
+	    
+	    temp = addresses[i + index];
+	    addresses[i + index] = addresses[i];	
+	printf("%d\n", i + index);    
+
 	    if(i < MEM_SIZE / 2)
 	    {
 	        random_addresses_1[i] = temp;
@@ -127,42 +128,42 @@ main()
     
 
 
-    create_request_read("case_0/way1_request_pool", "case_0/way1_correct_result_mem", random_addresses_1, mem);  
-    create_request_write("case_1/way1_request_pool_write", "case_1/way1_request_pool_read", "case_1/way1_correct_result_mem", random_addresses_1);
+    create_request_read("case_0/way1_request_pool", "case_0/way1_correct_result_mem", random_addresses_1); 
+    create_request_write("case_1/way1_request_pool", "case_1/way1_correct_result_mem", random_addresses_1);  
     
-    create_request_read("case_2/way1_request_pool", "case_2/way1_correct_result_mem", interleaved_bank_addresses_1, mem);  
-    create_request_write("case_3/way1_request_pool_write", "case_3/way1_request_pool_read", "case_3/way1_correct_result_mem", interleaved_bank_addresses_1);
+    create_request_read("case_2/way1_request_pool", "case_2/way1_correct_result_mem", interleaved_bank_addresses_1);  
+    create_request_write("case_3/way1_request_pool", "case_3/way1_correct_result_mem", interleaved_bank_addresses_1);
     
-    create_request_read("case_4/way1_request_pool", "case_4/way1_correct_result_mem", same_bank_addresses_1, mem);  
-    create_request_write("case_5/way1_request_pool_write", "case_5/way1_request_pool_read", "case_5/way1_correct_result_mem", same_bank_addresses_1);
+    create_request_read("case_4/way1_request_pool", "case_4/way1_correct_result_mem", same_bank_addresses_1);  
+    create_request_write("case_5/way1_request_pool", "case_5/way1_correct_result_mem", same_bank_addresses_1);
     
-    create_request_read("case_6/way1_request_pool", "case_6/way1_correct_result_mem", same_set_addresses_1, mem);  
-    create_request_write("case_7/way1_request_pool_write", "case_7/way1_request_pool_read", "case_7/way1_correct_result_mem", same_set_addresses_1);
+    create_request_read("case_6/way1_request_pool", "case_6/way1_correct_result_mem", same_set_addresses_1);  
+    create_request_write("case_7/way1_request_pool", "case_7/way1_correct_result_mem", same_set_addresses_1);
     
-    create_request_read("case_8/way1_request_pool", "case_8/way1_correct_result_mem", random_addresses_1, mem);  
-    create_request_write("case_9/way1_request_pool_write", "case_9/way1_request_pool_read", "case_9/way1_correct_result_mem", random_addresses_1);
+    create_request_read("case_8/way1_request_pool", "case_8/way1_correct_result_mem", random_addresses_1); 
+    create_request_write("case_9/way1_request_pool", "case_9/way1_correct_result_mem", random_addresses_1);  
     
-    create_request_read("case_10/way1_request_pool", "case_10/way1_correct_result_mem", interleaved_bank_addresses_1, mem);  
-    create_request_write("case_11/way1_request_pool_write", "case_11/way1_request_pool_read", "case_11/way1_correct_result_mem", interleaved_bank_addresses_1);
+    create_request_read("case_10/way1_request_pool", "case_10/way1_correct_result_mem", interleaved_bank_addresses_1);  
+    create_request_write("case_11/way1_request_pool", "case_11/way1_correct_result_mem", interleaved_bank_addresses_1);
     
-    create_request_read("case_12/way1_request_pool", "case_12/way1_correct_result_mem", same_bank_addresses_1, mem);  
-    create_request_write("case_13/way1_request_pool_write", "case_13/way1_request_pool_read", "case_13/way1_correct_result_mem", same_bank_addresses_1);
+    create_request_read("case_12/way1_request_pool", "case_12/way1_correct_result_mem", same_bank_addresses_1);  
+    create_request_write("case_13/way1_request_pool", "case_13/way1_correct_result_mem", same_bank_addresses_1);
     
-    create_request_read("case_14/way1_request_pool", "case_14/way1_correct_result_mem", same_set_addresses_1, mem);  
-    create_request_write("case_15/way1_request_pool_write", "case_15/way1_request_pool_read", "case_15/way1_correct_result_mem", same_set_addresses_1);
+    create_request_read("case_14/way1_request_pool", "case_14/way1_correct_result_mem", same_set_addresses_1);  
+    create_request_write("case_15/way1_request_pool", "case_15/way1_correct_result_mem", same_set_addresses_1);
     
     
-    create_request_read("case_8/way2_request_pool", "case_8/way2_correct_result_mem", random_addresses_2, mem);  
-    create_request_write("case_9/way2_request_pool_write", "case_9/way2_request_pool_read", "case_9/way2_correct_result_mem", random_addresses_2);
+    create_request_read("case_8/way2_request_pool", "case_8/way2_correct_result_mem", random_addresses_2); 
+    create_request_write("case_9/way2_request_pool", "case_9/way2_correct_result_mem", random_addresses_2);  
     
-    create_request_read("case_10/way2_request_pool", "case_10/way2_correct_result_mem", interleaved_bank_addresses_2, mem);  
-    create_request_write("case_11/way2_request_pool_write", "case_11/way2_request_pool_read", "case_11/way2_correct_result_mem", interleaved_bank_addresses_2);
+    create_request_read("case_10/way2_request_pool", "case_10/way2_correct_result_mem", interleaved_bank_addresses_2);  
+    create_request_write("case_11/way2_request_pool", "case_11/way2_correct_result_mem", interleaved_bank_addresses_2);
     
-    create_request_read("case_12/way2_request_pool", "case_12/way2_correct_result_mem", same_bank_addresses_2, mem);  
-    create_request_write("case_13/way2_request_pool_write", "case_13/way2_request_pool_read", "case_13/way2_correct_result_mem", same_bank_addresses_2);
+    create_request_read("case_12/way2_request_pool", "case_12/way2_correct_result_mem", same_bank_addresses_2);  
+    create_request_write("case_13/way2_request_pool", "case_13/way2_correct_result_mem", same_bank_addresses_2);
     
-    create_request_read("case_14/way2_request_pool", "case_14/way2_correct_result_mem", same_set_addresses_2, mem);  
-    create_request_write("case_15/way2_request_pool_write", "case_15/way2_request_pool_read", "case_15/way2_correct_result_mem", same_set_addresses_2);
+    create_request_read("case_14/way2_request_pool", "case_14/way2_correct_result_mem", same_set_addresses_2);  
+    create_request_write("case_15/way2_request_pool", "case_15/way2_correct_result_mem", same_set_addresses_2);
 
     
 }
@@ -241,23 +242,22 @@ void create_sim_main_memory(char *path)
         k =~ k;
         buffer[UNIFIED_CACHE_BLOCK_SIZE_IN_BITS] = 0;
         mem[i][UNIFIED_CACHE_BLOCK_SIZE_IN_BITS] = 0;
-	//strcpy(mem[i], buffer);
+
         write(fd, buffer, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
 	write(fd, "\n", 1);
-        //*buffer = 0;
+        
     }
 
     close(fd);
 }
 
-void create_request_write(char *path_request_write, char *path_request_read, char *path_correct, int *addresses)
+void create_request_write(char *path_request_write, char *path_correct, int *addresses)
 {
     int i, j, k = 1;
     
     int fd_request_write = open(path_request_write, O_WRONLY|O_CREAT|O_TRUNC, 0644);
+    int fd_correct = open(path_correct,O_WRONLY|O_CREAT|O_TRUNC,0644);
 
-    char temp_mem [MEM_SIZE][UNIFIED_CACHE_BLOCK_SIZE_IN_BITS + 1];
-    char buffer[UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + 1];
     char str[32];
     int address;
     long write_content = 0xffffffff;
@@ -267,21 +267,9 @@ void create_request_write(char *path_request_write, char *path_request_read, cha
         exit(1);
     }
     
-    for (i = 0; i < MEM_SIZE; i ++)
-    {
-	for (j = 0; j < UNIFIED_CACHE_BLOCK_SIZE_IN_BITS + 1; j++)
-        {
-            temp_mem[i][j] = mem[i][j];         
-        }
-    }
-    
 
     for (i = 0; i < MEM_SIZE / 2; i ++)
 	{
-        for (j = 0; j < UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + 1; j ++)
-        {
-            buffer[j] = 0;
-        }
 	
             
 
@@ -305,20 +293,43 @@ void create_request_write(char *path_request_write, char *path_request_read, cha
         /*addr*/itoa_bin(addresses[i], CPU_DATA_LEN_IN_BITS, str);
         write(fd_request_write, str, CPU_DATA_LEN_IN_BITS);
 
-	itoa_bin(write_content--, CPU_DATA_LEN_IN_BITS, str);
-        strcpy(temp_mem[addresses[i]], str); 	    
+	    itoa_bin(write_content--, CPU_DATA_LEN_IN_BITS, str);	    
 
         write(fd_request_write, "\n", 1);
-	  
+	    write(fd_correct, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
+	    write(fd_correct, "\n", 1);
+	    
+	    
+	    /*cacheable*/write(fd_request_write, "0", 1); 
+
+      	/*write*/write(fd_request_write, "0", 1);
+        /*valid*/write(fd_request_write, "1", 1);
+
+        /*port num*/itoa_bin(0, UNIFIED_CACHE_PACKET_PORT_ID_WIDTH, str);
+        write(fd_request_write, str, UNIFIED_CACHE_PACKET_PORT_ID_WIDTH);
+
+        /*byte mask*/itoa_bin(0, UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH, str);
+        write(fd_request_write, str, UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH);
+	
+     	/*type*/itoa_bin(0, UNIFIED_CACHE_PACKET_TYPE_WIDTH, str);
+        write(fd_request_write, str, UNIFIED_CACHE_PACKET_TYPE_WIDTH);
+
+     	/*data*/itoa_bin(0, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS, str);
+     	write(fd_request_write, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
+
+        /*addr*/itoa_bin(addresses[i], CPU_DATA_LEN_IN_BITS, str);
+        write(fd_request_write, str, CPU_DATA_LEN_IN_BITS);
+        
+        write(fd_request_write, "\n", 1);
 	}
 	
 	
-	create_request_read(path_request_read, path_correct, addresses, temp_mem);
 	
     close(fd_request_write);
+    close(fd_correct);
 }
 
-void create_request_read(char *path_request, char *path_correct, int *addresses, char mem[MEM_SIZE][UNIFIED_CACHE_BLOCK_SIZE_IN_BITS + 1])
+void create_request_read(char *path_request, char *path_correct, int *addresses)
 {
     int i, j, k = 1;
     
