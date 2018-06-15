@@ -266,9 +266,8 @@ void create_request_write(char *path_request_write, char *path_correct, int *add
         perror("network open ");
         exit(1);
     }
-    
 
-    for (i = 0; i < MEM_SIZE / 2; i ++)
+    for (i = 0; i < MEM_SIZE / 4; i ++)
 	{
 	
             
