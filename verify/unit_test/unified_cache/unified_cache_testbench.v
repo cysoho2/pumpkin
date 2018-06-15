@@ -60,9 +60,9 @@ begin
 
             mem_packet_to_cache     <= 0;
 
-            way1_packet_ack_to_cache <= 0;
-            way2_packet_ack_to_cache <= 0;
-            mem_packet_ack_to_cache  <= 0;
+            way1_packet_ack_to_cache <= 1;
+            way2_packet_ack_to_cache <= 1;
+            mem_packet_ack_to_cache  <= 1;
             
             correct_result_ctr_1     <= 0;
             correct_result_ctr_2     <= 0;
@@ -146,7 +146,7 @@ begin
                 /*type*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]},
                 /*byte mask*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]},
                 /*port*/{mem_packet_from_cache[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]},
-                /*valid*/{1'b0},
+                /*valid*/{1'b1},
                 /*write*/{1'b1},
                 /*cacheable*/{1'b0}
         };
