@@ -210,6 +210,8 @@ generate
         begin
             assign return_request_ack_packed [bank_index][port_index] =
                    return_request_ack_flatted[port_index * bank_index + bank_index];
+            
+            assign return_request_ack_merged = |return_request_ack_packed[bank_index];
         end
     end
 endgenerate
