@@ -111,10 +111,13 @@ begin
     wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
     wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
     
+    wire [`CPU_DATA_LEN_IN_BITS - 1 : 0]is_test [NUM_INPUT_PORT        - 1 : 0];
+    
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
+    
         assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
-        assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
+        assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: $clog2(NUM_BANK)] == bank_index;
     end
 
     unified_cache_bank
@@ -173,7 +176,7 @@ generate
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
         begin
             assign cache_to_input_queue_ack_packed [port_index][bank_index] =
-                   cache_to_input_queue_ack_flatted[bank_index * port_index + port_index];
+                   cache_to_input_queue_ack_flatted[bank_index * NUM_INPUT_PORT + port_index];
         end
 
         assign cache_to_input_queue_ack_merged[port_index] = |(cache_to_input_queue_ack_packed[port_index]);
@@ -211,7 +214,7 @@ generate
             assign return_request_ack_packed [bank_index][port_index] =
                    return_request_ack_flatted[port_index * bank_index + bank_index];
             
-            assign return_request_ack_merged = |return_request_ack_packed[bank_index];
+            assign return_request_ack_merged[bank_index] = |return_request_ack_packed[bank_index];
         end
     end
 endgenerate
