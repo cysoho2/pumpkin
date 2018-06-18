@@ -137,6 +137,25 @@ begin
         .read_single_entry_out      (),
         .write_single_entry_in      ()
     );
+
+    single_port_blockram
+    #(
+        .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
+        .NUM_SET                        (NUM_SET),
+        .SET_PTR_WIDTH_IN_BITS          ($clog2(NUM_SET))
+    )
+    data_array
+    (
+        .clk_in                         (clk_in),
+
+        .access_en_in                   (),
+        .write_en_in                    (),
+
+        .access_set_addr_in             (),
+
+        .write_entry_in                 (),
+        .read_entry_out                 ()
+    );
 end
 else if(MODE == "ADVANCED")
 begin
