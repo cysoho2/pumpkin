@@ -11,7 +11,7 @@ module unified_cache
     parameter NUM_WAY                            = 4,
     parameter BLOCK_SIZE_IN_BYTES                = 4,
 
-    parameter BANK_BITS                          = $clog2(NUM_SET / NUM_BANK)
+    parameter BANK_BITS                          = $clog2(NUM_BANK)
 )
 (
     input                                                                               reset_in,
@@ -48,7 +48,7 @@ generate
 genvar port_index, bank_index;
 
 for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
-begin
+begin : input_queue
 
     assign input_packet_packed[port_index] =
            input_packet_flatted_in[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
@@ -106,7 +106,7 @@ wire  [NUM_BANK                                      - 1 : 0] return_request_ack
 // generate cache banks
 generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
-begin
+begin : cache_bank
     
     wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
     wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
@@ -221,7 +221,7 @@ endgenerate
 
 generate
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
-    begin
+    begin : return_arbiter_for_port
 
         wire [NUM_BANK - 1 : 0] is_right_port;
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)

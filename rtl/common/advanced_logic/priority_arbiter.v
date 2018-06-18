@@ -19,9 +19,11 @@ module priority_arbiter
 // vivado 2016.4 doesn't support $ceil function, may add in the future
 parameter [31:0] NUM_REQUEST_LOG2_LOW = $clog2(NUM_REQUEST);
 parameter [31:0] NUM_REQUEST_LOG2     = 2 ** NUM_REQUEST_LOG2_LOW < NUM_REQUEST ? NUM_REQUEST_LOG2_LOW + 1 : NUM_REQUEST_LOG2_LOW;
+parameter same_way_lock_cycle = 4;
 
 reg [NUM_REQUEST_LOG2 - 1 : 0] last_send_index;
-reg [NUM_REQUEST      - 1 : 0] ack_to_send;
+reg [3                    : 0] same_way_lock    [NUM_REQUEST - 1 : 0];
+reg [NUM_REQUEST      - 1 : 0] ack_should_be_sent;
 
 // separete requests
 wire [SINGLE_REQUEST_WIDTH_IN_BITS - 1 : 0] request_packed_separation [NUM_REQUEST - 1 : 0];
@@ -93,15 +95,19 @@ begin
 end
 
 // arbiter logic
+integer lock_index;
 always@(posedge clk_in, posedge reset_in)
 begin
     if(reset_in)
     begin
-        request_out       <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
-        request_valid_out <= {(NUM_REQUEST){1'b0}};
-        ack_to_send       <= {(NUM_REQUEST){1'b0}};
-        issue_ack_out     <= {(NUM_REQUEST){1'b0}};
-        last_send_index   <= {(NUM_REQUEST_LOG2){1'b0}};
+        request_out                 <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+        request_valid_out           <= {(NUM_REQUEST){1'b0}};
+        ack_should_be_sent          <= {(NUM_REQUEST){1'b0}};
+        issue_ack_out               <= {(NUM_REQUEST){1'b0}};
+        last_send_index             <= {(NUM_REQUEST_LOG2){1'b0}};
+        
+        for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+            same_way_lock[lock_index] <= 0;
     end
 
     // move on to the next request
@@ -109,39 +115,101 @@ begin
     begin
         if(request_critical_flatted_in[critical_sel] & (|request_critical_flatted_in) & request_valid_flatted_in[critical_sel] )
         begin
-            request_out       <= request_packed_separation[critical_sel];
-            request_valid_out <= 1'b1;
-            ack_to_send       <= critical_mask;
-            issue_ack_out     <= ack_to_send;
-            last_send_index   <= critical_sel;
+            // ack signals needs (same_way_lock_cycle) cycle to do back propagate
+            if(critical_sel == last_send_index && same_way_lock[critical_sel] != 0)
+            begin
+                request_out                 <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+                request_valid_out           <= 1'b0;
+                ack_should_be_sent          <= {(NUM_REQUEST){1'b0}};
+                issue_ack_out               <= critical_mask & ack_should_be_sent;
+                last_send_index             <= last_send_index;
+                
+                for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+                begin
+                    same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
+                end
+            end
+
+            else
+            begin
+                request_out                 <= request_packed_separation[critical_sel];
+                request_valid_out           <= 1'b1;
+                ack_should_be_sent          <= {(NUM_REQUEST){1'b1}};
+                issue_ack_out               <= critical_mask & ack_should_be_sent;
+                last_send_index             <= critical_sel;
+
+                for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+                begin
+                    if(critical_sel == lock_index)
+                        same_way_lock[lock_index] <= same_way_lock_cycle;
+                    else
+                        same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
+                end
+            end
         end
 
         else if(request_valid_flatted_in[valid_sel])
         begin
-            request_out       <= request_packed_separation[valid_sel];
-            request_valid_out <= 1'b1;
-            ack_to_send       <= valid_mask;
-            issue_ack_out     <= ack_to_send;
-            last_send_index   <= valid_sel;
+            // ack signals needs (same_way_lock_cycle) cycle to do back propagate
+            if(valid_sel == last_send_index && same_way_lock[valid_sel] != 0)
+            begin
+                request_out                 <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+                request_valid_out           <= 1'b0;
+                ack_should_be_sent          <= {(NUM_REQUEST){1'b0}};
+                issue_ack_out               <= valid_mask & ack_should_be_sent;
+                last_send_index             <= last_send_index;
+
+                for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+                begin
+                    same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
+                end
+            end
+
+            else
+            begin
+                request_out                 <= request_packed_separation[valid_sel];
+                request_valid_out           <= 1'b1;
+                ack_should_be_sent          <= {(NUM_REQUEST){1'b1}};
+                issue_ack_out               <= valid_mask & ack_should_be_sent;
+                last_send_index             <= valid_sel;
+
+                for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+                begin
+                    if(valid_sel == lock_index)
+                        same_way_lock[lock_index] <= same_way_lock_cycle;
+                    else
+                        same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
+                end
+            end
         end
 
         else
         begin
-            request_out       <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
-            request_valid_out <= 1'b0;
-            ack_to_send       <= ack_to_send;
-            issue_ack_out     <= {(NUM_REQUEST){1'b0}};
-            last_send_index   <= last_send_index;
+            request_out         <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+            request_valid_out   <= 1'b0;
+            ack_should_be_sent  <= {(NUM_REQUEST){1'b0}};
+            issue_ack_out       <= {(NUM_REQUEST){1'b0}};
+            last_send_index     <= last_send_index;
+
+            for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+            begin
+                same_way_lock[lock_index] <= same_way_lock[lock_index];
+            end
         end
     end
 
     else
     begin
-        request_out       <= request_out;
-        request_valid_out <= request_valid_out;
-        ack_to_send       <= ack_to_send;
-        issue_ack_out     <= {(NUM_REQUEST){1'b0}};
-        last_send_index   <= last_send_index;
+        request_out         <= request_out;
+        request_valid_out   <= request_valid_out;
+        ack_should_be_sent  <= {(NUM_REQUEST){1'b1}};
+        issue_ack_out       <= {(NUM_REQUEST){1'b0}};
+        last_send_index     <= last_send_index;
+
+        for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
+        begin
+            same_way_lock[lock_index] <= same_way_lock[lock_index];
+        end
     end
 end
 
