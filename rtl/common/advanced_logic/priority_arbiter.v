@@ -1,7 +1,8 @@
 module priority_arbiter
 #(
     parameter NUM_REQUEST                  = 3,
-    parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64
+    parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
+    parameter SAME_WAY_LOCK_CYCLE          = 4
 )
 (
     input                                                               reset_in,
@@ -19,7 +20,6 @@ module priority_arbiter
 // vivado 2016.4 doesn't support $ceil function, may add in the future
 parameter [31:0] NUM_REQUEST_LOG2_LOW = $clog2(NUM_REQUEST);
 parameter [31:0] NUM_REQUEST_LOG2     = 2 ** NUM_REQUEST_LOG2_LOW < NUM_REQUEST ? NUM_REQUEST_LOG2_LOW + 1 : NUM_REQUEST_LOG2_LOW;
-parameter same_way_lock_cycle = 4;
 
 reg [NUM_REQUEST_LOG2 - 1 : 0] last_send_index;
 reg [3                    : 0] same_way_lock    [NUM_REQUEST - 1 : 0];
@@ -115,7 +115,7 @@ begin
     begin
         if(request_critical_flatted_in[critical_sel] & (|request_critical_flatted_in) & request_valid_flatted_in[critical_sel] )
         begin
-            // ack signals needs (same_way_lock_cycle) cycle to do back propagate
+            // ack signals needs (SAME_WAY_LOCK_CYCLE) cycle to do back propagate
             if(critical_sel == last_send_index && same_way_lock[critical_sel] != 0)
             begin
                 request_out                 <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
@@ -141,7 +141,7 @@ begin
                 for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
                 begin
                     if(critical_sel == lock_index)
-                        same_way_lock[lock_index] <= same_way_lock_cycle;
+                        same_way_lock[lock_index] <= SAME_WAY_LOCK_CYCLE;
                     else
                         same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
                 end
@@ -150,7 +150,7 @@ begin
 
         else if(request_valid_flatted_in[valid_sel])
         begin
-            // ack signals needs (same_way_lock_cycle) cycle to do back propagate
+            // ack signals needs (SAME_WAY_LOCK_CYCLE) cycle to do back propagate
             if(valid_sel == last_send_index && same_way_lock[valid_sel] != 0)
             begin
                 request_out                 <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
@@ -176,7 +176,7 @@ begin
                 for(lock_index = 0; lock_index < NUM_REQUEST; lock_index = lock_index + 1)
                 begin
                     if(valid_sel == lock_index)
-                        same_way_lock[lock_index] <= same_way_lock_cycle;
+                        same_way_lock[lock_index] <= SAME_WAY_LOCK_CYCLE;
                     else
                         same_way_lock[lock_index] <= same_way_lock[lock_index] != 0 ? same_way_lock[lock_index] - 1'b1 : 0;
                 end

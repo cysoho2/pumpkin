@@ -29,7 +29,7 @@ reg                                                             test_way2_enable
 reg                                                             test_way1_ack_in_ctr;
 reg                                                             test_way2_ack_in_ctr;
 
-reg     [15:0]                                                   test_gen_char          [15:0];
+reg     [15:0]                                                  test_gen_char          [15:0];
 reg     [1023:0]                                                test_case_char         [15:0];
 
 integer                                                         test_gen;
@@ -285,18 +285,18 @@ begin
       
                                 mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/sim_main_mem"};
                                 
-                                test_gen_char[0]                     = "0";
-                                test_gen_char[1]                     = "1";
-                                test_gen_char[2]                     = "2";
-                                test_gen_char[3]                     = "3";
+                                test_gen_char[0]                     = "00";
+                                test_gen_char[1]                     = "01";
+                                test_gen_char[2]                     = "02";
+                                test_gen_char[3]                     = "03";
                                 
-                                test_gen_char[4]                     = "4";
-                                test_gen_char[5]                     = "5";
-                                test_gen_char[6]                     = "6";
-                                test_gen_char[7]                     = "7";
+                                test_gen_char[4]                     = "04";
+                                test_gen_char[5]                     = "05";
+                                test_gen_char[6]                     = "06";
+                                test_gen_char[7]                     = "07";
                                 
-                                test_gen_char[8]                     = "8";
-                                test_gen_char[9]                     = "9";
+                                test_gen_char[8]                     = "08";
+                                test_gen_char[9]                     = "09";
                                 test_gen_char[10]                    = "10";
                                 test_gen_char[11]                    = "11";
                                 
