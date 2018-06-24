@@ -7,7 +7,7 @@
 `define WRITE_HIT   4'b0100
 `define WRITE_MISS  4'b0101
 
-module cache_simple_ctrl
+module cache_bank_simple_ctrl
 #(
     parameter BANK_NUM                           = 0,
     parameter NUM_INPUT_PORT                     = 2,
@@ -97,9 +97,7 @@ generate
 genvar way_index;
     for(way_index = 0; way_index < NUM_WAY; way_index = way_index + 1)
     begin
-        hit_flatted[way_index] = (tag_flatted_in[(way_index+1) * `UNIFIED_CACHE_TAG_LEN_IN_BITS - 1 : way_index * `UNIFIED_CACHE_TAG_LEN_IN_BITS]
-                                    == access_full_addr[`UNIFIED_CACHE_TAG_POS_HI : `UNIFIED_CACHE_TAG_POS_LO])
-                                & valid_flatted_in[way_index];
+        assign hit_flatted[way_index] = (tag_flatted_in[(way_index+1) * `UNIFIED_CACHE_TAG_LEN_IN_BITS - 1 : way_index * `UNIFIED_CACHE_TAG_LEN_IN_BITS] == access_full_addr[`UNIFIED_CACHE_TAG_POS_HI : `UNIFIED_CACHE_TAG_POS_LO]) & valid_flatted_in[way_index];
     end
 endgenerate
 
