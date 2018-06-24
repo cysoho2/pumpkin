@@ -128,33 +128,48 @@ main()
     
 
 
-    create_request_read("case_0/way1_request_pool", "case_0/way1_correct_result_mem", random_addresses_1, 0); 
-    create_request_write("case_1/way1_request_pool", "case_1/way1_correct_result_mem", random_addresses_1, 0);  
+    create_request_read("case_00/way1_request_pool", "case_00/way1_correct_result_mem", random_addresses_1, 0); 
+    printf("case_00"); 
+    create_request_write("case_01/way1_request_pool", "case_01/way1_correct_result_mem", random_addresses_1, 0);
+    printf("case_01");  
     
-    create_request_read("case_2/way1_request_pool", "case_2/way1_correct_result_mem", interleaved_bank_addresses_1, 0);  
-    create_request_write("case_3/way1_request_pool", "case_3/way1_correct_result_mem", interleaved_bank_addresses_1, 0);
+    create_request_read("case_02/way1_request_pool", "case_02/way1_correct_result_mem", interleaved_bank_addresses_1, 0);  
+    printf("case_02");
+    create_request_write("case_03/way1_request_pool", "case_03/way1_correct_result_mem", interleaved_bank_addresses_1, 0);
+    printf("case_03"); 
     
-    create_request_read("case_4/way1_request_pool", "case_4/way1_correct_result_mem", same_bank_addresses_1, 0);  
-    create_request_write("case_5/way1_request_pool", "case_5/way1_correct_result_mem", same_bank_addresses_1, 0);
+    create_request_read("case_04/way1_request_pool", "case_04/way1_correct_result_mem", same_bank_addresses_1, 0);  
+    printf("case_04");
+    create_request_write("case_05/way1_request_pool", "case_05/way1_correct_result_mem", same_bank_addresses_1, 0);
+    printf("case_05");
     
-    create_request_read("case_6/way1_request_pool", "case_6/way1_correct_result_mem", same_set_addresses_1, 0);  
-    create_request_write("case_7/way1_request_pool", "case_7/way1_correct_result_mem", same_set_addresses_1, 0);
+    create_request_read("case_06/way1_request_pool", "case_06/way1_correct_result_mem", same_set_addresses_1, 0);  
+    printf("case_06");
+    create_request_write("case_07/way1_request_pool", "case_07/way1_correct_result_mem", same_set_addresses_1, 0);
+    printf("case_07");
     
-    create_request_read("case_8/way1_request_pool", "case_8/way1_correct_result_mem", random_addresses_1, 0); 
-    create_request_write("case_9/way1_request_pool", "case_9/way1_correct_result_mem", random_addresses_1, 0);  
+    create_request_read("case_08/way1_request_pool", "case_08/way1_correct_result_mem", random_addresses_1, 0); 
+    printf("case_08");
+    create_request_write("case_09/way1_request_pool", "case_09/way1_correct_result_mem", random_addresses_1, 0);  
+    printf("case_09");
     
     create_request_read("case_10/way1_request_pool", "case_10/way1_correct_result_mem", interleaved_bank_addresses_1, 0);  
+    printf("case_10");
     create_request_write("case_11/way1_request_pool", "case_11/way1_correct_result_mem", interleaved_bank_addresses_1, 0);
+    printf("case_11");
     
     create_request_read("case_12/way1_request_pool", "case_12/way1_correct_result_mem", same_bank_addresses_1, 0);  
+    printf("case_12\n");
     create_request_write("case_13/way1_request_pool", "case_13/way1_correct_result_mem", same_bank_addresses_1, 0);
+    printf("case_13\n");
     
     create_request_read("case_14/way1_request_pool", "case_14/way1_correct_result_mem", same_set_addresses_1, 0);  
+    printf("case_14\n");
     create_request_write("case_15/way1_request_pool", "case_15/way1_correct_result_mem", same_set_addresses_1, 0);
+    printf("case_15\n");
     
-    
-    create_request_read("case_8/way2_request_pool", "case_8/way2_correct_result_mem", random_addresses_2, 1); 
-    create_request_write("case_9/way2_request_pool", "case_9/way2_correct_result_mem", random_addresses_2, 1);  
+    create_request_read("case_08/way2_request_pool", "case_08/way2_correct_result_mem", random_addresses_2, 1); 
+    create_request_write("case_09/way2_request_pool", "case_09/way2_correct_result_mem", random_addresses_2, 1);  
     
     create_request_read("case_10/way2_request_pool", "case_10/way2_correct_result_mem", interleaved_bank_addresses_2, 1);  
     create_request_write("case_11/way2_request_pool", "case_11/way2_correct_result_mem", interleaved_bank_addresses_2, 1);
@@ -322,6 +337,13 @@ void create_request_write(char *path_request_write, char *path_correct, int *add
         write(fd_request_write, "\n", 1);
 	}
 	
+	for (i = 0; i < MEM_SIZE / 4; i ++)
+	{
+	    itoa_bin(0, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS, str);
+        write(fd_correct, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
+        
+        write(fd_correct, "\n", 1);
+	}
 	
 	
     close(fd_request_write);

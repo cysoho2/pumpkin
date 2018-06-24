@@ -236,7 +236,7 @@ begin
     if (test_way1_enable)
         begin
         
-        for (test_result_index = test_way1_result_ctr - 1; test_result_index >= 0; test_result_index = test_result_index - 1'b1)
+        for (test_result_index = test_way1_result_ctr + 1; test_result_index >= 0; test_result_index = test_result_index - 1'b1)
         begin
             test_gen_flag = 1;
             begin:BREAK_1
@@ -277,7 +277,7 @@ begin
     if (test_way2_enable)
         begin
         
-        for (test_result_index = test_way2_result_ctr - 1; test_result_index >= 0; test_result_index = test_result_index - 1'b1)
+        for (test_result_index = test_way2_result_ctr + 1; test_result_index >= 0; test_result_index = test_result_index - 1'b1)
         begin
             test_gen_flag = 1;
             begin:BREAK_2
