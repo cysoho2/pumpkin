@@ -11,7 +11,7 @@ module unified_cache
     parameter NUM_WAY                            = 4,
     parameter BLOCK_SIZE_IN_BYTES                = 4,
 
-    parameter BANK_BITS                          = $clog2(NUM_SET / NUM_BANK)
+    parameter BANK_BITS                          = $clog2(NUM_BANK)
 )
 (
     input                                                                               reset_in,
@@ -48,7 +48,7 @@ generate
 genvar port_index, bank_index;
 
 for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
-begin
+begin : input_queue
 
     assign input_packet_packed[port_index] =
            input_packet_flatted_in[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
@@ -106,15 +106,18 @@ wire  [NUM_BANK                                      - 1 : 0] return_request_ack
 // generate cache banks
 generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
-begin
+begin : cache_bank
     
     wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
     wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
     
+    wire [`CPU_DATA_LEN_IN_BITS - 1 : 0]is_test [NUM_INPUT_PORT        - 1 : 0];
+    
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-        assign full_addr[port_index] = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
-        assign is_right_bank[port_index] = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
+    
+        assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
+        assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: $clog2(NUM_BANK)] == bank_index;
     end
 
     unified_cache_bank
@@ -129,8 +132,11 @@ begin
     )
     cache_bank
     (
+        .clk_in                             (clk_in),
+        .reset_in                           (reset_in),
+        
         .request_flatted_in                 (input_packet_to_cache_flatted),
-        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted | is_right_bank),
+        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted & is_right_bank),
         .request_critical_flatted_in        (input_packet_critical_to_cache_flatted),
         .issue_ack_out                      (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
                                                                                   bank_index * NUM_INPUT_PORT]),
@@ -170,7 +176,7 @@ generate
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
         begin
             assign cache_to_input_queue_ack_packed [port_index][bank_index] =
-                   cache_to_input_queue_ack_flatted[bank_index * port_index + port_index];
+                   cache_to_input_queue_ack_flatted[bank_index * NUM_INPUT_PORT + port_index];
         end
 
         assign cache_to_input_queue_ack_merged[port_index] = |(cache_to_input_queue_ack_packed[port_index]);
@@ -180,7 +186,8 @@ endgenerate
 priority_arbiter
 #(
     .NUM_REQUEST(NUM_BANK * 2),
-    .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
+    .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
+    .SAME_WAY_LOCK_CYCLE(2)
 )
 to_mem_arbiter
 (
@@ -207,13 +214,15 @@ generate
         begin
             assign return_request_ack_packed [bank_index][port_index] =
                    return_request_ack_flatted[port_index * bank_index + bank_index];
+            
+            assign return_request_ack_merged[bank_index] = |return_request_ack_packed[bank_index];
         end
     end
 endgenerate
 
 generate
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
-    begin
+    begin : return_arbiter_for_port
 
         wire [NUM_BANK - 1 : 0] is_right_port;
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
@@ -235,7 +244,7 @@ generate
 
             // the arbiter considers priority from right(high) to left(low)
             .request_flatted_in             (return_request_flatted),
-            .request_valid_flatted_in       (return_request_valid_flatted | is_right_port),
+            .request_valid_flatted_in       (return_request_valid_flatted & is_right_port),
             .request_critical_flatted_in    (return_request_critical_flatted),
             .issue_ack_out                  (return_request_ack_flatted[(port_index+1) * NUM_BANK -1 : port_index * NUM_BANK]),
 
