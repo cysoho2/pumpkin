@@ -2,7 +2,7 @@ module priority_arbiter
 #(
     parameter NUM_REQUEST                  = 3,
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
-    parameter SAME_WAY_LOCK_CYCLE          = 0
+    parameter SAME_WAY_LOCK_CYCLE          = 4
 )
 (
     input                                                               reset_in,
