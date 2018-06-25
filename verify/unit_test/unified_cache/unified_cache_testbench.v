@@ -52,7 +52,7 @@ reg                                                             test_way1_ack_in
 reg                                                             test_way2_ack_in_ctr;
 
 reg     [15:0]                                                  test_gen_char          [15:0];
-reg     [1023:0]                                                test_case_char         [15:0];
+reg     [511:0]                                                test_case_char         [15:0];
 
 integer                                                         test_gen;
 integer                                                         test_scoreboard_index;
@@ -494,7 +494,7 @@ begin
         $readmemb(mem_image_path, correct_result_mem_1);
         
         #(`FULL_CYCLE_DELAY * 8000) test_judge                           = (test_hit_1 == (`MEM_SIZE) / 2)? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case, {"                        ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        $display("[info-testbench] test case %d\t%s : \t%s", test_case, {"                      ", test_case_char[test_case]}, test_judge? "passed" : "failed");
 
         
          //case 1 (phase 1)
