@@ -317,7 +317,7 @@ sub task_begin
             }
             else
             {
-                say "\n[info-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
+                say "\n[critical-warning-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
             }
         }
         # invoke icarus for mac

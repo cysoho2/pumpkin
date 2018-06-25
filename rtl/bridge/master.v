@@ -20,15 +20,15 @@ module axi4_master
     // Width of Data Bus
     parameter integer C_M_AXI_DATA_WIDTH	= 32,
     // Width of User Write Address Bus
-    parameter integer C_M_AXI_AWUSER_WIDTH	= 0,
+    parameter integer C_M_AXI_AWUSER_WIDTH	= 1,
     // Width of User Read Address Bus
-    parameter integer C_M_AXI_ARUSER_WIDTH	= 0,
+    parameter integer C_M_AXI_ARUSER_WIDTH	= 1,
     // Width of User Write Data Bus
-    parameter integer C_M_AXI_WUSER_WIDTH	= 0,
+    parameter integer C_M_AXI_WUSER_WIDTH	= 1,
     // Width of User Read Data Bus
-    parameter integer C_M_AXI_RUSER_WIDTH	= 0,
+    parameter integer C_M_AXI_RUSER_WIDTH	= 1,
     // Width of User Response Bus
-    parameter integer C_M_AXI_BUSER_WIDTH	= 0
+    parameter integer C_M_AXI_BUSER_WIDTH	= 1
 )
 (
     // Users to add ports here
