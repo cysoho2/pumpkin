@@ -1,3 +1,4 @@
 working_temp/
 rtl/definitions/sim_config.h
+vivado/
 .DS_Store
