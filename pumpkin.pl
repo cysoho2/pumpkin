@@ -574,9 +574,9 @@ sub test_name_enumerate
 sub create_sim_config_file
 {
     my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'sim_config_filename'}";
-    system "rm $sim_config_path" if(-e $sim_config_path);
-
-    die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
+    
+    #system "rm $sim_config_path" if(-e $sim_config_path);
+    #die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
 
     die "[error-script] fail to open $sim_config_path"
     if !open config_handle, ">$sim_config_path";

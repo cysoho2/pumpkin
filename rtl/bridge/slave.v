@@ -1,5 +1,5 @@
-module axi4_slave #
-(
+module axi4_slave
+#(
         // Users to add parameters here
 
         // User parameters ends
