@@ -111,11 +111,8 @@ begin : cache_bank
     wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
     wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
     
-    wire [`CPU_DATA_LEN_IN_BITS - 1 : 0]is_test [NUM_INPUT_PORT        - 1 : 0];
-    
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-    
         assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
         assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: $clog2(NUM_BANK)] == bank_index;
     end

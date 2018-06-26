@@ -134,13 +134,12 @@ endgenerate
 
 
 // arbiter logic
-integer lock_index;
 always@(posedge clk_in, posedge reset_in)
 begin
     if(reset_in)
     begin
         request_out                             <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
-        request_valid_out                       <= {(NUM_REQUEST){1'b0}};
+        request_valid_out                       <= 1'b0;
         arbiter_ack_flatted_to_request_queue    <= {(NUM_REQUEST){1'b0}};
         last_send_index                         <= {(NUM_REQUEST_LOG2){1'b0}};
     end
@@ -148,7 +147,7 @@ begin
     // move on to the next request
     else if( (issue_ack_in & request_valid_out) | ~request_valid_out)
     begin
-        if(request_critical_final[critical_sel] & (|request_critical_final) & request_valid_flatted_from_request_queue[critical_sel] )
+        if(request_critical_final[critical_sel] & (|request_critical_final) & request_valid_flatted_from_request_queue[critical_sel])
         begin
             request_out                             <= request_packed_from_request_queue[critical_sel];
             request_valid_out                       <= 1'b1;
@@ -156,7 +155,7 @@ begin
             last_send_index                         <= critical_sel;
         end
 
-        else if(request_valid_flatted_in[valid_sel])
+        else if(request_valid_flatted_from_request_queue[valid_sel])
         begin
             request_out                             <= request_packed_from_request_queue[valid_sel];
             request_valid_out                       <= 1'b1;
