@@ -54,13 +54,13 @@ begin : request_queue
         .is_empty_out                   (), // intended left unconnected
         .is_full_out                    (request_queue_full[request_index]), // intended left unconnected
 
-        .request_in                     ({request_packed_in[request_index],
-                                          request_critical_flatted_in[request_index]}),
+        .request_in                     ({request_critical_flatted_in[request_index],
+                                          request_packed_in[request_index]}),
         .request_valid_in               (request_valid_flatted_in[request_index]),
         .issue_ack_out                  (issue_ack_out[request_index]),
 
-        .request_out                    ({request_packed_from_request_queue[request_index],
-                                          request_critical_flatted_from_request_queue[request_index]}),
+        .request_out                    ({request_critical_flatted_from_request_queue[request_index],
+                                          request_packed_from_request_queue[request_index]}),
         .request_valid_out              (request_valid_flatted_from_request_queue[request_index]),
         .issue_ack_in                   (arbiter_ack_flatted_to_request_queue[request_index])
     );
@@ -140,26 +140,26 @@ begin
     begin
         request_out                             <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
         request_valid_out                       <= 1'b0;
-        arbiter_ack_flatted_to_request_queue    <= {(NUM_REQUEST){1'b0}};
         last_send_index                         <= {(NUM_REQUEST_LOG2){1'b0}};
     end
 
     // move on to the next request
-    else if( (issue_ack_in & request_valid_out) | ~request_valid_out)
+    else if((issue_ack_in & request_valid_out) | ~request_valid_out)
     begin
-        if(request_critical_final[critical_sel] & (|request_critical_final) & request_valid_flatted_from_request_queue[critical_sel])
+        if(request_critical_final[critical_sel] & (|request_critical_final)
+           & request_valid_flatted_from_request_queue[critical_sel]
+           & ((critical_sel != last_send_index & request_valid_out) | ~request_valid_out))
         begin
             request_out                             <= request_packed_from_request_queue[critical_sel];
             request_valid_out                       <= 1'b1;
-            arbiter_ack_flatted_to_request_queue    <= critical_mask;
             last_send_index                         <= critical_sel;
         end
 
-        else if(request_valid_flatted_from_request_queue[valid_sel])
+        else if(request_valid_flatted_from_request_queue[valid_sel]
+                & ((valid_sel != last_send_index & request_valid_out) | ~request_valid_out))
         begin
             request_out                             <= request_packed_from_request_queue[valid_sel];
             request_valid_out                       <= 1'b1;
-            arbiter_ack_flatted_to_request_queue    <= valid_mask;
             last_send_index                         <= valid_sel;
         end
 
@@ -167,7 +167,6 @@ begin
         begin
             request_out                             <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
             request_valid_out                       <= 1'b0;
-            arbiter_ack_flatted_to_request_queue    <= {(NUM_REQUEST){1'b0}};
             last_send_index                         <= last_send_index;
         end
     end
@@ -176,9 +175,27 @@ begin
     begin
         request_out                             <= request_out;
         request_valid_out                       <= request_valid_out;
-        arbiter_ack_flatted_to_request_queue    <= {(NUM_REQUEST){1'b0}};
         last_send_index                         <= last_send_index;
     end
+end
+
+always@(*)
+begin
+    if(reset_in)
+    begin
+        arbiter_ack_flatted_to_request_queue <= {(NUM_REQUEST){1'b0}};
+    end
+
+    else if(issue_ack_in & request_valid_out)
+    begin
+        if(request_critical_final[critical_sel] & (|request_critical_final) & request_valid_flatted_from_request_queue[critical_sel])
+            arbiter_ack_flatted_to_request_queue <= critical_mask;
+        else if(request_valid_flatted_from_request_queue[valid_sel])
+            arbiter_ack_flatted_to_request_queue <= valid_mask;
+    end
+
+    else
+        arbiter_ack_flatted_to_request_queue <= {(NUM_REQUEST){1'b0}};
 end
 
 endmodule

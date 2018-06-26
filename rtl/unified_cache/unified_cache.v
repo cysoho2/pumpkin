@@ -65,7 +65,7 @@ begin : input_queue
         .reset_in                       (reset_in),
         .clk_in                         (clk_in),
 
-        .is_empty_out                   (), // intened left unconnected
+        .is_empty_out                   (), // intended left unconnected
         .is_full_out                    (is_input_queue_full_flatted[port_index]),
 
         .request_in                     (input_packet_packed[port_index]),
@@ -109,11 +109,12 @@ for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin : cache_bank
     
     wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
-    wire [`CPU_DATA_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
+    wire [`CPU_ADDR_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
     
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-        assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_DATA_LEN_IN_BITS];
+    
+        assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_ADDR_LEN_IN_BITS];
         assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: $clog2(NUM_BANK)] == bank_index;
     end
 

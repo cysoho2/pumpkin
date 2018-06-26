@@ -457,8 +457,9 @@ else if(MODE == "OFF")
 begin
     priority_arbiter
     #(
+        .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
         .NUM_REQUEST(NUM_INPUT_PORT),
-        .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)
+        .INPUT_QUEUE_SIZE(2)
     )
     intra_bank_arbiter
     (

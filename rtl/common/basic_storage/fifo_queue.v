@@ -48,7 +48,7 @@ begin
     begin
         // write logic
         // generate write_ptr when the queue is full but the issue_ack_in is high, save 1 cycle
-        if( |write_qualified ) /* ~is_full_out | (issue_ack_in & is_full_out)) & request_valid_in */
+        if(|write_qualified)
         begin
             write_ptr     <= write_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : write_ptr + 1'b1;
             issue_ack_out <= 1'b1;
@@ -61,11 +61,11 @@ begin
         end
 
         // read logic
-        if( |read_qualified ) /* issue_ack_in & fifo_entry_valid_packed[read_ptr] */
+        if(|read_qualified)
         begin
             read_ptr    <= read_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : read_ptr + 1'b1;
-            request_out <= fifo_entry_packed[read_ptr];
-            request_valid_out <= 1'b1;
+            request_out <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_valid_out <= 1'b0;
         end
 
         else if(fifo_entry_valid_packed[read_ptr])
