@@ -294,17 +294,19 @@ begin
 
         else if(~test_end_flag)
         begin
+            
             if((test_ctr >= QUEUE_SIZE / 2) && (test_ctr < QUEUE_SIZE))
             begin
 
-                if(~issue_ack_to_fifo)
-                    issue_ack_to_fifo <= 1'b1;
+                if(issue_ack_to_fifo)
+                    issue_ack_to_fifo <= 1'b0;
 
                 else if(request_valid_out)
                 begin
                     //record
                     #`FULL_CYCLE_DELAY test_buffer[test_ctr - QUEUE_SIZE / 2] <= test_buffer[test_ctr - QUEUE_SIZE / 2] ^ request_out;
                      test_ctr                                                 <= test_ctr + 1'b1;
+                     issue_ack_to_fifo                                        <= 1'b1;
                 end
             end
 
@@ -313,7 +315,9 @@ begin
                 issue_ack_to_fifo <= 1'b0;
 
                 if(test_ctr == QUEUE_SIZE)
+                begin
                     test_check_buffer <= 1'b1;
+                end
             end
         end
     end
