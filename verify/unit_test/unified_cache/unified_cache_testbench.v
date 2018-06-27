@@ -84,7 +84,7 @@ reg      [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        cache_packet_pen
 reg                                                             mem_packet_ack_to_cache;
 
 assign way1_packet_to_cache = test_way1_enable? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
-assign way2_packet_to_cache = test_way2_enable? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'bz}};
+assign way2_packet_to_cache = test_way2_enable? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
 
 always@(posedge clk_in or posedge reset_in)
 begin
