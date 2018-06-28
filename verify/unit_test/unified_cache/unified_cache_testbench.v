@@ -98,7 +98,7 @@ reg      [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        cache_packet_pen
 reg                                                             mem_packet_ack_to_cache;
 
 assign way1_packet_to_cache = (test_way1_enable & test_way1_valid)? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
-assign way2_packet_to_cache = (test_way2_enable & test_way1_valid)? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+assign way2_packet_to_cache = (test_way2_enable & test_way2_valid)? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
 
 always@(posedge clk_in or posedge reset_in)
 begin
@@ -197,12 +197,12 @@ begin
             end
 
 
-            if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (way1_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way1_last_packet_from_cache != way1_packet_from_cache)) 
-            //if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]) 
+            //if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (way1_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way1_last_packet_from_cache != way1_packet_from_cache)) 
+            if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]) 
             begin
                             
-                if (~way1_wait)
-                begin
+//                if (~way1_wait)
+//                begin
                     way1_last_packet_from_cache                 <= way1_packet_from_cache;
                     test_way1_ack_in_ctr     <= test_way1_ack_in_ctr + 1'b1;
                     way1_packet_ack_to_cache <= 1'b1;
@@ -221,12 +221,12 @@ begin
                         end
                     end
                     
-                way1_wait           <= 1;
-                end
-                else
-                begin
-                    way1_wait           <= 0;
-                end
+//                    way1_wait           <= 1;
+//                end
+//                else
+//                begin
+//                    way1_wait           <= 0;
+//                end
             end
             
             else
