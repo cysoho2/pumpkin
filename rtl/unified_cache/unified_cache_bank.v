@@ -10,7 +10,7 @@ module unified_cache_bank
     parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
 
     parameter BANK_NUM                           = 0,
-    parameter MODE                               = "OFF", /* OFF BASIC ADVANCED*/
+    parameter MODE                               = "OFF", /* option: OFF, BASIC, ADVANCED*/
 
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET)
 )
@@ -71,7 +71,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("LUTRAM")
     )
     valid_array
@@ -95,7 +95,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     history_array
@@ -119,7 +119,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (`UNIFIED_CACHE_TAG_LEN_IN_BITS),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     tag_array
@@ -142,7 +142,7 @@ begin
     #(
         .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
         .NUM_SET                        (NUM_SET),
-        .SET_PTR_WIDTH_IN_BITS          ($clog2(NUM_SET))
+        .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
     )
     data_array
     (
@@ -196,7 +196,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("LUTRAM")
     )
     valid_array
@@ -220,7 +220,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     history_array
@@ -244,7 +244,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     dirty_array
@@ -268,7 +268,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (`UNIFIED_CACHE_TAG_LEN_IN_BITS),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     tag_array

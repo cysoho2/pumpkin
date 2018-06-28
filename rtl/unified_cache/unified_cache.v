@@ -108,15 +108,26 @@ generate
 for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
 begin : cache_bank
     
-    wire [NUM_INPUT_PORT        - 1 : 0] is_right_bank;
-    wire [`CPU_ADDR_LEN_IN_BITS - 1 : 0] full_addr [NUM_INPUT_PORT - 1 : 0];
+    // banking for input requests
+    wire [`CPU_ADDR_LEN_IN_BITS - 1 : 0] input_full_addr [NUM_INPUT_PORT - 1 : 0];
+    wire [NUM_INPUT_PORT        - 1 : 0] input_is_right_bank;
+    wire [NUM_INPUT_PORT        - 1 : 0] input_is_valid_final;
     
     for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
     begin
-    
-        assign full_addr[port_index]       = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_ADDR_LEN_IN_BITS];
-        assign is_right_bank[port_index]   = full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: $clog2(NUM_BANK)] == bank_index;
+        assign input_full_addr[port_index]      = input_packet_to_cache_flatted[(port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) +: `CPU_ADDR_LEN_IN_BITS];
+        assign input_is_right_bank[port_index]  = input_full_addr[port_index][`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
+        assign input_is_valid_final[port_index] = input_packet_valid_to_cache_flatted[port_index] & input_is_right_bank[port_index];
     end
+
+    // banking for fetched requests
+    wire [`CPU_ADDR_LEN_IN_BITS - 1 : 0] fetched_full_addr;
+    wire fetched_is_right_bank;
+    wire fetched_is_valid_final;
+    
+    assign fetched_full_addr      = from_mem_packet_in[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
+    assign fetched_is_right_bank  = fetched_full_addr[`UNIFIED_CACHE_INDEX_POS_LO +: BANK_BITS] == bank_index;
+    assign fetched_is_valid_final = from_mem_packet_in[`UNIFIED_CACHE_PACKET_VALID_POS] & fetched_is_right_bank;
 
     unified_cache_bank
     #(
@@ -133,14 +144,14 @@ begin : cache_bank
         .clk_in                             (clk_in),
         .reset_in                           (reset_in),
         
-        .request_flatted_in                 (input_packet_to_cache_flatted),
-        .request_valid_flatted_in           (input_packet_valid_to_cache_flatted & is_right_bank),
+        .request_flatted_in                 (input_is_valid_final ? input_packet_to_cache_flatted : 0),
+        .request_valid_flatted_in           (input_is_valid_final),
         .request_critical_flatted_in        (input_packet_critical_to_cache_flatted),
         .issue_ack_out                      (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
                                                                                   bank_index * NUM_INPUT_PORT]),
 
-        .fetched_request_in                 (from_mem_packet_in),
-        .fetched_request_valid_in           (from_mem_packet_in[`UNIFIED_CACHE_PACKET_VALID_POS]),
+        .fetched_request_in                 (fetched_is_valid_final ? from_mem_packet_in : 0),
+        .fetched_request_valid_in           (fetched_is_valid_final),
         .fetch_ack_out                      (from_mem_packet_ack_flatted[bank_index]),
 
         .miss_request_out                   (miss_request_flatted[(bank_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :

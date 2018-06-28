@@ -9,25 +9,25 @@ module axi4_master
     // Do not modify the parameters beyond this line
 
     // Base address of targeted slave
-    parameter  C_M_TARGET_SLAVE_BASE_ADDR	= 32'h0000_0000,
+    parameter  C_M_TARGET_SLAVE_BASE_ADDR	    = 32'h0000_0000,
     // Width of Address Bus
-    parameter integer C_M_AXI_ADDR_WIDTH	= 32,
+    parameter integer C_M_AXI_ADDR_WIDTH	    = 32,
     // Width of Data Bus
-    parameter integer C_M_AXI_DATA_WIDTH	= 32,
+    parameter integer C_M_AXI_DATA_WIDTH	    = 32,
     // Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
-    parameter integer C_M_AXI_BURST_LEN	    = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / C_M_AXI_DATA_WIDTH,
+    parameter integer C_M_AXI_BURST_LEN	        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / C_M_AXI_DATA_WIDTH,
     // Thread ID Width
-    parameter integer C_M_AXI_ID_WIDTH	    = 4,
+    parameter integer C_M_AXI_ID_WIDTH	        = 4,
     // Width of User Write Address Bus
-    parameter integer C_M_AXI_AWUSER_WIDTH	= 1,
+    parameter integer C_M_AXI_AWUSER_WIDTH	    = 1,
     // Width of User Read Address Bus
-    parameter integer C_M_AXI_ARUSER_WIDTH	= 1,
+    parameter integer C_M_AXI_ARUSER_WIDTH	    = 1,
     // Width of User Write Data Bus
-    parameter integer C_M_AXI_WUSER_WIDTH	= 1,
+    parameter integer C_M_AXI_WUSER_WIDTH	    = 1,
     // Width of User Read Data Bus
-    parameter integer C_M_AXI_RUSER_WIDTH	= 1,
+    parameter integer C_M_AXI_RUSER_WIDTH	    = 1,
     // Width of User Response Bus
-    parameter integer C_M_AXI_BUSER_WIDTH	= 1
+    parameter integer C_M_AXI_BUSER_WIDTH	    = 1
 )
 (
     // Users to add ports here
@@ -38,9 +38,9 @@ module axi4_master
     // Initiate AXI transactions
     input wire  INIT_AXI_TXN,
     // Asserts when transaction is complete
+    input wire  [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0] TRANSACTION_PACKET,
     output wire  TXN_DONE,
-    // Asserts when ERROR is detected
-    output reg  ERROR,
+
     // Global Clock Signal.
     input wire  M_AXI_ACLK,
     // Global Reset Singal. This Signal is Active Low
@@ -154,8 +154,6 @@ module axi4_master
     // accept the read data and response information.
     output wire  M_AXI_RREADY
 );
-
-
     // function called clogb2 that returns an integer which has the
     //value of the ceiling of the log base 2
 
@@ -743,7 +741,6 @@ module axi4_master
             start_single_burst_write <= 1'b0;
             start_single_burst_read  <= 1'b0;
             compare_done      <= 1'b0;
-            ERROR <= 1'b0;
         end
         
         else
@@ -758,7 +755,6 @@ module axi4_master
             if ( init_txn_pulse == 1'b1)
             begin
                 mst_exec_state  <= INIT_WRITE;
-                ERROR <= 1'b0;
                 compare_done <= 1'b0;
             end
             
@@ -821,7 +817,6 @@ module axi4_master
             // compare_done signal will be asseted to indicate success.
             //if (~error_reg)
             begin
-                ERROR <= error_reg;
                 mst_exec_state <= IDLE;
                 compare_done <= 1'b1;
             end
