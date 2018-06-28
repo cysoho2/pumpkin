@@ -38,8 +38,9 @@ module axi4_master
     // Initiate AXI transactions
     input wire  INIT_AXI_TXN,
     // Asserts when transaction is complete
-    input wire  [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0] TRANSACTION_PACKET,
-    output wire  TXN_DONE,
+    input wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] TRANSACTION_PACKET,
+    output wire  [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0] RETURN_DATA,
+    output reg  TXN_DONE,
 
     // Global Clock Signal.
     input wire  M_AXI_ACLK,
@@ -178,17 +179,12 @@ module axi4_master
     // Example State machine to initialize counter, initialize write transactions,
     // initialize read transactions and comparison of read data with the
     // written data words.
-    parameter [1:0] IDLE = 2'b00, // This state initiates AXI4Lite transaction
+    parameter [1:0] IDLE        = 2'b00, // This state initiates AXI4Lite transaction
             // after the state machine changes state to INIT_WRITE
-            // when there is 0 to 1 transition on INIT_AXI_TXN
-        INIT_WRITE   = 2'b01, // This state initializes write transaction,
-            // once writes are done, the state machine
-            // changes state to INIT_READ
-        INIT_READ = 2'b10, // This state initializes read transaction
-            // once reads are done, the state machine
-            // changes state to INIT_COMPARE
-        INIT_COMPARE = 2'b11; // This state issues the status of comparison
-            // of the written data with the read data
+            // when there is 0 to 1 transition on INIT_AXI_TXN and TRANACTION_PACKET is a write packet
+                    INIT_WRITE  = 2'b01, // This state initializes write transaction
+                    INIT_READ   = 2'b10, // This state initializes read transaction
+                    ACK         = 2'b11;
 
     reg [1:0] mst_exec_state;
 
@@ -216,12 +212,8 @@ module axi4_master
     reg  	                            start_single_burst_read;
     reg  	                            writes_done;
     reg  	                            reads_done;
-    reg  	                            error_reg;
-    reg  	                            compare_done;
-    reg  	                            read_mismatch;
     reg  	                            burst_write_active;
     reg  	                            burst_read_active;
-    reg     [C_M_AXI_DATA_WIDTH-1 : 0] 	expected_rdata;
     //Interface response error flags
     wire  	                            write_resp_error;
     wire  	                            read_resp_error;
@@ -231,6 +223,9 @@ module axi4_master
     reg  	                            init_txn_ff2;
     reg  	                            init_txn_edge;
     wire  	                            init_txn_pulse;
+
+    reg     [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] expected_rdata;
+    assign  RETURN_DATA = expected_rdata;
 
     // I/O Connections assignments
 
@@ -252,7 +247,7 @@ module axi4_master
     assign M_AXI_AWUSER	        = 'b1;
     assign M_AXI_AWVALID	    = axi_awvalid;
     //Write Data(W)
-    assign M_AXI_WDATA	        = axi_wdata;                         //TO_MODIFIE
+    assign M_AXI_WDATA	        = axi_wdata_flatted[axi_wdata];                         //TO_MODIFIE
     //All bursts are complete and aligned in this example
     assign M_AXI_WSTRB	        = {(C_M_AXI_DATA_WIDTH/8){1'b1}};  //TO_MODIFIE
     assign M_AXI_WLAST	        = axi_wlast;
@@ -278,8 +273,6 @@ module axi4_master
     assign M_AXI_ARVALID	    = axi_arvalid;
     //Read and Read Response (R)
     assign M_AXI_RREADY	        = axi_rready;
-    //Example design I/O
-    assign TXN_DONE	            = compare_done;  //TO_MODIFIE
     //Burst size in bytes
     assign burst_size_bytes	    = C_M_AXI_BURST_LEN * C_M_AXI_DATA_WIDTH/8;
     assign init_txn_pulse	    = (!init_txn_ff2) && init_txn_ff;
@@ -342,7 +335,7 @@ module axi4_master
     begin
         if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
         begin
-            axi_awaddr <= 'b0;
+            axi_awaddr <= TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
         end
         
         else if (M_AXI_AWREADY && axi_awvalid)
@@ -446,6 +439,15 @@ module axi4_master
             write_index <= write_index;
     end
 
+    wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] packet_data = TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO];
+    wire [C_M_AXI_DATA_WIDTH                - 1 : 0] axi_wdata_flatted [C_M_AXI_BURST_LEN - 1 : 0];
+    generate
+        genvar data_index;
+        for(data_index = 0; data_index < C_M_AXI_BURST_LEN; data_index = data_index + 1)
+        begin
+            axi_wdata_flatted = packet_data[(data_index+1) * C_M_AXI_DATA_WIDTH - 1 : data_index * C_M_AXI_DATA_WIDTH];
+        end
+    endgenerate
 
     /* Write Data Generator
      Data pattern is only a simple incrementing count from 0 for each burst  */
@@ -540,7 +542,7 @@ module axi4_master
     begin
         if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
         begin
-            axi_araddr <= 'b0;
+            axi_araddr <= TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
         end
         
         else if (M_AXI_ARREADY && axi_arvalid)
@@ -607,62 +609,28 @@ module axi4_master
         // retain the previous value
     end
 
-    //Check received read data against data generator
-    always @(posedge M_AXI_ACLK)
-    begin
-        if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
-        begin
-            read_mismatch <= 1'b0;
-        end
-        //Only check data when RVALID is active
-        else if (rnext && (M_AXI_RDATA != expected_rdata))
-        begin
-            read_mismatch <= 1'b1;
-        end
-        else
-            read_mismatch <= 1'b0;
-    end
-
-    //Flag any read response errors
-    assign read_resp_error = axi_rready & M_AXI_RVALID & M_AXI_RRESP[1];
-
-
     //----------------------------------------
     //Example design read check data generator
     //-----------------------------------------
 
     //Generate expected read data to check against actual read data
 
+    reg [31:0] expected_read_index;
+
     always @(posedge M_AXI_ACLK)
     begin
         if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)// || M_AXI_RLAST)
-            expected_rdata <= 'b1;
+        begin
+            expected_rdata      <= 0;
+            expected_read_index <= 0;
+        end
+        
         else if (M_AXI_RVALID && axi_rready)
-            expected_rdata <= expected_rdata + 1;
-        else
-            expected_rdata <= expected_rdata;
-    end
-
-    //----------------------------------
-    //Example design error register
-    //----------------------------------
-
-    //Register and hold any data mismatches, or read/write interface errors
-
-    always @(posedge M_AXI_ACLK)
-    begin
-        if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
         begin
-            error_reg <= 1'b0;
+            expected_rdata[expected_read_index] <= M_AXI_RDATA;
+            expected_read_index                 <= expected_read_index + 1'b1;
         end
-        else if (read_mismatch || write_resp_error || read_resp_error)
-        begin
-            error_reg <= 1'b1;
-        end
-        else
-            error_reg <= error_reg;
     end
-
 
     //--------------------------------
     //Example design throttling
@@ -740,7 +708,6 @@ module axi4_master
             mst_exec_state      <= IDLE;
             start_single_burst_write <= 1'b0;
             start_single_burst_read  <= 1'b0;
-            compare_done      <= 1'b0;
         end
         
         else
@@ -748,43 +715,52 @@ module axi4_master
 
             // state transition
             case (mst_exec_state)
-
+            
             IDLE:
+            begin
+                TXN_DONE <= 1'b0;
                 // This state is responsible to wait for user defined C_M_START_COUNT
                 // number of clock cycles.
-            if ( init_txn_pulse == 1'b1)
-            begin
-                mst_exec_state  <= INIT_WRITE;
-                compare_done <= 1'b0;
-            end
-            
-            else
-            begin
-                mst_exec_state  <= IDLE;
-            end
-
-            INIT_WRITE:
-            // This state is responsible to issue start_single_write pulse to
-            // initiate a write transaction. Write transactions will be
-            // issued until burst_write_active signal is asserted.
-            // write controller
-            if (writes_done)
-            begin
-                mst_exec_state <= INIT_READ;//
-            end
-            
-            else
-            begin
-                mst_exec_state  <= INIT_WRITE;
-
-                if (~axi_awvalid && ~start_single_burst_write && ~burst_write_active)
+                if ( init_txn_pulse == 1'b1 & TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_VALID_POS])
                 begin
-                    start_single_burst_write <= 1'b1;
+                    if(TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
+                        mst_exec_state  <= INIT_WRITE;
+                    else
+                        mst_exec_state  <= INIT_READ;
                 end
                 
                 else
                 begin
-                    start_single_burst_write <= 1'b0; //Negate to generate a pulse
+                    mst_exec_state  <= IDLE;
+                end
+            end
+
+            INIT_WRITE:
+            begin
+            // This state is responsible to issue start_single_write pulse to
+            // initiate a write transaction. Write transactions will be
+            // issued until burst_write_active signal is asserted.
+            // write controller
+                if (writes_done)
+                begin
+                    mst_exec_state  <= ACK;
+                    TXN_DONE        <= 1'b1;
+                end
+                
+                else
+                begin
+                    mst_exec_state  <= INIT_WRITE;
+                    TXN_DONE        <= 1'b0;
+
+                    if (~axi_awvalid && ~start_single_burst_write && ~burst_write_active)
+                    begin
+                        start_single_burst_write <= 1'b1;
+                    end
+                    
+                    else
+                    begin
+                        start_single_burst_write <= 1'b0; //Negate to generate a pulse
+                    end
                 end
             end
 
@@ -793,37 +769,42 @@ module axi4_master
             // initiate a read transaction. Read transactions will be
             // issued until burst_read_active signal is asserted.
             // read controller
-            if (reads_done)
             begin
-                mst_exec_state <= INIT_COMPARE;
-            end
-            else
-            begin
-                mst_exec_state  <= INIT_READ;
-
-                if (~axi_arvalid && ~burst_read_active && ~start_single_burst_read)
+                if (reads_done)
                 begin
-                    start_single_burst_read <= 1'b1;
+                    mst_exec_state  <= ACK;
+                    TXN_DONE        <= 1'b1;
                 end
                 else
                 begin
-                    start_single_burst_read <= 1'b0; //Negate to generate a pulse
+                    mst_exec_state  <= INIT_READ;
+                    TXN_DONE        <= 1'b0;
+
+                    if (~axi_arvalid && ~burst_read_active && ~start_single_burst_read)
+                    begin
+                        start_single_burst_read <= 1'b1;
+                    end
+                    else
+                    begin
+                        start_single_burst_read <= 1'b0; //Negate to generate a pulse
+                    end
                 end
             end
 
-            INIT_COMPARE:
+            INIT_ACK:
             // This state is responsible to issue the state of comparison
             // of written data with the read data. If no error flags are set,
             // compare_done signal will be asseted to indicate success.
             //if (~error_reg)
             begin
                 mst_exec_state <= IDLE;
-                compare_done <= 1'b1;
+                TXN_DONE <= 1'b0;
             end
             
             default :
             begin
                 mst_exec_state  <= IDLE;
+                TXN_DONE        <= 1'b0;
             end
             
             endcase
