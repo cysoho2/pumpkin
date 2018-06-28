@@ -142,7 +142,7 @@ begin
                     test_way1_scoreboard_valid_array[test_way1_scoreboard_ctr]      <= 1'b1;
                     test_way1_scoreboard_addr[test_way1_scoreboard_ctr]             <= way1_packet_to_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
                     test_way1_scoreboard_data[test_way1_scoreboard_ctr]             <= correct_result_mem_1[test_way1_scoreboard_ctr];
-                    test_way1_scoreboard_ctr                                        = test_way1_scoreboard_ctr + 1'b1;
+                    test_way1_scoreboard_ctr                                        <= test_way1_scoreboard_ctr + 1'b1;
                 end
             end
 
