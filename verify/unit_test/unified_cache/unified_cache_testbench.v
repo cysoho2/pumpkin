@@ -52,7 +52,7 @@ reg                                                             test_way1_ack_in
 reg                                                             test_way2_ack_in_ctr;
 
 reg     [15:0]                                                  test_gen_char          [15:0];
-reg     [511:0]                                                test_case_char         [15:0];
+reg     [511:0]                                                 test_case_char         [15:0];
 
 integer                                                         test_gen;
 integer                                                         test_scoreboard_index;
@@ -84,7 +84,7 @@ reg      [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        cache_packet_pen
 reg                                                             mem_packet_ack_to_cache;
 
 assign way1_packet_to_cache = test_way1_enable? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
-assign way2_packet_to_cache = test_way2_enable? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'bz}};
+assign way2_packet_to_cache = test_way2_enable? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
 
 always@(posedge clk_in or posedge reset_in)
 begin
@@ -148,28 +148,27 @@ begin
 
             else
             begin
-                    way1_packet_index <= way1_packet_index;
+                way1_packet_index <= way1_packet_index;
             end
 
             if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]) 
             begin
-                    test_way1_ack_in_ctr     <= test_way1_ack_in_ctr + 1'b1;
-                    way1_packet_ack_to_cache <= 1'b1;
-                    
-                    if (~way1_packet_ack_to_cache & ~ way1_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
+                test_way1_ack_in_ctr     <= test_way1_ack_in_ctr + 1'b1;
+                way1_packet_ack_to_cache <= 1'b1;
+                
+                if (~way1_packet_ack_to_cache & ~ way1_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
+                begin
+                    if (test_way1_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                     begin
-                    
-                        if (test_way1_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
-                        begin
-                           test_way1_result_pool[test_way1_result_ctr] = way1_packet_from_cache;
-                           test_way1_result_ctr                        = test_way1_result_ctr + 1'b1;
-                        end
-                        
-                        if (test_way1_result_ctr == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
-                        begin
-                            test_check_flag = 1;
-                        end
+                        test_way1_result_pool[test_way1_result_ctr] <= way1_packet_from_cache;
+                        test_way1_result_ctr                        <= test_way1_result_ctr + 1'b1;
                     end
+                    
+                    if (test_way1_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
+                    begin
+                        test_check_flag <= 1;
+                    end
+                end
             end
             
             else
@@ -192,7 +191,7 @@ begin
                 test_way2_scoreboard_valid_array[test_way2_scoreboard_ctr]      <= 1'b1;
                 test_way2_scoreboard_addr[test_way2_scoreboard_ctr]             <= way2_packet_to_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
                 test_way2_scoreboard_data[test_way2_scoreboard_ctr]             <= correct_result_mem_2[test_way2_scoreboard_ctr];
-                test_way2_scoreboard_ctr                                        = test_way2_scoreboard_ctr + 1'b1;
+                test_way2_scoreboard_ctr                                        <= test_way2_scoreboard_ctr + 1'b1;
             end
                     
             end
@@ -211,11 +210,11 @@ begin
                 begin
                     if (test_way2_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                     begin
-                        test_way2_result_pool[test_way2_result_ctr] = way2_packet_from_cache;
-                        test_way2_result_ctr                        = test_way2_result_ctr + 1'b1;
+                        test_way2_result_pool[test_way2_result_ctr] <= way2_packet_from_cache;
+                        test_way2_result_ctr                        <= test_way2_result_ctr + 1'b1;
                     end
                                        
-                    if (test_way2_result_ctr == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
+                    if (test_way2_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                     begin
                         test_check_flag = 1;
                     end

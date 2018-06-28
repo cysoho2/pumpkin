@@ -23,7 +23,7 @@ parameter [31:0] NUM_REQUEST_LOG2     = 2 ** NUM_REQUEST_LOG2_LOW < NUM_REQUEST 
 
 // separete requests to input queue
 wire [SINGLE_REQUEST_WIDTH_IN_BITS  - 1 : 0] request_packed_in [NUM_REQUEST - 1 : 0];
-reg  [NUM_REQUEST                   - 1 : 0] arbiter_ack_flatted_to_request_queue;
+wire [NUM_REQUEST                   - 1 : 0] arbiter_ack_flatted_to_request_queue;
 
 // separete requests from input queue
 wire [SINGLE_REQUEST_WIDTH_IN_BITS  - 1 : 0] request_packed_from_request_queue [NUM_REQUEST - 1 : 0];
@@ -121,8 +121,8 @@ begin : Find_First_Critical_Way
 end
 
 // fill the valid/critical mask
-wire [NUM_REQUEST - 1 : 0]      valid_mask;
-wire [NUM_REQUEST - 1 : 0]      critical_mask;
+wire [NUM_REQUEST - 1 : 0] valid_mask;
+wire [NUM_REQUEST - 1 : 0] critical_mask;
 
 generate
 for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
@@ -132,6 +132,13 @@ begin
 end
 endgenerate
 
+generate
+    for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
+    begin
+        assign arbiter_ack_flatted_to_request_queue[request_index] = 
+                (issue_ack_in & (last_send_index == request_index)) ? 1 : 0;
+    end
+endgenerate
 
 // arbiter logic
 always@(posedge clk_in, posedge reset_in)
@@ -146,8 +153,7 @@ begin
     // move on to the next request
     else if((issue_ack_in & request_valid_out) | ~request_valid_out)
     begin
-        if(request_critical_final[critical_sel] & (|request_critical_final)
-           & request_valid_flatted_from_request_queue[critical_sel]
+        if(request_critical_final[critical_sel] & request_valid_flatted_from_request_queue[critical_sel]
            & ((critical_sel != last_send_index & request_valid_out) | ~request_valid_out))
         begin
             request_out                             <= request_packed_from_request_queue[critical_sel];
@@ -177,25 +183,6 @@ begin
         request_valid_out                       <= request_valid_out;
         last_send_index                         <= last_send_index;
     end
-end
-
-always@(*)
-begin
-    if(reset_in)
-    begin
-        arbiter_ack_flatted_to_request_queue <= {(NUM_REQUEST){1'b0}};
-    end
-
-    else if(issue_ack_in & request_valid_out)
-    begin
-        if(request_critical_final[critical_sel] & (|request_critical_final) & request_valid_flatted_from_request_queue[critical_sel])
-            arbiter_ack_flatted_to_request_queue <= critical_mask;
-        else if(request_valid_flatted_from_request_queue[valid_sel])
-            arbiter_ack_flatted_to_request_queue <= valid_mask;
-    end
-
-    else
-        arbiter_ack_flatted_to_request_queue <= {(NUM_REQUEST){1'b0}};
 end
 
 endmodule
