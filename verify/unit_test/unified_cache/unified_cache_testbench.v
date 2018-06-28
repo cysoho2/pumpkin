@@ -725,8 +725,8 @@ unified_cache
     .input_packet_flatted_in        ({way2_packet_to_cache, way1_packet_to_cache}),
     .input_packet_ack_flatted_out   ({way2_packet_ack_from_cache, way1_packet_ack_from_cache}),
     
-    .output_packet_flatted_out      ({way2_packet_from_cache, way1_packet_from_cache}),
-    .output_packet_ack_flatted_in   ({way2_packet_ack_to_cache, way1_packet_ack_to_cache}),
+    .return_packet_flatted_out      ({way2_packet_from_cache, way1_packet_from_cache}),
+    .return_packet_ack_flatted_in   ({way2_packet_ack_to_cache, way1_packet_ack_to_cache}),
 
     .from_mem_packet_in             (mem_packet_to_cache),
     .from_mem_packet_ack_out        (mem_packet_ack_from_cache),

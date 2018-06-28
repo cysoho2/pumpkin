@@ -22,8 +22,8 @@ module unified_cache
     output  [NUM_INPUT_PORT - 1 : 0]                                                    input_packet_ack_flatted_out,
 
     // return packet
-    output  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]             output_packet_flatted_out,
-    input   [NUM_INPUT_PORT - 1 : 0]                                                    output_packet_ack_flatted_in,
+    output  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]             return_packet_flatted_out,
+    input   [NUM_INPUT_PORT - 1 : 0]                                                    return_packet_ack_flatted_in,
 
     // from mem
     input   [(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]                              from_mem_packet_in,
@@ -144,11 +144,11 @@ begin : cache_bank
         .clk_in                             (clk_in),
         .reset_in                           (reset_in),
         
-        .request_flatted_in                 (input_is_valid_final ? input_packet_to_cache_flatted : 0),
-        .request_valid_flatted_in           (input_is_valid_final),
-        .request_critical_flatted_in        (input_packet_critical_to_cache_flatted),
-        .issue_ack_out                      (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
-                                                                                  bank_index * NUM_INPUT_PORT]),
+        .input_request_flatted_in           (input_is_valid_final ? input_packet_to_cache_flatted : 0),
+        .input_request_valid_flatted_in     (input_is_valid_final),
+        .input_request_critical_flatted_in  (input_packet_critical_to_cache_flatted),
+        .input_request_ack_out              (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
+                                                                               bank_index * NUM_INPUT_PORT]),
 
         .fetched_request_in                 (fetched_is_valid_final ? from_mem_packet_in : 0),
         .fetched_request_valid_in           (fetched_is_valid_final),
@@ -256,10 +256,10 @@ generate
             .request_critical_flatted_in    (return_request_critical_flatted),
             .issue_ack_out                  (return_request_ack_flatted[(port_index+1) * NUM_BANK -1 : port_index * NUM_BANK]),
 
-            .request_out                    (output_packet_flatted_out[(port_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
+            .request_out                    (return_packet_flatted_out[(port_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
                                                                            port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
             .request_valid_out              (),
-            .issue_ack_in                   (output_packet_ack_flatted_in[port_index])
+            .issue_ack_in                   (return_packet_ack_flatted_in[port_index])
         );
     end
 endgenerate

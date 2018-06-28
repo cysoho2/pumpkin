@@ -17,10 +17,10 @@ module unified_cache_bank
 (
     input                                                                   clk_in,
     input                                                                   reset_in,
-    input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]  request_flatted_in,
-    input  [NUM_INPUT_PORT                                        - 1 : 0]  request_valid_flatted_in,
-    input  [NUM_INPUT_PORT                                        - 1 : 0]  request_critical_flatted_in,
-    output [NUM_INPUT_PORT                                        - 1 : 0]  issue_ack_out,
+    input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]  input_request_flatted_in,
+    input  [NUM_INPUT_PORT                                        - 1 : 0]  input_request_valid_flatted_in,
+    input  [NUM_INPUT_PORT                                        - 1 : 0]  input_request_critical_flatted_in,
+    output [NUM_INPUT_PORT                                        - 1 : 0]  input_request_ack_out,
 
     input  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS                    - 1 : 0]  fetched_request_in,
     input                                                                   fetched_request_valid_in,
@@ -56,10 +56,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             ({request_flatted_in}),
-        .request_valid_flatted_in       ({request_valid_flatted_in}),
-        .request_critical_flatted_in    ({request_critical_flatted_in}),
-        .issue_ack_out                  ({issue_ack_out}),
+        .request_flatted_in             ({input_request_flatted_in}),
+        .request_valid_flatted_in       ({input_request_valid_flatted_in}),
+        .request_critical_flatted_in    ({input_request_critical_flatted_in}),
+        .issue_ack_out                  ({input_request_ack_out}),
 
         .request_out                    (access_packet),
         .request_valid_out              (),
@@ -167,8 +167,8 @@ begin
     wire                                              access_packet_ack;
 
     wire                                              request_critical_lower_flatted = is_miss_queue_about_to_full ?
-                                                                                        ~request_critical_flatted_in :
-                                                                                        request_critical_flatted_in;
+                                                                                        ~input_request_critical_flatted_in :
+                                                                                        input_request_critical_flatted_in;
 
     priority_arbiter
     #(
@@ -181,10 +181,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             ({miss_replay_request, request_flatted_in}),
-        .request_valid_flatted_in       ({miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS], request_valid_flatted_in}),
-        .request_critical_flatted_in    ({is_miss_queue_about_to_full, request_critical_flatted_in}),
-        .issue_ack_out                  ({miss_replay_request_ack, issue_ack_out}),
+        .request_flatted_in             ({miss_replay_request, input_request_flatted_in}),
+        .request_valid_flatted_in       ({miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS], input_request_valid_flatted_in}),
+        .request_critical_flatted_in    ({is_miss_queue_about_to_full, input_request_critical_flatted_in}),
+        .issue_ack_out                  ({miss_replay_request_ack, input_request_ack_out}),
 
         .request_out                    (access_packet),
         .request_valid_out              (),
@@ -467,10 +467,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             (request_flatted_in),
-        .request_valid_flatted_in       (request_valid_flatted_in),
-        .request_critical_flatted_in    (request_critical_flatted_in),
-        .issue_ack_out                  (issue_ack_out),
+        .request_flatted_in             (input_request_flatted_in),
+        .request_valid_flatted_in       (input_request_valid_flatted_in),
+        .request_critical_flatted_in    (input_request_critical_flatted_in),
+        .issue_ack_out                  (input_request_ack_out),
 
         .request_out                    (miss_request_out),
         .request_valid_out              (miss_request_valid_out),
