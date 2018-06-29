@@ -5,22 +5,22 @@ module axi4_slave
         // User parameters ends
         // Do not modify the parameters beyond this line
 
-        // Width of ID for for write address, write data, read address and read data
-        parameter integer C_S_AXI_ID_WIDTH      = 1,
         // Width of S_AXI data bus
         parameter integer C_S_AXI_DATA_WIDTH    = 32,
         // Width of S_AXI address bus
-        parameter integer C_S_AXI_ADDR_WIDTH    = 6,
+        parameter integer C_S_AXI_ADDR_WIDTH    = 32,
         // Width of optional user defined signal in write address channel
-        parameter integer C_S_AXI_AWUSER_WIDTH  = 0,
+        parameter integer C_S_AXI_AWUSER_WIDTH  = 1,
         // Width of optional user defined signal in read address channel
-        parameter integer C_S_AXI_ARUSER_WIDTH  = 0,
+        parameter integer C_S_AXI_ARUSER_WIDTH  = 1,
         // Width of optional user defined signal in write data channel
-        parameter integer C_S_AXI_WUSER_WIDTH   = 0,
+        parameter integer C_S_AXI_WUSER_WIDTH   = 1,
         // Width of optional user defined signal in read data channel
-        parameter integer C_S_AXI_RUSER_WIDTH   = 0,
+        parameter integer C_S_AXI_RUSER_WIDTH   = 1,
         // Width of optional user defined signal in write response channel
-        parameter integer C_S_AXI_BUSER_WIDTH   = 0
+        parameter integer C_S_AXI_BUSER_WIDTH   = 1,
+        // Width of ID for for write address, write data, read address and read data
+        parameter integer C_S_AXI_ID_WIDTH      = 1
 )
 (
         // Users to add ports here

@@ -10,17 +10,17 @@ module unified_cache_bank
     parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
 
     parameter BANK_NUM                           = 0,
-    parameter MODE                               = "OFF", /* OFF BASIC ADVANCED*/
+    parameter MODE                               = "OFF", /* option: OFF, BASIC, ADVANCED*/
 
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET)
 )
 (
     input                                                                   clk_in,
     input                                                                   reset_in,
-    input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]  request_flatted_in,
-    input  [NUM_INPUT_PORT                                        - 1 : 0]  request_valid_flatted_in,
-    input  [NUM_INPUT_PORT                                        - 1 : 0]  request_critical_flatted_in,
-    output [NUM_INPUT_PORT                                        - 1 : 0]  issue_ack_out,
+    input  [NUM_INPUT_PORT * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]  input_request_flatted_in,
+    input  [NUM_INPUT_PORT                                        - 1 : 0]  input_request_valid_flatted_in,
+    input  [NUM_INPUT_PORT                                        - 1 : 0]  input_request_critical_flatted_in,
+    output [NUM_INPUT_PORT                                        - 1 : 0]  input_request_ack_out,
 
     input  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS                    - 1 : 0]  fetched_request_in,
     input                                                                   fetched_request_valid_in,
@@ -56,10 +56,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             ({request_flatted_in}),
-        .request_valid_flatted_in       ({request_valid_flatted_in}),
-        .request_critical_flatted_in    ({request_critical_flatted_in}),
-        .issue_ack_out                  ({issue_ack_out}),
+        .request_flatted_in             ({input_request_flatted_in}),
+        .request_valid_flatted_in       ({input_request_valid_flatted_in}),
+        .request_critical_flatted_in    ({input_request_critical_flatted_in}),
+        .issue_ack_out                  ({input_request_ack_out}),
 
         .request_out                    (access_packet),
         .request_valid_out              (),
@@ -71,7 +71,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("LUTRAM")
     )
     valid_array
@@ -95,7 +95,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     history_array
@@ -119,7 +119,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (`UNIFIED_CACHE_TAG_LEN_IN_BITS),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     tag_array
@@ -142,7 +142,7 @@ begin
     #(
         .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
         .NUM_SET                        (NUM_SET),
-        .SET_PTR_WIDTH_IN_BITS          ($clog2(NUM_SET))
+        .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
     )
     data_array
     (
@@ -167,8 +167,8 @@ begin
     wire                                              access_packet_ack;
 
     wire                                              request_critical_lower_flatted = is_miss_queue_about_to_full ?
-                                                                                        ~request_critical_flatted_in :
-                                                                                        request_critical_flatted_in;
+                                                                                        ~input_request_critical_flatted_in :
+                                                                                        input_request_critical_flatted_in;
 
     priority_arbiter
     #(
@@ -181,10 +181,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             ({miss_replay_request, request_flatted_in}),
-        .request_valid_flatted_in       ({miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS], request_valid_flatted_in}),
-        .request_critical_flatted_in    ({is_miss_queue_about_to_full, request_critical_flatted_in}),
-        .issue_ack_out                  ({miss_replay_request_ack, issue_ack_out}),
+        .request_flatted_in             ({miss_replay_request, input_request_flatted_in}),
+        .request_valid_flatted_in       ({miss_replay_request[`UNIFIED_CACHE_PACKET_VALID_POS], input_request_valid_flatted_in}),
+        .request_critical_flatted_in    ({is_miss_queue_about_to_full, input_request_critical_flatted_in}),
+        .issue_ack_out                  ({miss_replay_request_ack, input_request_ack_out}),
 
         .request_out                    (access_packet),
         .request_valid_out              (),
@@ -196,7 +196,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("LUTRAM")
     )
     valid_array
@@ -220,7 +220,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     history_array
@@ -244,7 +244,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (1),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     dirty_array
@@ -268,7 +268,7 @@ begin
         .SINGLE_ENTRY_SIZE_IN_BITS  (`UNIFIED_CACHE_TAG_LEN_IN_BITS),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),
-        .SET_PTR_WIDTH_IN_BITS      ($clog2(NUM_SET)),
+        .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
         .STORAGE_TYPE               ("BRAM")
     )
     tag_array
@@ -467,10 +467,10 @@ begin
         .clk_in                         (clk_in),
 
         // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             (request_flatted_in),
-        .request_valid_flatted_in       (request_valid_flatted_in),
-        .request_critical_flatted_in    (request_critical_flatted_in),
-        .issue_ack_out                  (issue_ack_out),
+        .request_flatted_in             (input_request_flatted_in),
+        .request_valid_flatted_in       (input_request_valid_flatted_in),
+        .request_critical_flatted_in    (input_request_critical_flatted_in),
+        .issue_ack_out                  (input_request_ack_out),
 
         .request_out                    (miss_request_out),
         .request_valid_out              (miss_request_valid_out),
