@@ -575,7 +575,7 @@ sub create_sim_config_file
 {
     my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'sim_config_filename'}";
     
-    #system "rm $sim_config_path" if(-e $sim_config_path);
+    system "cat /dev/null >$sim_config_path" if(-e $sim_config_path);
     #die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
 
     die "[error-script] fail to open $sim_config_path"
@@ -584,8 +584,8 @@ sub create_sim_config_file
     printf config_handle "`ifndef SIMULATION\n";
     printf config_handle "    `define SIMULATION\n";
     printf config_handle "    `timescale 100ps/1ps\n";
-    printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 100;
-    printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 50;
+    printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
+    printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
     printf config_handle "    `define MEM_IMAGE_DIR \"%s\"\n", $pumpkin_path_hash{'unit_test_mem_image_dir'};
 
     if($pumpkin_parameter_hash{'running_on_mac'} == 1)
