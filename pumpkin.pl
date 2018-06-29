@@ -311,13 +311,16 @@ sub task_begin
             `cp $impl_log_path  $report_dir/$pumpkin_parameter_hash{impl_log_filename}`  if -e $impl_log_path;
             `cp $sim_log_path   $report_dir/$pumpkin_parameter_hash{sim_log_filename}`   if -e $sim_log_path;
 
-            if(&check_timing($timing_rpt_path) eq 'pass')
+            if($test_mode eq 'post-synthesis' or $test_mode eq 'post-implementation')
             {
-                say "\n[info-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is met";
-            }
-            else
-            {
-                say "\n[critical-warning-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
+                if(&check_timing($timing_rpt_path) eq 'pass')
+                {
+                    say "\n[info-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is met";
+                }
+                else
+                {
+                    say "\n[critical-warning-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
+                }
             }
         }
         # invoke icarus for mac
