@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use v5.26;
+use v5.10;
 use strict;
 use Data::Dumper;
 use POSIX;

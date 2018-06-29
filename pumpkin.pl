@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use v5.26;
+use v5.10;
 use strict;
 use File::Find;
 use File::Copy;
@@ -59,7 +59,7 @@ sub pumpkin_init
         'default_test_mode'             => 'post-implementation',
         'default_test_type'             => 'timing',
         'default_test_dump'             => 'off',
-        'default_cycle_time'            => 5, # counting in nano second
+        'default_cycle_time'            => 10, # counting in nano second
 
         'waveform_filename'             => 'sim_waves.vcd',
         'autogen_constr_filename'       => 'auto_constraints.xdc',
@@ -70,7 +70,7 @@ sub pumpkin_init
         'util_rpt_filename'             => 'util.log',
         'report_dir'                    => 'report',
 
-        'sim_config_filename' 			=> 'sim_config.h',
+        'sim_config_filename' 		=> 'sim_config.h',
 
         'c_x64_compiler'                => 'gcc',
         'cpp_x64_compiler'              => 'g++',
@@ -583,9 +583,9 @@ sub create_sim_config_file
 
     printf config_handle "`ifndef SIMULATION\n";
     printf config_handle "    `define SIMULATION\n";
-    printf config_handle "    `timescale 10ns/100ps\n";
-    printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
-    printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+    printf config_handle "    `timescale 100ps/1ps\n";
+    printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 100;
+    printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 50;
     printf config_handle "    `define MEM_IMAGE_DIR \"%s\"\n", $pumpkin_path_hash{'unit_test_mem_image_dir'};
 
     if($pumpkin_parameter_hash{'running_on_mac'} == 1)
