@@ -105,11 +105,11 @@ main()
     k = 0;
     for (i = 0; i < MEM_SIZE; i++)
     {
-        if (i % 4 == 0 || i % 4 == 1)
+        if (i % 4 == 0)
         {
             same_bank_addresses_1[j++] = i; 
         }
-        else
+        else if (i % 4 == 1)
         {
             same_bank_addresses_2[k++] = i;
         }
@@ -304,7 +304,7 @@ void create_request_write(char *path_request_write, char *path_correct, int *add
      	/*data*/itoa_bin(write_content, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS, str);
      	write(fd_request_write, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
 
-        /*addr*/itoa_bin(addresses[i], CPU_DATA_LEN_IN_BITS, str);
+        /*addr*/itoa_bin(addresses[i] << 2, CPU_DATA_LEN_IN_BITS, str);
         write(fd_request_write, str, CPU_DATA_LEN_IN_BITS);
 
 	    itoa_bin(write_content--, CPU_DATA_LEN_IN_BITS, str);	    
@@ -331,7 +331,7 @@ void create_request_write(char *path_request_write, char *path_correct, int *add
      	/*data*/itoa_bin(0, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS, str);
      	write(fd_request_write, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
 
-        /*addr*/itoa_bin(addresses[i], CPU_DATA_LEN_IN_BITS, str);
+        /*addr*/itoa_bin(addresses[i] << 2, CPU_DATA_LEN_IN_BITS, str);
         write(fd_request_write, str, CPU_DATA_LEN_IN_BITS);
         
         write(fd_request_write, "\n", 1);
@@ -394,7 +394,7 @@ void create_request_read(char *path_request, char *path_correct, int *addresses,
      	/*data*/itoa_bin(write_content, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS, str);
      	write(fd_request, str, UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
 
-        /*addr*/itoa_bin(addresses[i], CPU_DATA_LEN_IN_BITS, str);
+        /*addr*/itoa_bin(addresses[i] << 2, CPU_DATA_LEN_IN_BITS, str);
 	write(fd_request, str, CPU_DATA_LEN_IN_BITS);
 
 	write(fd_correct, mem[addresses[i]], UNIFIED_CACHE_BLOCK_SIZE_IN_BITS);
