@@ -41,8 +41,14 @@ reg     [31:0]                                                  correct_result_c
 reg     [31:0]                                                  test_hit_1;
 reg     [31:0]                                                  test_hit_2;
 reg                                                             test_gen_flag;
-reg                                                             test_check_flag;
+reg                                                             test_way1_check_flag;
+reg                                                             test_way2_check_flag;
 reg     [31:0]                                                  test_check_clk;
+
+reg                                                             test_mem_accept_flag;
+reg                                                             test_mem_wait;
+reg     [31:0]                                                  test_mem_clk_ctr;
+reg                                                             test_mem_pending_lock;
 
 reg                                                             test_judge;
 reg                                                             test_way1_enable;
@@ -69,12 +75,18 @@ reg                                                             test_way1_valid;
 reg                                                             test_way1_accept_flag;
 reg                                                             test_way1_record_flag;
 
+wire                                                            test_way1_is_next_packet_from_cache;
+reg                                                             test_way1_gotten_invalid_packet;
+
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way2_last_packet_from_cache;
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way2_last_packet_to_cache;
 reg                                                             way2_wait;
 reg                                                             test_way2_valid;
 reg                                                             test_way2_accept_flag;
 reg                                                             test_way2_record_flag;
+
+wire                                                            test_way2_is_next_packet_from_cache;
+reg                                                             test_way2_gotten_invalid_packet;
 
 wire    [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_to_cache;
 wire                                                            way1_packet_ack_from_cache;
@@ -99,6 +111,9 @@ reg                                                             mem_packet_ack_t
 
 assign way1_packet_to_cache = (test_way1_enable & test_way1_valid)? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
 assign way2_packet_to_cache = (test_way2_enable & test_way2_valid)? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+
+assign test_way1_is_next_packet_from_cache = (way1_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way1_last_packet_from_cache != way1_packet_from_cache) | (test_way1_gotten_invalid_packet);
+assign test_way2_is_next_packet_from_cache = (way2_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way2_last_packet_from_cache != way2_packet_from_cache) | (test_way2_gotten_invalid_packet);
 
 always@(posedge clk_in or posedge reset_in)
 begin
@@ -127,7 +142,8 @@ begin
             test_judge                          <= 0;
             
             test_gen_flag                       <= 1;
-            test_check_flag                     <= 0;
+            test_way1_check_flag                <= 0;
+            test_way2_check_flag                <= 0;
             
             test_way1_scoreboard_valid_array    <= {((`MEM_SIZE)/2){1'b0}};
             test_way1_scoreboard_ctr            <= 0;
@@ -146,18 +162,21 @@ begin
             test_way1_accept_flag               <= 0;
             test_way1_record_flag               <= 0;
             
+            test_way1_gotten_invalid_packet     <= 0;
+            
             way2_last_packet_from_cache         <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             way2_last_packet_to_cache           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             way2_wait                           <= 1;
             test_way2_valid                     <= 1;
             test_way2_accept_flag               <= 0;
             test_way2_record_flag               <= 0;
+            
+            test_way2_gotten_invalid_packet     <= 0;
     end
 
     else
     begin
-        // way1 packet 
-        
+        // way1 packet to cache
         if(test_way1_enable)
         begin
         
@@ -177,10 +196,10 @@ begin
             if(clk_ctr % 3 == 0 & test_way1_accept_flag)
             begin
                 //next request
-                test_way1_valid         <= 1;
-                test_way1_record_flag   <= 1;
-                way1_packet_index       <= way1_packet_index + 1'b1;
-                test_way1_accept_flag   <= 0;
+                test_way1_valid                                                     <= 1;
+                test_way1_record_flag                                               <= 1;
+                way1_packet_index                                                   <= way1_packet_index + 1'b1;
+                test_way1_accept_flag                                               <= 0;
             end
 
             else
@@ -189,53 +208,58 @@ begin
                 begin
                     if(test_way1_valid & ~test_way1_record_flag)
                     begin
-                        way1_last_packet_to_cache   <= way1_packet_to_cache;
-                        test_way1_accept_flag       <= 1;
-                        test_way1_valid             <= 0;
+                        way1_last_packet_to_cache                                   <= way1_packet_to_cache;
+                        test_way1_accept_flag                                       <= 1;
+                        test_way1_valid                                             <= 0;
                     end
                 end
             end
 
 
-            //if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (way1_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way1_last_packet_from_cache != way1_packet_from_cache)) 
-            if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]) 
+            //way1 packet from cache
+            if(way1_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & test_way1_is_next_packet_from_cache) 
             begin
                             
-//                if (~way1_wait)
-//                begin
-                    way1_last_packet_from_cache                 <= way1_packet_from_cache;
-                    test_way1_ack_in_ctr     <= test_way1_ack_in_ctr + 1'b1;
-                    way1_packet_ack_to_cache <= 1'b1;
+                if (~way1_wait)
+                begin
+                    way1_last_packet_from_cache                                     <= way1_packet_from_cache;
+                    way1_packet_ack_to_cache                                        <= 1'b1;
+                    test_way1_gotten_invalid_packet                                 <= 0;
                     
                     if (~ way1_packet_ack_to_cache & ~ way1_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
                     begin
                         if (test_way1_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                         begin
-                            test_way1_result_pool[test_way1_result_ctr] <= way1_packet_from_cache;
-                            test_way1_result_ctr                        <= test_way1_result_ctr + 1'b1;
+                            test_way1_result_pool[test_way1_result_ctr]             <= way1_packet_from_cache;
+                            test_way1_result_ctr                                    <= test_way1_result_ctr + 1'b1;
                         end
                         
                         if (test_way1_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                         begin
-                            test_check_flag <= 1;
+                            test_way1_check_flag                                         <= 1;
                         end
                     end
                     
-//                    way1_wait           <= 1;
-//                end
-//                else
-//                begin
-//                    way1_wait           <= 0;
-//                end
+                    way1_wait           <= 1;
+                end
+                else
+                begin
+                    way1_wait           <= 0;
+                end
             end
             
             else
             begin
                 way1_packet_ack_to_cache <= 1'b0;
+                
+                if (way1_packet_from_cache == 0)
+                begin
+                    test_way1_gotten_invalid_packet = 1;
+                end
             end
         end
 
-        // way2 packet
+        // way2 packet to cache
         if (test_way2_enable)
         begin
             if (test_way2_record_flag)
@@ -273,40 +297,59 @@ begin
                 end
             end
     
-            if(way2_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]) 
+            // way2 packet from cache
+            if(way2_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & test_way2_is_next_packet_from_cache) 
             begin
-                test_way2_ack_in_ctr     <= test_way2_ack_in_ctr + 1'b1;
-                way2_packet_ack_to_cache <= 1'b1;
-                                
-                if (~way2_packet_ack_to_cache & ~ way2_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
+                            
+                if (~way2_wait)
                 begin
-                    if (test_way2_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
+                    way2_last_packet_from_cache                                     <= way2_packet_from_cache;
+                    test_way2_ack_in_ctr                                            <= test_way2_ack_in_ctr + 1'b1;
+                    way2_packet_ack_to_cache                                        <= 1'b1;
+                    test_way2_gotten_invalid_packet                                 <= 0;
+                    
+                    if (~ way2_packet_ack_to_cache & ~ way2_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS])
                     begin
-                        test_way2_result_pool[test_way2_result_ctr] <= way2_packet_from_cache;
-                        test_way2_result_ctr                        <= test_way2_result_ctr + 1'b1;
+                        if (test_way2_result_ctr < ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
+                        begin
+                            test_way2_result_pool[test_way2_result_ctr]             <= way2_packet_from_cache;
+                            test_way2_result_ctr                                    <= test_way2_result_ctr + 1'b1;
+                        end
+                        
+                        if (test_way2_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
+                        begin
+                            test_way2_check_flag                                         <= 1;
+                        end
                     end
-                                       
-                    if (test_way2_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
-                    begin
-                        test_check_flag = 1;
-                    end
+                    
+                    way2_wait           <= 1;
                 end
-            end                                          
+                else
+                begin
+                    way2_wait           <= 0;
+                end
+            end
             
             else
             begin
-                    way2_packet_ack_to_cache <= 1'b0;
+                way2_packet_ack_to_cache <= 1'b0;
+                
+                if (way2_packet_from_cache == 0)
+                begin
+                    test_way2_gotten_invalid_packet = 1;
+                end
             end
+            
         end
-        
     end
 end
 
 //check the result
-always@(test_check_flag)
+always@((test_way1_enable? test_way1_check_flag : ~test_way1_check_flag) & (test_way2_enable? test_way2_check_flag : ~test_way2_check_flag))
 begin
     
-    test_check_flag = 0;
+    test_way1_check_flag = 0;
+    test_way2_check_flag = 0;
     
     //way1 check
     if (test_way1_enable)
@@ -397,12 +440,19 @@ always@(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        mem_packet_ack_to_cache <= 0;
-        cache_packet_pending    <= 0;
+        test_mem_accept_flag                <= 1;
+        mem_packet_ack_to_cache             <= 0;
+        cache_packet_pending                <= 0;
+        test_mem_wait                       <= 0;
+        test_mem_clk_ctr                    <= 0;
+        
+        test_mem_pending_lock               <= 0;
     end
     
-    else if(mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (clk_ctr % test_latency == 0) & (~mem_packet_ack_to_cache))
+    else if(mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (~test_mem_wait) & (test_mem_accept_flag) & (~test_mem_pending_lock))
     begin
+        test_mem_pending_lock   <= 1;
+        test_mem_accept_flag    <= 0;
         mem_packet_ack_to_cache <= 1;
         
         if ({mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]})
@@ -424,10 +474,29 @@ begin
         
     end
 
-    else if(mem_packet_ack_to_cache)
+    else if(mem_packet_ack_to_cache & (~test_mem_wait))
     begin
-        mem_packet_ack_to_cache <= 0;
-        cache_packet_pending    <= 0;
+        if(~test_mem_accept_flag)
+        begin
+            test_mem_accept_flag    <= 1;
+            mem_packet_ack_to_cache <= 0;
+            cache_packet_pending    <= 0;
+            test_mem_wait           <= 1;
+            test_mem_clk_ctr        <= 0;
+        end
+    end
+    
+    if (test_mem_wait)
+    begin
+        
+        test_mem_clk_ctr            <= test_mem_clk_ctr + 1'b1;
+    
+        if ((test_mem_clk_ctr + 1'b1) % test_latency == 0)
+        begin
+            test_mem_wait           <= 0;
+            //test_mem_accept_flag    <= 0;
+        end
+        
     end
 end
 
@@ -451,6 +520,7 @@ begin
 
     else if(mem_packet_to_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & mem_packet_ack_from_cache)
     begin
+        test_mem_pending_lock   <= 0;
         mem_packet_to_cache     <= 0; 
     end
 end
@@ -736,3 +806,4 @@ unified_cache
 );
 
 endmodule
+
