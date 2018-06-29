@@ -38,7 +38,7 @@ module axi4_master
     // Initiate AXI transactions
     input wire  INIT_AXI_TXN,
     // Asserts when transaction is complete
-    input wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] TRANSACTION_PACKET,
+    input  wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] TRANSACTION_PACKET,
     output wire  [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0] RETURN_DATA,
     output reg  TXN_DONE,
 
@@ -445,7 +445,7 @@ module axi4_master
         genvar data_index;
         for(data_index = 0; data_index < C_M_AXI_BURST_LEN; data_index = data_index + 1)
         begin
-            axi_wdata_flatted = packet_data[(data_index+1) * C_M_AXI_DATA_WIDTH - 1 : data_index * C_M_AXI_DATA_WIDTH];
+            assign axi_wdata_flatted[data_index] = packet_data[(data_index+1) * C_M_AXI_DATA_WIDTH - 1 : data_index * C_M_AXI_DATA_WIDTH];
         end
     endgenerate
 
