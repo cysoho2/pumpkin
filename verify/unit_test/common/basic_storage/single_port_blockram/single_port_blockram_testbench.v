@@ -6,6 +6,7 @@ module single_port_blockram_testbench();
 parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
 parameter NUM_SET                       = 64;
 parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET);
+parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS;
 
 integer                                         test_case_num;
 reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_input_1;
@@ -13,9 +14,9 @@ reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_result_1;
 reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_result_2;
 reg                                             test_judge;
 
-reg     clk_in;
-reg     access_en_in;
-reg     write_en_in;
+reg                                             clk_in;
+reg                                             access_en_in;
+reg     [WRITE_MASK_LEN            - 1 : 0]     write_en_in;
 
 reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     access_set_addr_in;
 
@@ -49,7 +50,7 @@ begin
     test_input_1                                = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
 
     access_en_in                                = 1;
-    write_en_in                                 = 1;
+    write_en_in                                 = {(WRITE_MASK_LEN){1'b1}};
     #(`FULL_CYCLE_DELAY) write_entry_in         = test_input_1;
     #(`FULL_CYCLE_DELAY) access_set_addr_in     = NUM_SET - 1;
 
