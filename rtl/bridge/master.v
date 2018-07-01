@@ -181,7 +181,7 @@ module axi4_master
     // written data words.
     parameter [1:0] IDLE        = 2'b00, // This state initiates AXI4Lite transaction
             // after the state machine changes state to INIT_WRITE
-            // when there is 0 to 1 transition on INIT_AXI_TXN and TRANACTION_PACKET is a write packet
+            // when there is 0 to 1 transition on INIT_AXI_TXN and TRANSACTION_PACKET is a write packet
                     INIT_WRITE  = 2'b01, // This state initializes write transaction
                     INIT_READ   = 2'b10, // This state initializes read transaction
                     ACK         = 2'b11;
@@ -192,7 +192,7 @@ module axi4_master
     //AXI4 internal temp signals
     reg     [C_M_AXI_ADDR_WIDTH-1 : 0] 	axi_awaddr;
     reg  	                            axi_awvalid;
-    reg     [C_M_AXI_DATA_WIDTH-1 : 0] 	axi_wdata;
+    reg     [C_M_AXI_DATA_WIDTH-1 : 0] 	axi_wdata_index;
     reg  	                            axi_wlast;
     reg  	                            axi_wvalid;
     reg  	                            axi_bready;
@@ -232,7 +232,7 @@ module axi4_master
     //I/O Connections. Write Address (AW)
     assign M_AXI_AWID	        = 'b0;
     //The AXI address is a concatenation of the target base address + active offset range
-    assign M_AXI_AWADDR	        = C_M_TARGET_SLAVE_BASE_ADDR + axi_awaddr;  //TO_MODIFIE
+    assign M_AXI_AWADDR	        = C_M_TARGET_SLAVE_BASE_ADDR + axi_awaddr;
     //Burst LENgth is number of transaction beats, minus 1
     assign M_AXI_AWLEN	        = C_M_AXI_BURST_LEN - 1;
     //Size should be C_M_AXI_DATA_WIDTH, in 2^SIZE bytes, otherwise narrow bursts are used
@@ -247,9 +247,9 @@ module axi4_master
     assign M_AXI_AWUSER	        = 'b1;
     assign M_AXI_AWVALID	    = axi_awvalid;
     //Write Data(W)
-    assign M_AXI_WDATA	        = axi_wdata_flatted[axi_wdata];                         //TO_MODIFIE
+    assign M_AXI_WDATA	        = axi_wdata_flatted[axi_wdata_index];
     //All bursts are complete and aligned in this example
-    assign M_AXI_WSTRB	        = {(C_M_AXI_DATA_WIDTH/8){1'b1}};  //TO_MODIFIE
+    assign M_AXI_WSTRB	        = wstrb;
     assign M_AXI_WLAST	        = axi_wlast;
     assign M_AXI_WUSER	        = 'b0;
     assign M_AXI_WVALID	        = axi_wvalid;
@@ -257,7 +257,7 @@ module axi4_master
     assign M_AXI_BREADY	        = axi_bready;
     //Read Address (AR)
     assign M_AXI_ARID	        = 'b0;
-    assign M_AXI_ARADDR	        = C_M_TARGET_SLAVE_BASE_ADDR + axi_araddr;   //TO_MODIFIE
+    assign M_AXI_ARADDR	        = C_M_TARGET_SLAVE_BASE_ADDR + axi_araddr;
     //Burst LENgth is number of transaction beats, minus 1
     assign M_AXI_ARLEN	        = C_M_AXI_BURST_LEN - 1;
     //Size should be C_M_AXI_DATA_WIDTH, in 2^n bytes, otherwise narrow bursts are used
@@ -439,6 +439,12 @@ module axi4_master
             write_index <= write_index;
     end
 
+    wire  [C_M_AXI_DATA_WIDTH/8-1 : 0] wstrb;
+    wire  [`UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH - 1 : 0] input_bytemask = 
+            TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
+    assign wstrb = input_bytemask[(axi_wdata_index+1) * (C_M_AXI_DATA_WIDTH/8) - 1 : axi_wdata_index * (C_M_AXI_DATA_WIDTH/8)];
+
+
     wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] packet_data = TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO];
     wire [C_M_AXI_DATA_WIDTH                - 1 : 0] axi_wdata_flatted [C_M_AXI_BURST_LEN - 1 : 0];
     generate
@@ -454,13 +460,11 @@ module axi4_master
     always @(posedge M_AXI_ACLK)
     begin
         if (M_AXI_ARESETN == 0 || init_txn_pulse == 1'b1)
-            axi_wdata <= 'b1;
-        //else if (wnext && axi_wlast)
-        //  axi_wdata <= 'b0;
+            axi_wdata_index <= 'b0;
         else if (wnext)
-            axi_wdata <= axi_wdata + 1;
+            axi_wdata_index <= axi_wdata_index + 1;
         else
-            axi_wdata <= axi_wdata;
+            axi_wdata_index <= axi_wdata_index;
     end
 
 
