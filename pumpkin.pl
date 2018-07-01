@@ -586,9 +586,9 @@ sub create_sim_config_file
 
     printf config_handle "`ifndef SIMULATION\n";
     printf config_handle "    `define SIMULATION\n";
-    printf config_handle "    `timescale 100ps/1ps\n";
-    printf config_handle "    `define FULL_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 10;
-    printf config_handle "    `define HALF_CYCLE_DELAY %d\n", $pumpkin_parameter_hash{'default_cycle_time'} * 5;
+    printf config_handle "    `timescale 100ps/100ps\n";
+    printf config_handle "    `define FULL_CYCLE_DELAY %d\n",  $pumpkin_parameter_hash{'default_cycle_time'} * 10;
+    printf config_handle "    `define HALF_CYCLE_DELAY %d\n",  $pumpkin_parameter_hash{'default_cycle_time'} * 5;
     printf config_handle "    `define MEM_IMAGE_DIR \"%s\"\n", $pumpkin_path_hash{'unit_test_mem_image_dir'};
 
     if($pumpkin_parameter_hash{'running_on_mac'} == 1)
