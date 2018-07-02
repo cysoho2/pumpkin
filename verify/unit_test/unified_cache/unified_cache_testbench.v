@@ -10,6 +10,7 @@ reg                                                             reset_in;
 
 reg     [31:0]                                                  clk_ctr;
 reg     [1023:0]                                                mem_image_path;
+reg     [1023:0]                                                test_case_content;
 
 reg     [(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS)   - 1 : 0]         sim_main_memory                 [0 : (`MEM_SIZE)   - 1];
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_issue               [0 : (`MEM_SIZE)/2 - 1];
@@ -476,17 +477,6 @@ begin
         
     end
 
-//    else if(mem_packet_ack_to_cache & (~test_mem_wait) & ~test_mem_pending_lock)
-//    begin
-//        if(~test_cache_to_mem_accept_flag)
-//        begin
-//            test_cache_to_mem_accept_flag    <= 1;
-//            mem_packet_ack_to_cache          <= 0;
-//            cache_packet_pending             <= 0;
-//            test_mem_wait                    <= 1;
-//            test_mem_clk_ctr                 <= 0;
-//        end
-//    end
     else if(mem_packet_ack_to_cache)
     begin
         if(~test_cache_to_mem_accept_flag)
@@ -504,7 +494,7 @@ begin
         if ((test_mem_clk_ctr + 1'b1) % test_latency == 0)
         begin
             test_mem_wait           <= 0;
-            //test_cache_to_mem_accept_flag    <= 0;
+
         end
         
     end
@@ -520,32 +510,24 @@ begin
     end
     else
     begin
-//    else if(mem_packet_ack_to_cache)
-//    begin
-//        mem_packet_to_cache     <= cache_packet_pending;
-//    end
         
         if (mem_packet_ack_from_cache)
         begin
             test_mem_to_cache_accept_flag   <= 1;
+            mem_packet_to_cache             <= 0; 
         end
         
         if(cache_packet_pending[`UNIFIED_CACHE_PACKET_VALID_POS] & test_mem_pending_lock & test_mem_to_cache_accept_flag)
         begin
-    //        mem_packet_to_cache     <= mem_packet_to_cache;
             mem_packet_to_cache             <= cache_packet_pending;
             test_mem_to_cache_accept_flag   <= 0;
             test_mem_pending_lock           <= 0;
             
-            cache_packet_pending             <= 0;
             test_mem_wait                    <= 1;
             test_mem_clk_ctr                 <= 0;
         end
     
-        else
-        begin
-            mem_packet_to_cache     <= 0; 
-        end
+
     end
 end
 
@@ -659,7 +641,10 @@ begin
         $readmemb(mem_image_path, correct_result_mem_1);
         
         #(`FULL_CYCLE_DELAY * 8000) test_judge                           = (test_hit_1 == (`MEM_SIZE) / 2)? 1 : 0;
-        $display("[info-testbench] test case %d\t%s : \t%s", test_case, {"                      ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+//        test_case_content = {"                      ", test_case_char[test_case]};
+        test_case_content = {test_case_char[test_case]};
+        $display("[info-testbench] test case %d%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
 
         
          //case 1 (phase 1)
@@ -681,7 +666,9 @@ begin
         $readmemb(mem_image_path, correct_result_mem_1);     
     
         #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case, {" (latency : 2 cycles)   ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+        test_case_content = {" (latency : 2 cycles)   ", test_case_char[test_case]};
+        $display("[info-testbench] test case %d%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
 
          
          //case 1 (phase 2)
@@ -705,7 +692,9 @@ begin
         
     
         #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case,{" (latency : 200 cycles) ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+        test_case_content = {" (latency : 200 cycles) ", test_case_char[test_case]};
+        $display("[info-testbench] test case %d%s : \t%s", test_case,test_case_content, test_judge? "passed" : "failed");
         
         test_case                                                        <= test_case + 1'b1;
     end
@@ -738,7 +727,9 @@ begin
         $readmemb(mem_image_path, correct_result_mem_2); 
         
         #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 2 && test_hit_2 == (`MEM_SIZE) / 2)? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case,  {"                        ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+        test_case_content = {"                        ", test_case_char[test_case]};
+        $display("[info-testbench] test case %d%35s : \t%s", test_case,  test_case_content, test_judge? "passed" : "failed");
 
         
         //case 9 (phase 1)
@@ -766,7 +757,9 @@ begin
         $readmemb(mem_image_path, correct_result_mem_2); 
 
         #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4 && test_hit_2 == (`MEM_SIZE) / 4)? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case, {" (latency : 2 cycles)   ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+        test_case_content = {" (latency : 2 cycles)   ", test_case_char[test_case]};
+        $display("[info-testbench] test case %d%35s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
 
         
         //case 9 (phase 2)
@@ -794,7 +787,9 @@ begin
         $readmemb(mem_image_path, correct_result_mem_2);  
     
         #(`FULL_CYCLE_DELAY * 8000) test_judge = ((test_hit_1 == ((`MEM_SIZE)) / 4)) && (test_hit_2 == ((`MEM_SIZE) / 4))? 1 : 0;
-        $display("[info-testbench] test case %d%35s : \t%s", test_case, {" (latency : 200 cycles) ", test_case_char[test_case]}, test_judge? "passed" : "failed");
+        
+        test_case_content = {" (latency : 200 cycles) ", test_case_char[test_case]};
+        $display("[info-testbench] test case %d%35s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
         
         test_case                                                        <= test_case + 1'b1;
     end
