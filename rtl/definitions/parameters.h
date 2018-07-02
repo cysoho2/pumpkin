@@ -14,8 +14,8 @@
 `endif
 `define CPU_INST_LEN_IN_BITS                            32
 
-`define INSTS_FETCH_WIDTH_IN_BITS 						128
-`define NUM_INSTS_FETCH_PER_CYCLE 						(`INSTS_FETCH_WIDTH_IN_BITS / `CPU_INST_LEN_IN_BITS)
+`define NUM_INSTS_FETCH_PER_CYCLE 						4
+`define INSTS_FETCH_WIDTH_IN_BITS 						(`NUM_INSTS_FETCH_PER_CYCLE * `CPU_INST_LEN_IN_BITS)
 
 // General - Misc.
 `define CPU_DATA_LEN_IN_BYTES                           (`CPU_DATA_LEN_IN_BITS / `BYTE_LEN_IN_BITS)
