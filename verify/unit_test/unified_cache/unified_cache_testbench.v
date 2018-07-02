@@ -45,7 +45,9 @@ reg                                                             test_way1_check_
 reg                                                             test_way2_check_flag;
 reg     [31:0]                                                  test_check_clk;
 
-reg                                                             test_mem_accept_flag;
+reg                                                             test_cache_to_mem_accept_flag;
+reg                                                             test_mem_to_cache_accept_flag;
+
 reg                                                             test_mem_wait;
 reg     [31:0]                                                  test_mem_clk_ctr;
 reg                                                             test_mem_pending_lock;
@@ -440,7 +442,7 @@ always@(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        test_mem_accept_flag                <= 1;
+        test_cache_to_mem_accept_flag       <= 1;
         mem_packet_ack_to_cache             <= 0;
         cache_packet_pending                <= 0;
         test_mem_wait                       <= 0;
@@ -449,10 +451,10 @@ begin
         test_mem_pending_lock               <= 0;
     end
     
-    else if(mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (~test_mem_wait) & (test_mem_accept_flag) & (~test_mem_pending_lock))
+    else if(mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & (~test_mem_wait) & (test_cache_to_mem_accept_flag) & (~test_mem_pending_lock))
     begin
         test_mem_pending_lock   <= 1;
-        test_mem_accept_flag    <= 0;
+        test_cache_to_mem_accept_flag    <= 0;
         mem_packet_ack_to_cache <= 1;
         
         if ({mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]})
@@ -474,15 +476,23 @@ begin
         
     end
 
-    else if(mem_packet_ack_to_cache & (~test_mem_wait))
+//    else if(mem_packet_ack_to_cache & (~test_mem_wait) & ~test_mem_pending_lock)
+//    begin
+//        if(~test_cache_to_mem_accept_flag)
+//        begin
+//            test_cache_to_mem_accept_flag    <= 1;
+//            mem_packet_ack_to_cache          <= 0;
+//            cache_packet_pending             <= 0;
+//            test_mem_wait                    <= 1;
+//            test_mem_clk_ctr                 <= 0;
+//        end
+//    end
+    else if(mem_packet_ack_to_cache)
     begin
-        if(~test_mem_accept_flag)
+        if(~test_cache_to_mem_accept_flag)
         begin
-            test_mem_accept_flag    <= 1;
-            mem_packet_ack_to_cache <= 0;
-            cache_packet_pending    <= 0;
-            test_mem_wait           <= 1;
-            test_mem_clk_ctr        <= 0;
+            test_cache_to_mem_accept_flag    <= 1;
+            mem_packet_ack_to_cache          <= 0;       
         end
     end
     
@@ -494,7 +504,7 @@ begin
         if ((test_mem_clk_ctr + 1'b1) % test_latency == 0)
         begin
             test_mem_wait           <= 0;
-            //test_mem_accept_flag    <= 0;
+            //test_cache_to_mem_accept_flag    <= 0;
         end
         
     end
@@ -505,23 +515,37 @@ always@(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
     begin
-        mem_packet_to_cache     <= 0;
+        mem_packet_to_cache             <= 0;
+        test_mem_to_cache_accept_flag   <= 1;
     end
+    else
+    begin
+//    else if(mem_packet_ack_to_cache)
+//    begin
+//        mem_packet_to_cache     <= cache_packet_pending;
+//    end
+        
+        if (mem_packet_ack_from_cache)
+        begin
+            test_mem_to_cache_accept_flag   <= 1;
+        end
+        
+        if(cache_packet_pending[`UNIFIED_CACHE_PACKET_VALID_POS] & test_mem_pending_lock & test_mem_to_cache_accept_flag)
+        begin
+    //        mem_packet_to_cache     <= mem_packet_to_cache;
+            mem_packet_to_cache             <= cache_packet_pending;
+            test_mem_to_cache_accept_flag   <= 0;
+            test_mem_pending_lock           <= 0;
+            
+            cache_packet_pending             <= 0;
+            test_mem_wait                    <= 1;
+            test_mem_clk_ctr                 <= 0;
+        end
     
-    else if(mem_packet_ack_to_cache)
-    begin
-        mem_packet_to_cache     <= cache_packet_pending;
-    end
-
-    else if(mem_packet_to_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & ~mem_packet_ack_from_cache)
-    begin
-        mem_packet_to_cache     <= mem_packet_to_cache;
-    end
-
-    else if(mem_packet_to_cache[`UNIFIED_CACHE_PACKET_VALID_POS] & mem_packet_ack_from_cache)
-    begin
-        test_mem_pending_lock   <= 0;
-        mem_packet_to_cache     <= 0; 
+        else
+        begin
+            mem_packet_to_cache     <= 0; 
+        end
     end
 end
 
