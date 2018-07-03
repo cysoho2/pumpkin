@@ -18,6 +18,7 @@ module single_port_lutram
 );
 
 integer index;
+integer write_lane;
 reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
 
 always @(posedge clk_in or posedge reset_in)
@@ -32,9 +33,16 @@ begin
  
     else if(access_en_in)
     begin
-        if(write_en_in)
+        if(|write_en_in)
         begin
-            lutram[access_set_addr_in] <= write_entry_in;
+            for(write_lane = 0; write_lane < WRITE_MASK_LEN; write_lane = write_lane + 1)
+            begin
+                if(write_en_in[write_lane])
+                begin
+                    lutram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
+                        <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
+                end
+            end
         end
 
         else
