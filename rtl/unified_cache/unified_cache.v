@@ -216,15 +216,14 @@ to_mem_arbiter
 wire  [NUM_INPUT_PORT * NUM_BANK                     - 1 : 0] return_request_ack_flatted;
 wire  [NUM_INPUT_PORT                                - 1 : 0] return_request_ack_packed [NUM_BANK - 1 : 0];
 generate
-    for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
+    for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
     begin
-        for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
+        for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
         begin
             assign return_request_ack_packed [bank_index][port_index] =
-                   return_request_ack_flatted[port_index * bank_index + bank_index];
-            
-            assign return_request_ack_merged[bank_index] = |return_request_ack_packed[bank_index];
+                   return_request_ack_flatted[port_index * NUM_BANK + bank_index];
         end
+        assign return_request_ack_merged[bank_index] = |return_request_ack_packed[bank_index];
     end
 endgenerate
 
@@ -235,9 +234,9 @@ generate
         wire [NUM_BANK - 1 : 0] is_right_port;
         for(bank_index = 0; bank_index < NUM_BANK; bank_index = bank_index + 1)
         begin
-            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH]
-                                                ==
-                                                port_index;
+            assign is_right_port[bank_index] = return_request_flatted[(bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS
+                                                                        + `UNIFIED_CACHE_PACKET_PORT_NUM_LO) +: PORT_ID_WIDTH] == port_index &
+                                               return_request_flatted[bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS];
         end
 
         priority_arbiter
