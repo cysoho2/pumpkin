@@ -4,6 +4,7 @@ module associative_single_port_array
     parameter NUM_SET                       = 64,
     parameter NUM_WAY                       = 16,
     parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET),
+    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS
     parameter STORAGE_TYPE                  = "LUTRAM"
 )
 (
@@ -11,7 +12,7 @@ module associative_single_port_array
     input                                                       clk_in,
 
     input                                                       access_en_in,
-    input                                                       write_en_in,
+    input  [WRITE_MASK_LEN                          - 1 : 0]    write_en_in,
 
     input  [SET_PTR_WIDTH_IN_BITS                   - 1 : 0]    access_set_addr_in,
     input  [NUM_WAY                                 - 1 : 0]    way_select_in,
@@ -43,7 +44,7 @@ generate
                 .clk_in                     (clk_in),
 
                 .access_en_in               (access_en_in & way_select_in[gen]),
-                .write_en_in                (write_en_in  & way_select_in[gen]),
+                .write_en_in                (write_en_in  & {(WRITE_MASK_LEN){way_select_in[gen]}}),
 
                 .access_set_addr_in         (access_set_addr_in),
 
@@ -67,7 +68,7 @@ generate
                 .clk_in                     (clk_in),
 
                 .access_en_in               (access_en_in & way_select_in[gen]),
-                .write_en_in                (write_en_in  & way_select_in[gen]),
+                .write_en_in                (write_en_in  & {(WRITE_MASK_LEN){way_select_in[gen]}}),
 
                 .access_set_addr_in         (access_set_addr_in),
 
