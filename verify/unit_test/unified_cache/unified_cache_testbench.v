@@ -640,7 +640,7 @@ begin
         mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/case_", test_gen_char[test_case], "/way1_correct_result_mem"};
         $readmemb(mem_image_path, correct_result_mem_1);
         
-        #(`FULL_CYCLE_DELAY * 8000) test_judge                           = (test_hit_1 == (`MEM_SIZE) / 2)? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 2000) test_judge                           = (test_hit_1 == (`MEM_SIZE) / 2)? 1 : 0;
         
 //        test_case_content = {"                      ", test_case_char[test_case]};
         test_case_content = {test_case_char[test_case]};
@@ -665,7 +665,7 @@ begin
         mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/case_", test_gen_char[test_case], "/way1_correct_result_mem"};
         $readmemb(mem_image_path, correct_result_mem_1);     
     
-        #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 2000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
         
         test_case_content = {" (latency : 2 cycles)   ", test_case_char[test_case]};
         $display("[info-testbench] test case %d\t%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
@@ -691,7 +691,7 @@ begin
         $readmemb(mem_image_path, correct_result_mem_1); 
         
     
-        #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 16000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4)? 1 : 0;
         
         test_case_content = {" (latency : 200 cycles) ", test_case_char[test_case]};
         $display("[info-testbench] test case %d\t%s : \t%s", test_case,test_case_content, test_judge? "passed" : "failed");
@@ -726,7 +726,7 @@ begin
         mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/case_", test_gen_char[test_case], "/way2_correct_result_mem"};
         $readmemb(mem_image_path, correct_result_mem_2); 
         
-        #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 2 && test_hit_2 == (`MEM_SIZE) / 2)? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 2000) test_judge = (test_hit_1 == (`MEM_SIZE) / 2 && test_hit_2 == (`MEM_SIZE) / 2)? 1 : 0;
         
         test_case_content = {test_case_char[test_case]};
         $display("[info-testbench] test case %d\t%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
@@ -756,7 +756,7 @@ begin
         mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/case_", test_gen_char[test_case], "/way2_correct_result_mem"};
         $readmemb(mem_image_path, correct_result_mem_2); 
 
-        #(`FULL_CYCLE_DELAY * 8000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4 && test_hit_2 == (`MEM_SIZE) / 4)? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 2000) test_judge = (test_hit_1 == (`MEM_SIZE) / 4 && test_hit_2 == (`MEM_SIZE) / 4)? 1 : 0;
         
         test_case_content = {" (latency : 2 cycles)   ", test_case_char[test_case]};
         $display("[info-testbench] test case %d\t%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
@@ -786,7 +786,7 @@ begin
         mem_image_path = {`MEM_IMAGE_DIR, "/unified_cache/case_", test_gen_char[test_case], "/way2_correct_result_mem"};
         $readmemb(mem_image_path, correct_result_mem_2);  
     
-        #(`FULL_CYCLE_DELAY * 8000) test_judge = ((test_hit_1 == ((`MEM_SIZE)) / 4)) && (test_hit_2 == ((`MEM_SIZE) / 4))? 1 : 0;
+        #(`FULL_CYCLE_DELAY * 16000) test_judge = ((test_hit_1 == ((`MEM_SIZE)) / 4)) && (test_hit_2 == ((`MEM_SIZE) / 4))? 1 : 0;
         
         test_case_content = {" (latency : 200 cycles) ", test_case_char[test_case]};
         $display("[info-testbench] test case %d\t%s : \t%s", test_case, test_case_content, test_judge? "passed" : "failed");
