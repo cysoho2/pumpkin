@@ -112,8 +112,8 @@ wire     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        mem_packet_from_
 reg      [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]        cache_packet_pending;
 reg                                                             mem_packet_ack_to_cache;
 
-assign way1_packet_to_cache = (test_way1_enable & test_way1_valid)? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
-assign way2_packet_to_cache = (test_way2_enable & test_way2_valid)? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+assign way1_packet_to_cache = (test_way1_enable & test_way1_valid & ~test_way1_check_flag)? way1_packet_issue[way1_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+assign way2_packet_to_cache = (test_way2_enable & test_way2_valid & ~test_way1_check_flag)? way2_packet_issue[way2_packet_index] : {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
 
 assign test_way1_is_next_packet_from_cache = (way1_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way1_last_packet_from_cache != way1_packet_from_cache) | (test_way1_gotten_invalid_packet);
 assign test_way2_is_next_packet_from_cache = (way2_last_packet_from_cache == {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}} | way2_last_packet_from_cache != way2_packet_from_cache) | (test_way2_gotten_invalid_packet);
@@ -199,6 +199,7 @@ begin
             if(clk_ctr % 3 == 0 & test_way1_accept_flag)
             begin
                 //next request
+                
                 test_way1_valid                                                     <= 1;
                 test_way1_record_flag                                               <= 1;
                 way1_packet_index                                                   <= way1_packet_index + 1'b1;
@@ -282,6 +283,7 @@ begin
             if(clk_ctr % 4 == 0 & test_way2_accept_flag)
             begin
                 //next request
+                
                 test_way2_valid         <= 1;
                 test_way2_record_flag   <= 1;
                 way2_packet_index       <= way2_packet_index + 1'b1;
