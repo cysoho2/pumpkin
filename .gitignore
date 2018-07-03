@@ -1,5 +1,7 @@
 working_temp/
 rtl/definitions/sim_config.h
 vivado/
-vivado*
+vivado*.str
+vivado*.log
+vivado*.jou
 .DS_Store
