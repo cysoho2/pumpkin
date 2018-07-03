@@ -98,6 +98,7 @@ begin
     write_entry_in                              = test_input_1;
 
     #(`FULL_CYCLE_DELAY) write_en_in            = {{(WRITE_MASK_LEN / 4){1'b1}}, {(WRITE_MASK_LEN / 4){1'b0}}, {(WRITE_MASK_LEN / 4){1'b1}}, {(WRITE_MASK_LEN / 4){1'b0}}};
+    #(`FULL_CYCLE_DELAY) write_en_in            = 0;
 
     #(`FULL_CYCLE_DELAY * 3) test_result_2      = read_entry_out;
     #(`FULL_CYCLE_DELAY) test_judge             = (test_result_2 === test_result_1) && (test_result_2 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
