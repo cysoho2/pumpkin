@@ -1,3 +1,5 @@
+`include "parameters.h"
+
 module single_port_lutram
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64,
