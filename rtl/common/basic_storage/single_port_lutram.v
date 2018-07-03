@@ -33,22 +33,16 @@ begin
  
     else if(access_en_in)
     begin
-        if(|write_en_in)
+        for(write_lane = 0; write_lane < WRITE_MASK_LEN; write_lane = write_lane + 1)
         begin
-            for(write_lane = 0; write_lane < WRITE_MASK_LEN; write_lane = write_lane + 1)
+            if(write_en_in[write_lane])
             begin
-                if(write_en_in[write_lane])
-                begin
-                    lutram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
-                        <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
-                end
+                lutram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
+                    <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
             end
         end
 
-        else
-        begin
-            read_entry_out <= lutram[access_set_addr_in];
-        end
+        read_entry_out <= lutram[access_set_addr_in];
     end
 end
 endmodule
