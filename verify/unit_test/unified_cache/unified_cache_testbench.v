@@ -129,9 +129,9 @@ begin
 
             mem_packet_to_cache                 <= 0;
 
-            way1_packet_ack_to_cache            <= 1;
-            way2_packet_ack_to_cache            <= 1;
-            mem_packet_ack_to_cache             <= 1;
+            way1_packet_ack_to_cache            <= 0;
+            way2_packet_ack_to_cache            <= 0;
+            mem_packet_ack_to_cache             <= 0;
             
             correct_result_ctr_1                <= 0;
             correct_result_ctr_2                <= 0;
