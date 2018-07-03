@@ -240,6 +240,7 @@ begin
                         if (test_way1_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                         begin
                             test_way1_check_flag                                         <= 1;
+                            test_way1_valid                                              <= 0;
                         end
                     end
                     
@@ -322,6 +323,7 @@ begin
                         if (test_way2_result_ctr + 1'b1 == ((test_phase == 32'b0)? (`MEM_SIZE)/2 : (`MEM_SIZE)/4))
                         begin
                             test_way2_check_flag                                         <= 1;
+                            test_way2_valid                                              <= 0;
                         end
                     end
                     
