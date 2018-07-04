@@ -148,7 +148,7 @@ begin
                 from_cache_ack)
             to_cache_ack <= 1'b1;
         
-        else to_cache_ack <= 1'b1;
+        else to_cache_ack <= 1'b0;
     end
 end
 
@@ -179,7 +179,7 @@ begin
             };
         end
 
-        else if(from_cache_ack)
+        else if(from_cache_ack & mem_to_cache_packet[`UNIFIED_CACHE_PACKET_VALID_POS])
         begin
             mem_to_cache_packet <= 0;
         end
