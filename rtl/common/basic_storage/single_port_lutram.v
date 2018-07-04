@@ -21,7 +21,7 @@ module single_port_lutram
 
 integer index;
 integer write_lane;
-reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
+(* ram_style = "distributed" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
 
 always @(posedge clk_in or posedge reset_in)
 begin

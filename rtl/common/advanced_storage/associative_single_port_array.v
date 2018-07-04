@@ -1,3 +1,5 @@
+`include "parameters.h"
+
 module associative_single_port_array
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64,

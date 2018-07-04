@@ -34,7 +34,7 @@ begin
                 <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
             end
         end
-        
+
         read_entry_out <= blockram[access_set_addr_in];
     end
 end
