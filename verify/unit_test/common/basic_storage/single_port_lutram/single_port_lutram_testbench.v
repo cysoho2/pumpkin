@@ -24,6 +24,8 @@ reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     access_set_addr_in;
 reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     write_entry_in;
 wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     read_entry_out;
 
+integer                                         test_latency;
+
 initial
 begin
     `ifdef DUMP
@@ -33,7 +35,7 @@ begin
 
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      = 0;
-
+    reset_in                                    = 1;
     test_case_num                               = 0;
     test_input_1                                = 0;
 
@@ -49,6 +51,7 @@ begin
     test_latency                                = 1;
 
     #(`FULL_CYCLE_DELAY * 25 + `HALF_CYCLE_DELAY);
+    reset_in                                    = 0;
 
     $display("[info-testbench] %m testbench reset completed\n");
 
