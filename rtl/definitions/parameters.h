@@ -9,7 +9,7 @@
     `define CPU_DATA_LEN_IN_BITS                        32
     `define CPU_ADDR_LEN_IN_BITS                        32
 `else
-    `define CPU_DATA_LEN_IN_BITS                        64
+    `define CPU_DATA_LEN_IN_BITS                        32
     `define CPU_ADDR_LEN_IN_BITS                        32
 `endif
 `define CPU_INST_LEN_IN_BITS                            32
@@ -23,12 +23,12 @@
 `define INSTS_FETCH_WIDTH_IN_BITS 						(`NUM_INSTS_FETCH_PER_CYCLE * `CPU_INST_LEN_IN_BITS)
 
 // Unified Cache - Architecture
-`define UNIFIED_CACHE_SIZE_IN_BYTES                     128 * 1024 // Bytes, must be a power of 2
+`define UNIFIED_CACHE_SIZE_IN_BYTES                     64 // Bytes, must be a power of 2
 `define UNIFIED_CACHE_SET_ASSOCIATIVITY                 4 // must be a power of 2
 `ifdef SIMULATION
     `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2, and should be small enough to avoid pin allocation failure
 `else
-    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           64 // must be a power of 2
+    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2
 `endif
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets, musht be a power of 2                 

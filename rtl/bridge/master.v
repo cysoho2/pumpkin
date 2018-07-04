@@ -3,11 +3,6 @@
 module axi4_master
 #
 (
-    // Users to add parameters here
-
-    // User parameters ends
-    // Do not modify the parameters beyond this line
-
     // Base address of targeted slave
     parameter  C_M_TARGET_SLAVE_BASE_ADDR	    = 32'h0000_0000,
     // Width of Address Bus
@@ -30,11 +25,6 @@ module axi4_master
     parameter integer C_M_AXI_BUSER_WIDTH	    = 1
 )
 (
-    // Users to add ports here
-
-    // User ports ends
-    // Do not modify the ports beyond this line
-
     // Initiate AXI transactions
     input wire  INIT_AXI_TXN,
     // Asserts when transaction is complete

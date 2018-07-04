@@ -3,14 +3,13 @@
 module unified_cache
 #(
     parameter NUM_INPUT_PORT                     = 2,
-    parameter PORT_ID_WIDTH                      = $clog2(NUM_INPUT_PORT) + 1,
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-
     parameter NUM_SET                            = 64,
     parameter NUM_BANK                           = 4,
     parameter NUM_WAY                            = 4,
     parameter BLOCK_SIZE_IN_BYTES                = 4,
-
+    
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    parameter PORT_ID_WIDTH                      = $clog2(NUM_INPUT_PORT) + 1,
     parameter BANK_BITS                          = $clog2(NUM_BANK)
 )
 (
@@ -132,11 +131,11 @@ begin : cache_bank
     unified_cache_bank
     #(
         .NUM_INPUT_PORT                     (NUM_INPUT_PORT),
-        .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
-
-        .NUM_SET                            (NUM_SET),
         .BANK_NUM                           (bank_index),
+        .NUM_SET                            (NUM_SET),
         .NUM_WAY                            (NUM_WAY),
+        
+        .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
         .BLOCK_SIZE_IN_BYTES                (BLOCK_SIZE_IN_BYTES)
     )
     cache_bank

@@ -3,15 +3,15 @@
 module unified_cache_bank
 #(
     parameter NUM_INPUT_PORT                     = 2,
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-
-    parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
-    parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
-    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
+    parameter NUM_SET                            = 4,
+    parameter NUM_WAY                            = 4,
+    parameter BLOCK_SIZE_IN_BYTES                = 4,
 
     parameter BANK_NUM                           = 0,
     parameter MODE                               = "OFF", /* option: OFF, BASIC, ADVANCED*/
 
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS;
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET)
 )
 (
@@ -140,7 +140,7 @@ begin
 
     single_port_blockram
     #(
-        .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
+        .SINGLE_ENTRY_SIZE_IN_BITS      (BLOCK_SIZE_IN_BITS),
         .NUM_SET                        (NUM_SET),
         .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
     )
@@ -336,7 +336,7 @@ begin
 
     single_port_blockram
     #(
-        .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
+        .SINGLE_ENTRY_SIZE_IN_BITS      (BLOCK_SIZE_IN_BITS),
         .NUM_SET                        (`UNIFIED_CACHE_WRITEBACK_BUFFER_SIZE),
         .SET_PTR_WIDTH_IN_BITS          ($clog2(`UNIFIED_CACHE_WRITEBACK_BUFFER_SIZE) + 1)
     )
@@ -425,7 +425,7 @@ begin
 
     single_port_blockram
     #(
-        .SINGLE_ENTRY_SIZE_IN_BITS      (`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS),
+        .SINGLE_ENTRY_SIZE_IN_BITS      (BLOCK_SIZE_IN_BITS),
         .NUM_SET                        (`UNIFIED_CACHE_WRITEBACK_BUFFER_SIZE),
         .SET_PTR_WIDTH_IN_BITS          ($clog2(`UNIFIED_CACHE_MISS_BUFFER_SIZE) + 1)
     )
