@@ -59,7 +59,7 @@ sub pumpkin_init
         'default_test_mode'             => 'post-implementation',
         'default_test_type'             => 'timing',
         'default_test_dump'             => 'off',
-        'default_cycle_time'            => 5, # counting in nano second
+        'default_cycle_time'            => 10, # counting in nano second
 
         'waveform_filename'             => 'sim_waves.vcd',
         'autogen_constr_filename'       => 'auto_constraints.xdc',
