@@ -110,7 +110,7 @@ end
 wire [`CPU_ADDR_LEN_IN_BITS            - 1 : 0] access_full_addr = access_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO];
 wire [`UNIFIED_CACHE_INDEX_LEN_IN_BITS - 1 : 0] access_set_addr  = access_full_addr[`UNIFIED_CACHE_INDEX_POS_HI : `UNIFIED_CACHE_INDEX_POS_LO];
 wire                                            is_write         = access_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS];
-wire [`WRITE_MASK_LEN                  - 1 : 0] write_mask       = access_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
+wire [WRITE_MASK_LEN                   - 1 : 0] write_mask       = access_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
 
 wire [NUM_WAY - 1 : 0]                          hit_flatted;
 reg  [3           : 0]                          stage;

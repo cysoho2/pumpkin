@@ -11,7 +11,7 @@ module unified_cache_bank
     parameter MODE                               = "OFF", /* option: OFF, BASIC, ADVANCED*/
 
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS;
+    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET)
 )
 (

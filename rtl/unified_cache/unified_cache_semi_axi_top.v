@@ -11,7 +11,7 @@ module unified_cache_semi_axi_top
     parameter BLOCK_SIZE_IN_BYTES                   = 4,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS    = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter PORT_ID_WIDTH                         = $clog2(NUM_INPUT_PORT) + 1,
-    parameter BANK_BITS                             = $clog2(NUM_BANK)，
+    parameter BANK_BITS                             = $clog2(NUM_BANK),
 
     // AXI parameters
     parameter C_M_TARGET_SLAVE_BASE_ADDR	        = 32'h0000_0000,
@@ -196,7 +196,7 @@ unified_cache
     .NUM_BANK                           (NUM_BANK),
     .NUM_SET                            (NUM_SET),
     .NUM_WAY                            (NUM_WAY),
-    .BLOCK_SIZE_IN_BYTES                (BLOCK_SIZE_IN_BYTES),
+    .BLOCK_SIZE_IN_BYTES                (BLOCK_SIZE_IN_BYTES)
 )
 unified_cache
 (
@@ -280,3 +280,5 @@ axi4_master
     M_AXI_RVALID                    (M_AXI_RVALID),
     M_AXI_RREADY                    (M_AXI_RREADY)
 );
+
+endmodule
