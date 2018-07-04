@@ -8,7 +8,7 @@ module unified_cache_bank
     parameter BLOCK_SIZE_IN_BYTES                = 4,
 
     parameter BANK_NUM                           = 0,
-    parameter MODE                               = "OFF", /* option: OFF, BASIC, ADVANCED*/
+    parameter MODE                               = `UNIFIED_CACHE_BANK_ARCHITECTURE,
 
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
@@ -43,7 +43,44 @@ module unified_cache_bank
 );
 
 generate
-if(MODE == "BASIC")
+
+if(MODE == "OFF")
+begin
+    priority_arbiter
+    #(
+        .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
+        .NUM_REQUEST(NUM_INPUT_PORT),
+        .INPUT_QUEUE_SIZE(2)
+    )
+    intra_bank_arbiter
+    (
+        .reset_in                       (reset_in),
+        .clk_in                         (clk_in),
+
+        // the arbiter considers priority from right(high) to left(low)
+        .request_flatted_in             (input_request_flatted_in),
+        .request_valid_flatted_in       (input_request_valid_flatted_in),
+        .request_critical_flatted_in    (input_request_critical_flatted_in),
+        .issue_ack_out                  (input_request_ack_out),
+
+        .request_out                    (miss_request_out),
+        .request_valid_out              (miss_request_valid_out),
+        .issue_ack_in                   (miss_request_ack_in)
+    );
+
+    assign miss_request_critical_out        = 1'b0;
+
+    assign return_request_out               = fetched_request_in;
+    assign return_request_valid_out         = fetched_request_valid_in;
+    assign fetch_ack_out                    = return_request_ack_in;
+    assign return_request_critical_out      = 1'b1;
+
+    assign writeback_request_out            = 0;
+    assign writeback_request_valid_out      = 0;
+    assign writeback_request_critical_out   = 0;
+end
+
+else if(MODE == "BASIC")
 begin
     priority_arbiter
     #(
@@ -157,6 +194,7 @@ begin
         .read_entry_out                 ()
     );
 end
+
 else if(MODE == "ADVANCED")
 begin
     wire                                              is_miss_queue_about_to_full;
@@ -451,42 +489,6 @@ begin
     (
 
     );
-end
-
-else if(MODE == "OFF")
-begin
-    priority_arbiter
-    #(
-        .SINGLE_REQUEST_WIDTH_IN_BITS(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
-        .NUM_REQUEST(NUM_INPUT_PORT),
-        .INPUT_QUEUE_SIZE(2)
-    )
-    intra_bank_arbiter
-    (
-        .reset_in                       (reset_in),
-        .clk_in                         (clk_in),
-
-        // the arbiter considers priority from right(high) to left(low)
-        .request_flatted_in             (input_request_flatted_in),
-        .request_valid_flatted_in       (input_request_valid_flatted_in),
-        .request_critical_flatted_in    (input_request_critical_flatted_in),
-        .issue_ack_out                  (input_request_ack_out),
-
-        .request_out                    (miss_request_out),
-        .request_valid_out              (miss_request_valid_out),
-        .issue_ack_in                   (miss_request_ack_in)
-    );
-
-    assign miss_request_critical_out        = 1'b0;
-
-    assign return_request_out               = fetched_request_in;
-    assign return_request_valid_out         = fetched_request_valid_in;
-    assign fetch_ack_out                    = return_request_ack_in;
-    assign return_request_critical_out      = 1'b1;
-
-    assign writeback_request_out            = 0;
-    assign writeback_request_valid_out      = 0;
-    assign writeback_request_critical_out   = 0;
 end
 endgenerate
 

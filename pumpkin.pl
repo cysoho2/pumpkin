@@ -47,7 +47,7 @@ say "\n";
 sub pumpkin_init
 {
     say "\n";
-    say " ******* Pumpkin auto worker script v1.6";
+    say " ******* Pumpkin auto worker script v1.63";
     say "\n";
 
     %pumpkin_parameter_hash =

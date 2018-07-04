@@ -23,6 +23,8 @@
 `define INSTS_FETCH_WIDTH_IN_BITS 						(`NUM_INSTS_FETCH_PER_CYCLE * `CPU_INST_LEN_IN_BITS)
 
 // Unified Cache - Architecture
+`define UNIFIED_CACHE_BANK_ARCHITECTURE                 "OFF" /* option: OFF, BASIC, ADVANCED*/
+
 `define UNIFIED_CACHE_SIZE_IN_BYTES                     64 // Bytes, must be a power of 2
 `define UNIFIED_CACHE_SET_ASSOCIATIVITY                 4 // must be a power of 2
 `ifdef SIMULATION

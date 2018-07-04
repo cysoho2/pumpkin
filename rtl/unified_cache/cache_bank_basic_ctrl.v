@@ -1,21 +1,22 @@
 `include "parameters.h"
 
 `define IDLE        4'b0000
-`define FIRST       4'b0001
+`define JUDGE       4'b0001
 `define READ_HIT    4'b0010
 `define READ_MISS   4'b0011
 `define WRITE_HIT   4'b0100
 `define WRITE_MISS  4'b0101
 
-module cache_bank_simple_ctrl
+module cache_bank_basic_ctrl
 #(
     parameter BANK_NUM                           = 0,
+    
     parameter NUM_INPUT_PORT                     = 2,
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-
     parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
     parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
     parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
+
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter BLOCK_SIZE_IN_BITS                 = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES / `BYTE_LEN_IN_BITS,
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN                     = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS
@@ -172,7 +173,7 @@ begin
     begin
         if(issue_grant && stage == `IDLE) // ready to issue request
         begin
-            stage                                           <= `FIRST;
+            stage                                           <= `JUDGE;
             bank_lock_release                               <= 1'b0;
             // to valid, tag array
             access_en_to_main_array_out                     <= 1'b1;
@@ -210,7 +211,7 @@ begin
             return_request_critical_out                     <= 1'b0;
         end
 
-        else if(stage == `FIRST)
+        else if(stage == `JUDGE)
         begin
             if( (|hit_flatted) && ~is_write )
             begin
@@ -234,7 +235,7 @@ begin
                 access_set_addr_to_data_array_out               <= access_set_addr;
                 
                 write_valid_out                                 <= {(NUM_WAY){1'b0}};
-                write_history_out                               <= {(NUM_WAY){1'b0}};
+                write_history_out                               <= hit_flatted | history_flatted_in;
                 write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
                 write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
                 write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
@@ -269,7 +270,7 @@ begin
                 way_select_to_history_array_out                 <= {(NUM_WAY){1'b0}};
                 access_set_addr_to_history_array_out            <= 0;
                 // to data array
-                access_en_to_data_array_out                     <= 1'b1;
+                access_en_to_data_array_out                     <= 1'b0;
                 write_en_to_data_array_out                      <= 1'b0;
                 way_select_to_data_array_out                    <= {(NUM_WAY){1'b0}};
                 access_set_addr_to_data_array_out               <= 0;
@@ -336,7 +337,7 @@ begin
             access_set_addr_to_data_array_out               <= access_set_addr;
             
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
-            write_history_out                               <= hit_flatted | history_flatted_in;
+            write_history_out                               <= {(NUM_WAY){1'b0}};
             write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
             write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
             write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
