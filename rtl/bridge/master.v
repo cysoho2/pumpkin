@@ -429,10 +429,20 @@ module axi4_master
             write_index <= write_index;
     end
 
-    wire  [C_M_AXI_DATA_WIDTH/8-1 : 0] wstrb;
     wire  [`UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH - 1 : 0] input_bytemask = 
             TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
-    assign wstrb = input_bytemask[(axi_wdata_index+1) * (C_M_AXI_DATA_WIDTH/8) - 1 : axi_wdata_index * (C_M_AXI_DATA_WIDTH/8)];
+    wire  [C_M_AXI_DATA_WIDTH / 8                 - 1 : 0] input_bytemask_packed [C_M_AXI_BURST_LEN - 1 : 0];
+    wire  [C_M_AXI_DATA_WIDTH / 8                 - 1 : 0] wstrb;
+
+    generate
+        genvar mask_index;
+        for(mask_index = 0; mask_index < C_M_AXI_BURST_LEN; mask_index = mask_index + 1)
+        begin
+            assign input_bytemask_packed[mask_index] = input_bytemask[(mask_index+1) * C_M_AXI_DATA_WIDTH/8 - 1 : mask_index * C_M_AXI_DATA_WIDTH/8];
+        end
+    endgenerate
+    
+    assign wstrb = input_bytemask_packed[axi_wdata_index];
 
 
     wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] packet_data = TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO];
@@ -785,7 +795,7 @@ module axi4_master
                 end
             end
 
-            INIT_ACK:
+            ACK:
             // This state is responsible to issue the state of comparison
             // of written data with the read data. If no error flags are set,
             // compare_done signal will be asseted to indicate success.
