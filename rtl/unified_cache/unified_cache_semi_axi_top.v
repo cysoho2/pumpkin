@@ -86,7 +86,7 @@ module unified_cache_semi_axi_top
 
 reg                                                 init_pulse;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  cache_to_mem_packet;
-wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_to_cache_packet;
+reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_to_cache_packet;
 wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0]  mem_return_data;
 
 wire                                                mem_done;
@@ -217,16 +217,16 @@ unified_cache
 
 axi4_master
 #(
-    C_M_TARGET_SLAVE_BASE_ADDR      (C_M_TARGET_SLAVE_BASE_ADDR),
-    C_M_AXI_ADDR_WIDTH              (C_M_AXI_ADDR_WIDTH),
-    C_M_AXI_DATA_WIDTH	            (C_M_AXI_DATA_WIDTH),
-    C_M_AXI_BURST_LEN	            (C_M_AXI_BURST_LEN),
-    C_M_AXI_ID_WIDTH	            (C_M_AXI_ID_WIDTH),
-    C_M_AXI_AWUSER_WIDTH	        (C_M_AXI_AWUSER_WIDTH),
-    C_M_AXI_ARUSER_WIDTH	        (C_M_AXI_ARUSER_WIDTH),
-    C_M_AXI_WUSER_WIDTH	            (C_M_AXI_WUSER_WIDTH),
-    C_M_AXI_RUSER_WIDTH	            (C_M_AXI_RUSER_WIDTH),
-    C_M_AXI_BUSER_WIDTH	            (C_M_AXI_BUSER_WIDTH)
+    .C_M_TARGET_SLAVE_BASE_ADDR     (C_M_TARGET_SLAVE_BASE_ADDR),
+    .C_M_AXI_ADDR_WIDTH             (C_M_AXI_ADDR_WIDTH),
+    .C_M_AXI_DATA_WIDTH	            (C_M_AXI_DATA_WIDTH),
+    .C_M_AXI_BURST_LEN	            (C_M_AXI_BURST_LEN),
+    .C_M_AXI_ID_WIDTH	            (C_M_AXI_ID_WIDTH),
+    .C_M_AXI_AWUSER_WIDTH	        (C_M_AXI_AWUSER_WIDTH),
+    .C_M_AXI_ARUSER_WIDTH	        (C_M_AXI_ARUSER_WIDTH),
+    .C_M_AXI_WUSER_WIDTH	        (C_M_AXI_WUSER_WIDTH),
+    .C_M_AXI_RUSER_WIDTH	        (C_M_AXI_RUSER_WIDTH),
+    .C_M_AXI_BUSER_WIDTH	        (C_M_AXI_BUSER_WIDTH)
 )
 axi4_master
 (
