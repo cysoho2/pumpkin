@@ -79,6 +79,7 @@ module cache_bank_basic_ctrl
 );
 
 reg  bank_lock;
+reg  bank_lock_release;
 wire issue_grant = access_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & (~bank_lock | (bank_lock & bank_lock_release));
 
 always@(posedge clk_in or posedge reset_in)
