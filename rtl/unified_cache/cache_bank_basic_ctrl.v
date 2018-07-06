@@ -20,7 +20,7 @@ module cache_bank_basic_ctrl
     parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN                     = BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter UNIFIED_CACHE_TAG_LEN_IN_BITS      = `CPU_ADDR_LEN_IN_BITS - `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS - `UNIFIED_CACHE_INDEX_LEN_IN_BITS;
+    parameter UNIFIED_CACHE_TAG_LEN_IN_BITS      = `CPU_ADDR_LEN_IN_BITS - `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS - `UNIFIED_CACHE_INDEX_LEN_IN_BITS
 )
 (
     input                                                                   reset_in,
