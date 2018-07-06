@@ -12,14 +12,15 @@ module cache_bank_basic_ctrl
     parameter BANK_NUM                           = 0,
     
     parameter NUM_INPUT_PORT                     = 2,
-    parameter NUM_SET                            = `UNIFIED_CACHE_NUM_SETS,
-    parameter NUM_WAY                            = `UNIFIED_CACHE_SET_ASSOCIATIVITY,
-    parameter BLOCK_SIZE_IN_BYTES                = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
+    parameter NUM_SET                            = 4,
+    parameter NUM_WAY                            = 4,
+    parameter BLOCK_SIZE_IN_BYTES                = 4,
 
-    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-    parameter BLOCK_SIZE_IN_BITS                 = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES / `BYTE_LEN_IN_BITS,
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = 80,
+    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET),
-    parameter WRITE_MASK_LEN                     = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS
+    parameter WRITE_MASK_LEN                     = BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
+    parameter UNIFIED_CACHE_TAG_LEN_IN_BITS      = `CPU_ADDR_LEN_IN_BITS - `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS - `UNIFIED_CACHE_INDEX_LEN_IN_BITS;
 )
 (
     input                                                                   reset_in,
@@ -49,8 +50,8 @@ module cache_bank_basic_ctrl
 
     input   [NUM_WAY                                         - 1 : 0]       valid_flatted_in,
     input   [NUM_WAY                                         - 1 : 0]       history_flatted_in,
-    input   [NUM_WAY * `UNIFIED_CACHE_TAG_LEN_IN_BITS        - 1 : 0]       tag_flatted_in,
-    input   [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS               - 1 : 0]       data_in,
+    input   [NUM_WAY * UNIFIED_CACHE_TAG_LEN_IN_BITS         - 1 : 0]       tag_flatted_in,
+    input   [BLOCK_SIZE_IN_BITS                              - 1 : 0]       data_in,
 
     // to valid, tag array
     output  reg                                                             access_en_to_main_array_out,
@@ -73,8 +74,8 @@ module cache_bank_basic_ctrl
     // write signals
     output  reg [NUM_WAY                                     - 1 : 0]       write_valid_out,
     output  reg [NUM_WAY                                     - 1 : 0]       write_history_out,
-    output  reg [`UNIFIED_CACHE_TAG_LEN_IN_BITS              - 1 : 0]       write_tag_out,
-    output  reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS           - 1 : 0]       write_data_out,
+    output  reg [UNIFIED_CACHE_TAG_LEN_IN_BITS               - 1 : 0]       write_tag_out,
+    output  reg [BLOCK_SIZE_IN_BITS                          - 1 : 0]       write_data_out,
     output  reg [WRITE_MASK_LEN                              - 1 : 0]       write_mask_to_data_array_out
 );
 
@@ -121,8 +122,8 @@ generate
 genvar way_index;
     for(way_index = 0; way_index < NUM_WAY; way_index = way_index + 1)
     begin
-        assign hit_flatted[way_index] = (tag_flatted_in[(way_index+1) * `UNIFIED_CACHE_TAG_LEN_IN_BITS - 1 :
-                                                         way_index * `UNIFIED_CACHE_TAG_LEN_IN_BITS]
+        assign hit_flatted[way_index] = (tag_flatted_in[(way_index+1) * UNIFIED_CACHE_TAG_LEN_IN_BITS - 1 :
+                                                         way_index * UNIFIED_CACHE_TAG_LEN_IN_BITS]
                                             == access_full_addr[`UNIFIED_CACHE_TAG_POS_HI : `UNIFIED_CACHE_TAG_POS_LO])
                                         & valid_flatted_in[way_index];
     end
@@ -152,20 +153,20 @@ begin
 
         write_valid_out                                 <= {(NUM_WAY){1'b0}};
         write_history_out                               <= {(NUM_WAY){1'b0}};
-        write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-        write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+        write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+        write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
         write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
         access_packet_ack                               <= 1'b0;
         fetched_request_ack_out                         <= 1'b0;
         
-        miss_request_out                                <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+        miss_request_out                                <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
         miss_request_valid_out                          <= 1'b0;
         miss_request_critical_out                       <= 1'b0;
-        writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+        writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
         writeback_request_valid_out                     <= 1'b0;
         writeback_request_critical_out                  <= 1'b0;
-        return_request_out                              <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+        return_request_out                              <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
         return_request_valid_out                        <= 1'b0;
         return_request_critical_out                     <= 1'b0;
     end
@@ -194,20 +195,20 @@ begin
             
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
             write_history_out                               <= {(NUM_WAY){1'b0}};
-            write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-            write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+            write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+            write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
             write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
             access_packet_ack                               <= 1'b0;
             fetched_request_ack_out                         <= 1'b0;
 
-            miss_request_out                                <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            miss_request_out                                <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             miss_request_valid_out                          <= 1'b0;
             miss_request_critical_out                       <= 1'b0;
-            writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             writeback_request_valid_out                     <= 1'b0;
             writeback_request_critical_out                  <= 1'b0;
-            return_request_out                              <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            return_request_out                              <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             return_request_valid_out                        <= 1'b0;
             return_request_critical_out                     <= 1'b0;
         end
@@ -237,20 +238,20 @@ begin
                 
                 write_valid_out                                 <= {(NUM_WAY){1'b0}};
                 write_history_out                               <= hit_flatted | history_flatted_in;
-                write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-                write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+                write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+                write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
                 write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
                 access_packet_ack                               <= 1'b0;
                 fetched_request_ack_out                         <= 1'b0;
 
-                miss_request_out                                <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                miss_request_out                                <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 miss_request_valid_out                          <= 1'b0;
                 miss_request_critical_out                       <= 1'b0;
-                writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 writeback_request_valid_out                     <= 1'b0;
                 writeback_request_critical_out                  <= 1'b0;
-                return_request_out                              <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                return_request_out                              <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 return_request_valid_out                        <= 1'b0;
                 return_request_critical_out                     <= 1'b0;
             end
@@ -278,8 +279,8 @@ begin
                 
                 write_valid_out                                 <= {(NUM_WAY){1'b0}};
                 write_history_out                               <= {(NUM_WAY){1'b0}};
-                write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-                write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+                write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+                write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
                 write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
                 access_packet_ack                               <= 1'b0;
@@ -288,10 +289,10 @@ begin
                 miss_request_out                                <= access_packet;
                 miss_request_valid_out                          <= 1'b1;
                 miss_request_critical_out                       <= 1'b1;
-                writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 writeback_request_valid_out                     <= 1'b0;
                 writeback_request_critical_out                  <= 1'b0;
-                return_request_out                              <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                return_request_out                              <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 return_request_valid_out                        <= 1'b1;
                 return_request_critical_out                     <= 1'b1;
             end
@@ -339,17 +340,17 @@ begin
             
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
             write_history_out                               <= {(NUM_WAY){1'b0}};
-            write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-            write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+            write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+            write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
             write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
             access_packet_ack                               <= 1'b0;
             fetched_request_ack_out                         <= 1'b0;
 
-            miss_request_out                                <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            miss_request_out                                <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             miss_request_valid_out                          <= 1'b0;
             miss_request_critical_out                       <= 1'b0;
-            writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             writeback_request_valid_out                     <= 1'b0;
             writeback_request_critical_out                  <= 1'b0;
             return_request_out                              <=
@@ -371,7 +372,7 @@ begin
         begin
             if(fetched_request_valid_in)
             begin
-                return_request_out                          <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                return_request_out                          <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 return_request_valid_out                    <= 1'b1;
                 return_request_critical_out                 <= 1'b1;
             end
@@ -394,8 +395,8 @@ begin
             
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
             write_history_out                               <= {(NUM_WAY){1'b0}};
-            write_tag_out                                   <= {(`UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
-            write_data_out                                  <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}};
+            write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
+            write_data_out                                  <= {(BLOCK_SIZE_IN_BITS){1'b0}};
             write_mask_to_data_array_out                    <= {(WRITE_MASK_LEN){1'b0}};
 
             access_packet_ack                               <= 1'b0;
@@ -403,7 +404,7 @@ begin
 
             if(miss_request_ack_in & miss_request_valid_out)
             begin
-                miss_request_out                            <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+                miss_request_out                            <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
                 miss_request_valid_out                      <= 1'b0;
                 miss_request_critical_out                   <= 1'b0;
             end
@@ -415,7 +416,7 @@ begin
                 miss_request_critical_out                   <= 1'b1;
             end
 
-            writeback_request_out                           <= {(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
+            writeback_request_out                           <= {(UNIFIED_CACHE_PACKET_WIDTH_IN_BITS){1'b0}};
             writeback_request_valid_out                     <= 1'b0;
             writeback_request_critical_out                  <= 1'b0;
         end

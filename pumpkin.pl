@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use v5.10;
+use v5.26;
 use strict;
 use File::Find;
 use File::Copy;
