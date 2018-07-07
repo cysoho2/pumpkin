@@ -4,12 +4,13 @@ module unified_cache_semi_axi_top
 #
 (
     // cache parameters
-    parameter NUM_INPUT_PORT                        = 1,
+    parameter NUM_INPUT_PORT                        = 2,
     parameter NUM_BANK                              = 4,
     parameter NUM_SET                               = 4,
     parameter NUM_WAY                               = 4,
     parameter BLOCK_SIZE_IN_BYTES                   = 4,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS    = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    parameter BLOCK_SIZE_IN_BITS                    = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter PORT_ID_WIDTH                         = $clog2(NUM_INPUT_PORT) + 1,
     parameter BANK_BITS                             = $clog2(NUM_BANK),
 
@@ -85,9 +86,9 @@ module unified_cache_semi_axi_top
 );
 
 reg                                                 init_pulse;
-wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  cache_to_mem_packet;
-reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_to_cache_packet;
-wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0]  mem_return_data;
+wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS  - 1 : 0]  cache_to_mem_packet;
+reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS  - 1 : 0]  mem_to_cache_packet;
+wire [BLOCK_SIZE_IN_BITS                  - 1 : 0]  mem_return_data;
 
 wire                                                mem_done;
 wire                                                from_cache_ack;
@@ -95,7 +96,7 @@ reg                                                 to_cache_ack;
 
 // generate master pulse
 
-reg [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   cache_to_mem_packet_last_cycle;
+reg [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS  - 1 : 0]   cache_to_mem_packet_last_cycle;
 
 always@(posedge clk_in or posedge reset_in)
 begin
@@ -191,7 +192,7 @@ end
 
 unified_cache
 #(
-    .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
+    .UNIFIED_CACHE_PACKET_WIDTH_IN_BITS (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS),
     .NUM_INPUT_PORT                     (NUM_INPUT_PORT),
     .NUM_BANK                           (NUM_BANK),
     .NUM_SET                            (NUM_SET),
