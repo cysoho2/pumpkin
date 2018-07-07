@@ -10,7 +10,7 @@ reg                                                             reset_in;
 
 reg     [31:0]                                                  clk_ctr;
 reg     [1023:0]                                                mem_image_path;
-reg     [511:0]                                                test_case_content;
+reg     [511:0]                                                 test_case_content;
 
 reg     [(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS)   - 1 : 0]         sim_main_memory                 [0 : (`MEM_SIZE)   - 1];
 reg     [(`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 : 0]         way1_packet_issue               [0 : (`MEM_SIZE)/2 - 1];
