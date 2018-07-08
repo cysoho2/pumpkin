@@ -631,8 +631,8 @@ module axi4_master
         
         else if (M_AXI_RVALID && axi_rready)
         begin
-            expected_rdata[expected_read_index] <= M_AXI_RDATA;
-            expected_read_index                 <= expected_read_index + 1'b1;
+            expected_rdata[expected_read_index * C_M_AXI_DATA_WIDTH +: C_M_AXI_DATA_WIDTH]  <= M_AXI_RDATA;
+            expected_read_index                                                             <= expected_read_index + 1'b1;
         end
     end
 
@@ -879,7 +879,7 @@ module axi4_master
 
         //The reads_done should be associated with a rready response
         //else if (M_AXI_BVALID && axi_bready && (write_burst_counter == {(C_NO_BURSTS_REQ-1){1}}) && axi_wlast)
-        else if (M_AXI_RVALID && axi_rready && (read_index == C_M_AXI_BURST_LEN-1) && (read_burst_counter[C_NO_BURSTS_REQ]))
+        else if (M_AXI_RVALID && axi_rready && (read_index == C_M_AXI_BURST_LEN-1) && (C_M_AXI_BURST_LEN == 1 |read_burst_counter[C_NO_BURSTS_REQ]))
             reads_done <= 1'b1;
         else
             reads_done <= reads_done;
