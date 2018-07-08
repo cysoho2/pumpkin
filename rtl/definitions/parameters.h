@@ -25,12 +25,12 @@
 // Unified Cache - Architecture
 `define UNIFIED_CACHE_BANK_ARCHITECTURE                 "OFF" /* option: OFF, BASIC, ADVANCED*/
 
-`define UNIFIED_CACHE_SIZE_IN_BYTES                     1024 // Bytes, must be a power of 2
+`define UNIFIED_CACHE_SIZE_IN_BYTES                     64 // Bytes, must be a power of 2
 `define UNIFIED_CACHE_SET_ASSOCIATIVITY                 4 // must be a power of 2
 `ifdef SIMULATION
     `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2, and should be small enough to avoid pin allocation failure
 `else
-    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           64 // must be a power of 2
+    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2
 `endif
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets, musht be a power of 2                 
