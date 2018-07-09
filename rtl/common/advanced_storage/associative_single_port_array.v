@@ -51,7 +51,7 @@ generate
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[(gen+1) * SINGLE_ENTRY_SIZE_IN_BITS - 1 : gen * SINGLE_ENTRY_SIZE_IN_BITS])
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS])
             );
         end
     end
@@ -75,7 +75,7 @@ generate
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[(gen+1) * SINGLE_ENTRY_SIZE_IN_BITS - 1 : gen * SINGLE_ENTRY_SIZE_IN_BITS])
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS])
             );
         end
     end

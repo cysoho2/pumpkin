@@ -37,8 +37,7 @@ for(request_index = 0; request_index < NUM_REQUEST; request_index = request_inde
 begin : request_queue
 
     assign request_packed_in[request_index] =
-           request_flatted_in[(request_index + 1) * (SINGLE_REQUEST_WIDTH_IN_BITS) - 1 :
-                               request_index      * (SINGLE_REQUEST_WIDTH_IN_BITS)];
+           request_flatted_in[(request_index) * (SINGLE_REQUEST_WIDTH_IN_BITS) +: (SINGLE_REQUEST_WIDTH_IN_BITS)];
 
     fifo_queue
     #(

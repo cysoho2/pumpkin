@@ -122,10 +122,10 @@ generate
 genvar way_index;
     for(way_index = 0; way_index < NUM_WAY; way_index = way_index + 1)
     begin
-        assign hit_flatted[way_index] = (tag_flatted_in[(way_index+1) * UNIFIED_CACHE_TAG_LEN_IN_BITS - 1 :
-                                                         way_index * UNIFIED_CACHE_TAG_LEN_IN_BITS]
-                                            == access_full_addr[`UNIFIED_CACHE_TAG_POS_HI : `UNIFIED_CACHE_TAG_POS_LO])
-                                        & valid_flatted_in[way_index];
+        assign hit_flatted[way_index] = 
+                    (tag_flatted_in[way_index * UNIFIED_CACHE_TAG_LEN_IN_BITS +: UNIFIED_CACHE_TAG_LEN_IN_BITS]
+                        == access_full_addr[`UNIFIED_CACHE_TAG_POS_HI : `UNIFIED_CACHE_TAG_POS_LO])
+                    & valid_flatted_in[way_index];
     end
 endgenerate
 

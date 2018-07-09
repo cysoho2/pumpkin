@@ -30,7 +30,7 @@
 `ifdef SIMULATION
     `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2, and should be small enough to avoid pin allocation failure
 `else
-    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2
+    `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be 4 or multiplier of 8, to connect with AXI port
 `endif
 `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
 `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets, musht be a power of 2                 

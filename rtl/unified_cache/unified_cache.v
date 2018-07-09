@@ -50,8 +50,7 @@ for(port_index = 0; port_index < NUM_INPUT_PORT; port_index = port_index + 1)
 begin : input_queue
 
     assign input_packet_packed[port_index] =
-           input_packet_flatted_in[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
-                                    port_index      * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)];
+           input_packet_flatted_in[port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
 
     fifo_queue
     #(
@@ -76,8 +75,7 @@ begin : input_queue
         .issue_ack_in                   (cache_to_input_queue_ack_merged[port_index])
     );
 
-    assign input_packet_to_cache_flatted[(port_index + 1) * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS) - 1 :
-                                               port_index * (UNIFIED_CACHE_PACKET_WIDTH_IN_BITS)]
+    assign input_packet_to_cache_flatted[port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]
             = input_packet_to_cache_packed[port_index];
 
     assign input_packet_critical_to_cache_flatted[port_index] = is_input_queue_full_flatted[port_index];
@@ -146,27 +144,26 @@ begin : cache_bank
         .input_request_flatted_in           (input_is_valid_final ? input_packet_to_cache_flatted : 0),
         .input_request_valid_flatted_in     (input_is_valid_final),
         .input_request_critical_flatted_in  (input_packet_critical_to_cache_flatted),
-        .input_request_ack_out              (cache_to_input_queue_ack_flatted[(bank_index+1) * NUM_INPUT_PORT - 1 :
-                                                                               bank_index * NUM_INPUT_PORT]),
+        .input_request_ack_out              (cache_to_input_queue_ack_flatted[bank_index * NUM_INPUT_PORT +: NUM_INPUT_PORT]),
 
         .fetched_request_in                 (fetched_is_valid_final ? from_mem_packet_in : 0),
         .fetched_request_valid_in           (fetched_is_valid_final),
         .fetch_ack_out                      (from_mem_packet_ack_flatted[bank_index]),
 
-        .miss_request_out                   (miss_request_flatted[(bank_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
-                                                                   bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
+        .miss_request_out                   (miss_request_flatted[bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +:
+                                                                               UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
         .miss_request_valid_out             (miss_request_valid_flatted[bank_index]),
         .miss_request_critical_out          (miss_request_critical_flatted[bank_index]),
         .miss_request_ack_in                (miss_request_ack_flatted[bank_index]),
 
-        .writeback_request_out              (writeback_request_flatted[(bank_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
-                                                                        bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
+        .writeback_request_out              (writeback_request_flatted[bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +:
+                                                                                    UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
         .writeback_request_valid_out        (writeback_request_valid_flatted[bank_index]),
         .writeback_request_critical_out     (writeback_request_critical_flatted[bank_index]),
         .writeback_request_ack_in           (writeback_request_ack_flatted[bank_index]),
 
-        .return_request_out                 (return_request_flatted[(bank_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
-                                                                     bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
+        .return_request_out                 (return_request_flatted[bank_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +:
+                                                                                 UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
         .return_request_valid_out           (return_request_valid_flatted[bank_index]),
         .return_request_critical_out        (return_request_critical_flatted[bank_index]),
         .return_request_ack_in              (return_request_ack_merged[bank_index])

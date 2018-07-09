@@ -16,7 +16,7 @@ generate
 
     for(gen = 0; gen < NUMBER_WAY; gen = gen + 1)
     begin
-        assign data_to_mux[gen] = way_flatted_in[(gen+1) * SINGLE_ENTRY_SIZE_IN_BITS - 1 : gen * SINGLE_ENTRY_SIZE_IN_BITS];
+        assign data_to_mux[gen] = way_flatted_in[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS];
     end
 
 endgenerate
