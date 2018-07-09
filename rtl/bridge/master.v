@@ -844,7 +844,7 @@ module axi4_master
 
         //The writes_done should be associated with a bready response
         //else if (M_AXI_BVALID && axi_bready && (write_burst_counter == {(C_NO_BURSTS_REQ-1){1}}) && axi_wlast)
-        else if (M_AXI_BVALID && (write_burst_counter[C_NO_BURSTS_REQ]) && axi_bready)
+        else if (M_AXI_BVALID && axi_bready && (C_M_AXI_BURST_LEN == 1 | write_burst_counter[C_NO_BURSTS_REQ]))
             writes_done <= 1'b1;
         else
             writes_done <= writes_done;
@@ -879,7 +879,7 @@ module axi4_master
 
         //The reads_done should be associated with a rready response
         //else if (M_AXI_BVALID && axi_bready && (write_burst_counter == {(C_NO_BURSTS_REQ-1){1}}) && axi_wlast)
-        else if (M_AXI_RVALID && axi_rready && (read_index == C_M_AXI_BURST_LEN-1) && (C_M_AXI_BURST_LEN == 1 |read_burst_counter[C_NO_BURSTS_REQ]))
+        else if (M_AXI_RVALID && axi_rready && (read_index == C_M_AXI_BURST_LEN-1) && (C_M_AXI_BURST_LEN == 1 | read_burst_counter[C_NO_BURSTS_REQ]))
             reads_done <= 1'b1;
         else
             reads_done <= reads_done;
