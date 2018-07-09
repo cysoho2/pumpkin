@@ -249,10 +249,10 @@ generate
             .request_flatted_in             (return_request_flatted),
             .request_valid_flatted_in       (return_request_valid_flatted & is_right_port),
             .request_critical_flatted_in    (return_request_critical_flatted),
-            .issue_ack_out                  (return_request_ack_flatted[(port_index+1) * NUM_BANK -1 : port_index * NUM_BANK]),
+            .issue_ack_out                  (return_request_ack_flatted[port_index * NUM_BANK +: NUM_BANK]),
 
-            .request_out                    (return_packet_flatted_out[(port_index+1) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 :
-                                                                           port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
+            .request_out                    (return_packet_flatted_out[port_index * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +:
+                                                                                    UNIFIED_CACHE_PACKET_WIDTH_IN_BITS]),
             .request_valid_out              (),
             .issue_ack_in                   (return_packet_ack_flatted_in[port_index])
         );
