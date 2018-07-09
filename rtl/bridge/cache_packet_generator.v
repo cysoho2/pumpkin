@@ -3,15 +3,15 @@
 module cache_packet_generator
 #
 (
-    NUM_WAY                                 = 2,
-    TIMING_OUT_CYCLE                        = 100000,
+    parameter NUM_WAY                                 = 2,
+    parameter TIMING_OUT_CYCLE                        = 100000,
 
-    UNIFIED_CACHE_PACKET_WIDTH_IN_BITS      = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-    UNIFIED_CACHE_PACKET_PORT_ID_WIDTH      = `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH,
-    UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH   = `UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH,
-    UNIFIED_CACHE_PACKET_TYPE_WIDTH         = `UNIFIED_CACHE_PACKET_TYPE_WIDTH,
-    UNIFIED_CACHE_BLOCK_SIZE_IN_BITS        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
-    CPU_ADDR_LEN_IN_BITS                    = `CPU_ADDR_LEN_IN_BITS
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS      = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    parameter UNIFIED_CACHE_PACKET_PORT_ID_WIDTH      = `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH,
+    parameter UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH   = `UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH,
+    parameter UNIFIED_CACHE_PACKET_TYPE_WIDTH         = `UNIFIED_CACHE_PACKET_TYPE_WIDTH,
+    parameter UNIFIED_CACHE_BLOCK_SIZE_IN_BITS        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
+    parameter CPU_ADDR_LEN_IN_BITS                    = `CPU_ADDR_LEN_IN_BITS
 )
 (
     input                                                           reset_in,
