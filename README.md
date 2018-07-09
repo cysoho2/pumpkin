@@ -6,7 +6,7 @@ Pumpkin is a non-profit personal side project aiming at building a powerful educ
 * parameterized
 * synthesizable
 
-This package includes RTL codes, simulation scripts, an ARMv8 ELF loader, along with a series of cpp source files which can be compiled by a standard ARM compiler. 
+This package includes RTL codes, simulation scripts, an ELF loader, along with a series of cpp source files which can be compiled by a standard compiler. 
 Tested can be performed with a RTL simulator or on a real FPGA board. 
 
 #Required Tools
