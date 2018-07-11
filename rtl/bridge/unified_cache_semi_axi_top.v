@@ -94,6 +94,20 @@ wire                                                mem_done;
 wire                                                from_cache_ack;
 reg                                                 to_cache_ack;
 
+wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   mem_to_cache_packet_concatenated;
+packet_concat mem_to_cache_packet_concat
+(
+    .addr_in        (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]),
+    .data_in        (mem_return_data),
+    .type_in        (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]),
+    .write_mask_in  (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]),
+    .port_num_in    (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]),
+    .valid_in       (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS]),
+    .is_write_in    (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]),
+    .cacheable_in   (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_CACHEABLE_POS]),
+    .packet_out     (mem_to_cache_packet_concatenated)
+);
+
 // generate master pulse
 
 reg [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS  - 1 : 0]   cache_to_mem_packet_last_cycle;
@@ -167,17 +181,7 @@ begin
           ~cache_to_mem_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS] &
           mem_done)
         begin
-            mem_to_cache_packet <=
-            {   
-                /*cacheable*/   {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_CACHEABLE_POS]},
-                /*write*/       {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]},                   
-                /*valid*/       {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS]},
-                /*port*/        {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]},
-                /*byte mask*/   {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]},     
-                /*type*/        {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]},
-                /*data*/        {mem_return_data},
-                /*addr*/        {cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]}
-            };
+            mem_to_cache_packet <= mem_to_cache_packet_concatenated;
         end
 
         else if(from_cache_ack & mem_to_cache_packet[`UNIFIED_CACHE_PACKET_VALID_POS])

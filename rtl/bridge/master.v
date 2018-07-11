@@ -429,7 +429,7 @@ module axi4_master
             write_index <= write_index;
     end
 
-    wire  [`UNIFIED_CACHE_PACKET_BYTE_MASK_LENGTH - 1 : 0] input_bytemask = 
+    wire  [`UNIFIED_CACHE_PACKET_BYTE_MASK_LEN    - 1 : 0] input_bytemask = 
             TRANSACTION_PACKET[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
     wire  [C_M_AXI_DATA_WIDTH / 8                 - 1 : 0] input_bytemask_packed [C_M_AXI_BURST_LEN - 1 : 0];
     wire  [C_M_AXI_DATA_WIDTH / 8                 - 1 : 0] wstrb;

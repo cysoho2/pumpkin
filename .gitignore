@@ -5,3 +5,4 @@ vivado*.str
 vivado*.log
 vivado*.jou
 .DS_Store
+.vscode/
