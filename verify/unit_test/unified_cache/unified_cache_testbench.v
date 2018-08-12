@@ -456,8 +456,23 @@ begin
     end
 end
 
-
 // from cache packet
+wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   from_cache_packet_concatenated;
+packet_concat from_cache_packet_concat
+(
+    .addr_in        (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]),
+    .data_in        (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS] ?
+                     mem_packet_from_cache[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]:
+                     sim_main_memory[{{2'b0},mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 2]}]),
+    .type_in        (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]),
+    .write_mask_in  (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]),
+    .port_num_in    (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]),
+    .valid_in       (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]),
+    .is_write_in    (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]),
+    .cacheable_in   (mem_packet_from_cache[`UNIFIED_CACHE_PACKET_CACHEABLE_POS]),
+    .packet_out     (from_cache_packet_concatenated)
+);
+
 always@(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
@@ -479,21 +494,10 @@ begin
         
         if ({mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]})
         begin
-            sim_main_memory[{{2'b0},mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 2]}] = mem_packet_from_cache[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO];
+            sim_main_memory[{{2'b0},mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 2]}] <= mem_packet_from_cache[`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO];
         end
         
-        cache_packet_pending    <=
-        {   
-            /*cacheable*/   {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_CACHEABLE_POS]},
-            /*write*/       {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]},                   
-            /*valid*/       {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_VALID_POS]},
-            /*port*/        {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]},
-            /*byte mask*/   {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO]},     
-            /*type*/        {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_TYPE_POS_HI : `UNIFIED_CACHE_PACKET_TYPE_POS_LO]},
-            /*data*/        {sim_main_memory[{{2'b0},mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 2]}]},
-            /*addr*/        {mem_packet_from_cache[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]}
-        };
-        
+        cache_packet_pending    <= from_cache_packet_concatenated;
     end
 
     else if(mem_packet_ack_to_cache)
