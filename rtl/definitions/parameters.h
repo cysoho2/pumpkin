@@ -15,7 +15,7 @@
             `define CPU_ADDR_LEN_IN_BITS                        32
         `else
             `define CPU_DATA_LEN_IN_BITS                        64
-            `define CPU_ADDR_LEN_IN_BITS                        64
+            `define CPU_ADDR_LEN_IN_BITS                        32
         `endif
         `define CPU_INST_LEN_IN_BITS                            32
 
