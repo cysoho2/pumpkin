@@ -70,7 +70,7 @@ sub pumpkin_init
         'util_rpt_filename'             => 'util.log',
         'report_dir'                    => 'report',
 
-        'sim_config_filename' 		=> 'sim_config.h',
+        'sim_config_filename' 		    => 'sim_config.h',
 
         'c_x64_compiler'                => 'gcc',
         'cpp_x64_compiler'              => 'g++',
