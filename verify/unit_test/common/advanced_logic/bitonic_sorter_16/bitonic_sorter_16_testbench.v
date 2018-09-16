@@ -12,7 +12,7 @@ reg                                                     reset_in;
 reg  [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  pre_sort_flatted;
 wire [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  post_sort_flatted;
 
-reg test_case;
+integer test_case;
 reg test_judge;
 reg [NUM_WAY - 1 : 0] sorted;
 integer loop_index;
@@ -97,8 +97,8 @@ bitonic_sorter_16
 (
     .clk_in(clk_in),
     .reset_in(reset_in),
-    .pre_sort_flatted(pre_sort_flatted),
-    .post_sort_flatted(post_sort_flatted)
+    .pre_sort_flatted_in(pre_sort_flatted),
+    .post_sort_flatted_out(post_sort_flatted)
 );
 
 endmodule

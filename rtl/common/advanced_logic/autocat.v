@@ -1,23 +1,20 @@
 module autocat
 #
 (
-    //parameter SAMPLE_RATIO      = 32,
     parameter CACHE_ASSOCIATIVITY = 16, // currently only support 16-way fix configuration
     parameter COUNTER_WIDTH       = 32,
-    parameter SET_ADDR_LEN        = 64,
-    parameter RESET_BIN_POWER     = 20,  // 2^20 is about 1M requests
+    parameter RESET_BIN_POWER     = 20  // 2^20 is about 1M requests
 )
 (
     input                                                   clk_in,
     input                                                   reset_in,
 
-    output [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0]    cat_counter_flatted,
+    output [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0]    cat_counter_flatted_out,
 
-    input  [SET_ADDR_LEN                        - 1 : 0]    set_address,
-    input                                                   access_valid,
-    input  [CACHE_ASSOCIATIVITY                 - 1 : 0]    hit_vec,
+    input                                                   access_valid_in,
+    input  [CACHE_ASSOCIATIVITY                 - 1 : 0]    hit_vec_in,
 
-    output [CACHE_ASSOCIATIVITY                 - 1 : 0]    suggested_waymask
+    output [CACHE_ASSOCIATIVITY                 - 1 : 0]    suggested_waymask_out
 );
 
 //wire is_sampled = set_address[$clog2(SAMPLE_RATIO) - 1 : 0] == 0;
@@ -34,15 +31,15 @@ begin
     begin
         access_counter      <= 0;
         access_valid_pre    <= 0;
-        hit_vec             <= 0;
+        hit_vec_pre         <= 0;
     end
 
     else
     begin
-        access_valid_pre    <= access_valid;
-        hit_vec_pre         <= hit_vec;
+        access_valid_pre    <= access_valid_in;
+        hit_vec_pre         <= hit_vec_in;
         
-        if(~access_valid_pre & access_valid)
+        if(~access_valid_pre & access_valid_in)
             access_counter <= access_counter + 1'b1;
     end
 end
@@ -66,7 +63,7 @@ begin
             hit_counter <= 0;
         end
 
-        else if(~hit_vec_pre[gen] & hit_vec[gen])
+        else if(~hit_vec_pre[gen] & hit_vec_in[gen])
         begin
             hit_counter <= hit_counter + 1'b1;
         end
@@ -85,8 +82,8 @@ sorter
 (
     .clk_in(clk_in),
     .reset_in(reset_in),
-    .pre_sort_flatted(counter_flatted),
-    .post_sort_flatted(post_sort_counter_flatted)
+    .pre_sort_flatted_in(counter_flatted),
+    .post_sort_flatted_out(post_sort_counter_flatted)
 );
 
 wire [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0] post_calc_counter_flatted;
@@ -97,6 +94,5 @@ generate
                post_sort_counter_flatted[gen * COUNTER_WIDTH +: COUNTER_WIDTH] >> (RESET_BIN_POWER - 4);
     end
 endgenerate
-
 
 endmodule

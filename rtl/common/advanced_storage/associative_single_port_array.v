@@ -5,7 +5,7 @@ module associative_single_port_array
     parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64,
     parameter NUM_SET                       = 64,
     parameter NUM_WAY                       = 16,
-    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET),
+    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET) + 1,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter STORAGE_TYPE                  = "LUTRAM"
 )

@@ -6,8 +6,8 @@ module bitonic_sorter_16
 (
     input                                                clk_in,
     input                                                reset_in,
-    input  [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  pre_sort_flatted,
-    output [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  post_sort_flatted
+    input  [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  pre_sort_flatted_in,
+    output [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  post_sort_flatted_out
 );
 
 wire [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] cross_0_flatted;
@@ -42,7 +42,7 @@ begin
     end
 end
 
-assign post_sort_flatted = stage_3_flatted;
+assign post_sort_flatted_out = stage_3_flatted;
 
 // cross 0  /**/
 generate
@@ -59,8 +59,8 @@ begin : cross_0  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (pre_sort_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted( cross_0_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (pre_sort_flatted_in[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out( cross_0_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -80,8 +80,8 @@ begin : cross_1  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_0_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_0_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -101,8 +101,8 @@ begin : cross_2  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -122,8 +122,8 @@ begin : cross_3  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_3_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_3_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -143,8 +143,8 @@ begin : cross_4  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (stage_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_4_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (stage_1_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_4_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -164,8 +164,8 @@ begin : cross_5  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_4_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_5_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_4_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_5_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -185,8 +185,8 @@ begin : cross_6  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_5_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_6_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_5_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_6_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -206,8 +206,8 @@ begin : cross_7  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (stage_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_7_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (stage_2_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_7_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -227,8 +227,8 @@ begin : cross_8  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_7_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_8_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_7_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_8_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
@@ -248,8 +248,8 @@ begin : cross_9  /**/
     bitonic_sorter_cell
     (
          /**/
-        .pre_sort_flatted (cross_8_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
-        .post_sort_flatted(cross_9_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
+        .pre_sort_flatted_in  (cross_8_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS]),
+        .post_sort_flatted_out(cross_9_flatted[gen * SINGLE_WAY_WIDTH_IN_BITS +: `stride * SINGLE_WAY_WIDTH_IN_BITS])
     );
 end
 `undef stride
