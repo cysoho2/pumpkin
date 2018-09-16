@@ -552,15 +552,13 @@ sub test_name_enumerate
             next unless $line =~ / \A! \s+
                                     (?<test_name>\w+)\s+
                                     (?<test_src_dir>[\w|\/]+)\s+
-                                    (?<topmodule_test>\w+)\s+
-                                    (?<topmodule_src>\w+)
                                     /gx;
 
             $unit_test_info_hash{$+{test_name}} =
             {
                 'test_src_dir'   => "$pumpkin_path_hash{'unit_test_dir'}/".$+{test_src_dir},
-                'topmodule_test' => $+{topmodule_test},
-                'topmodule_src'  => $+{topmodule_src}
+                'topmodule_test' => $+{test_name}."_testbench",
+                'topmodule_src'  => $+{test_name}
             };
         }
 

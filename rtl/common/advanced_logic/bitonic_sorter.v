@@ -1,4 +1,4 @@
-module bitonic_sorter_16
+module bitonic_sorter
 #(
     parameter SINGLE_WAY_WIDTH_IN_BITS = 4,
     parameter NUM_WAY                  = 16 // must be a power of 2

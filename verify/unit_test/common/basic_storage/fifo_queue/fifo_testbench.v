@@ -1,7 +1,7 @@
 `include "sim_config.h"
 `include "parameters.h"
 
-module fifo_testbench();
+module fifo_queue_testbench();
 
 parameter QUEUE_SIZE = 8;
 parameter QUEUE_PTR_WIDTH_IN_BITS = 3;
@@ -191,7 +191,7 @@ initial
 begin
     `ifdef DUMP
         $dumpfile(`DUMP_FILENAME);
-        $dumpvars(0, fifo_testbench);
+        $dumpvars(0, fifo_queue_testbench);
     `endif
 
         $display("\n[info-testbench] simulation for %m begins now");

@@ -1,13 +1,13 @@
 `include "sim_config.h"
 `include "parameters.h"
 
-module bitonic_sorter_16_testbench();
+module bitonic_sorter_testbench();
 
 parameter SINGLE_WAY_WIDTH_IN_BITS = 4;
 parameter NUM_WAY                  = 16; // must be a power of 2
 
-reg                                                     clk_in;
-reg                                                     reset_in;
+reg                                                clk_in;
+reg                                                reset_in;
 
 reg  [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  pre_sort_flatted;
 wire [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  post_sort_flatted;
@@ -45,7 +45,7 @@ begin
 
     `ifdef DUMP
         $dumpfile(`DUMP_FILENAME);
-        $dumpvars(0, bitonic_sorter_16_testbench);
+        $dumpvars(0, bitonic_sorter_testbench);
     `endif
 
     $display("\n[info-rtl] simulation begins now\n");
@@ -88,12 +88,12 @@ end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
-bitonic_sorter_16
+bitonic_sorter
 #(
     .SINGLE_WAY_WIDTH_IN_BITS(SINGLE_WAY_WIDTH_IN_BITS),
     .NUM_WAY(NUM_WAY)
 )
-bitonic_sorter_16
+bitonic_sorter
 (
     .clk_in(clk_in),
     .reset_in(reset_in),
