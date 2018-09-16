@@ -1,7 +1,6 @@
 // with 8 elements, this module will be syntheWIDTHd into 4-layer of logic
 module select_biggest
-#
-(
+#(
     parameter NUM_WAY                   = 16, // currently support 16-elements at most
 	parameter WAY_PTR_WIDTH_IN_BITS     = $clog2(NUM_WAY) + 1,
 	parameter SINGLE_WAY_WIDTH_IN_BITS  = 4
