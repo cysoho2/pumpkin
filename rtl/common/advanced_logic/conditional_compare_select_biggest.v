@@ -7,15 +7,15 @@ module conditional_compare_select_biggest
 	parameter SINGLE_ELEMENT_WIDTH_IN_BITS = 32
 )
 (
-	input                                [NUM_ELEMENTS - 1 : 0] 	condition_in,
-	input [SINGLE_ELEMENT_WIDTH_IN_BITS * NUM_ELEMENTS - 1 : 0]		 elements_in,
-	output               [SINGLE_ELEMENT_WIDTH_IN_BITS - 1 : 0]		 selected_out
+	input [NUM_ELEMENTS                                - 1 : 0] condition_in,
+	input [SINGLE_ELEMENT_WIDTH_IN_BITS * NUM_ELEMENTS - 1 : 0]	elements_in,
+	output               [SINGLE_ELEMENT_WIDTH_IN_BITS - 1 : 0]	selected_out
 );
 
 generate
     genvar i;
-    wire [SINGLE_ELEMENT_WIDTH_IN_BITS * NUM_ELEMENTS - 1 : 0]      values_layer1;
-    wire     [ELEMENT_PTR_SIZE_IN_BITS * NUM_ELEMENTS - 1 : 0]        ptrs_layer1;
+    wire [SINGLE_ELEMENT_WIDTH_IN_BITS * NUM_ELEMENTS - 1 : 0] values_layer1;
+    wire     [ELEMENT_PTR_SIZE_IN_BITS * NUM_ELEMENTS - 1 : 0] ptrs_layer1;
 
     if(NUM_ELEMENTS != 0)
     begin : layer1
