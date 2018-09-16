@@ -2,26 +2,26 @@ module autocat
 #
 (
     //parameter SAMPLE_RATIO      = 32,
-    parameter CACHE_ASSOCIATIVITY = 16,
-    parameter COUNTER_LEN         = 32,
+    parameter CACHE_ASSOCIATIVITY = 16, // currently only support 16-way fix configuration
+    parameter COUNTER_WIDTH       = 32,
     parameter SET_ADDR_LEN        = 64,
-    parameter RESET_REQUEST       = 32'h0010_0000
+    parameter RESET_BIN_POWER     = 20,  // 2^20 is about 1M requests
 )
 (
-    input                                              clk_in,
-    input                                              reset_in,
+    input                                                   clk_in,
+    input                                                   reset_in,
 
-    output [CACHE_ASSOCIATIVITY * COUNTER_LEN - 1 : 0] cat_counter_flatted,
+    output [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0]    cat_counter_flatted,
 
-    input  [SET_ADDR_LEN                      - 1 : 0] set_address,
-    input                                              access_valid,
-    input  [CACHE_ASSOCIATIVITY               - 1 : 0] hit_vec,
+    input  [SET_ADDR_LEN                        - 1 : 0]    set_address,
+    input                                                   access_valid,
+    input  [CACHE_ASSOCIATIVITY                 - 1 : 0]    hit_vec,
 
-    output [CACHE_ASSOCIATIVITY               - 1 : 0] suggested_waymask
+    output [CACHE_ASSOCIATIVITY                 - 1 : 0]    suggested_waymask
 );
 
 //wire is_sampled = set_address[$clog2(SAMPLE_RATIO) - 1 : 0] == 0;
-wire reset_with_request_limit = reset_in | request_counter == RESET_REQUEST;
+wire reset_with_request_limit = reset_in | request_counter == 2 ** RESET_BIN_POWER;
 
 // overall request counter
 reg                               access_valid_pre;
@@ -47,7 +47,8 @@ begin
     end
 end
 
-wire [CACHE_ASSOCIATIVITY * COUNTER_LEN - 1 : 0] counter_flatted;
+wire [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0] counter_flatted;
+wire [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0] post_sort_counter_flatted;
 
 // hit counter array
 generate
@@ -55,8 +56,8 @@ genvar gen;
 
 for(gen = 0; gen < CACHE_ASSOCIATIVITY; gen = gen + 1)
 begin
-    reg [COUNTER_LEN - 1 : 0] hit_counter;
-    assign counter_flatted[gen * COUNTER_LEN +: COUNTER_LEN] = hit_counter;
+    reg [COUNTER_WIDTH - 1 : 0] hit_counter;
+    assign counter_flatted[gen * COUNTER_WIDTH +: COUNTER_WIDTH] = hit_counter;
 
     always@(posedge clk_in, posedge reset_with_request_limit)
     begin
@@ -73,5 +74,29 @@ begin
 end
 
 endgenerate
+
+// sort all the hit counters
+bitonic_sorter_16
+#(
+    .SINGLE_WAY_WIDTH_IN_BITS(COUNTER_WIDTH),
+    .NUM_WAY(NUM_WAY)
+)
+sorter
+(
+    .clk_in(clk_in),
+    .reset_in(reset_in),
+    .pre_sort_flatted(counter_flatted),
+    .post_sort_flatted(post_sort_counter_flatted)
+);
+
+wire [CACHE_ASSOCIATIVITY * COUNTER_WIDTH - 1 : 0] post_calc_counter_flatted;
+generate
+    for(gen = 0; gen < CACHE_ASSOCIATIVITY; gen = gen + 1)
+    begin
+        assign post_calc_counter_flatted[gen * COUNTER_WIDTH +: COUNTER_WIDTH] =
+               post_sort_counter_flatted[gen * COUNTER_WIDTH +: COUNTER_WIDTH] >> (RESET_BIN_POWER - 4);
+    end
+endgenerate
+
 
 endmodule
