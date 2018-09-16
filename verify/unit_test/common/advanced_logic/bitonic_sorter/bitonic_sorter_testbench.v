@@ -48,7 +48,7 @@ begin
         $dumpvars(0, bitonic_sorter_testbench);
     `endif
 
-    $display("\n[info-rtl] simulation begins now\n");
+    $display("\n[info-testbench] simulation for %m begins now");
     test_case                   = 0;
     clk_in                      = 1'b0;
     reset_in                    = 1'b0;

@@ -52,30 +52,6 @@ wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_out;
 wire                                                    request_valid_out;
 reg     	                                            issue_ack_to_fifo;
 
-fifo_queue
-#
-(
-    .QUEUE_SIZE                                         (QUEUE_SIZE),
-    .QUEUE_PTR_WIDTH_IN_BITS                            (QUEUE_PTR_WIDTH_IN_BITS),
-    .SINGLE_ENTRY_WIDTH_IN_BITS                         (SINGLE_ENTRY_WIDTH_IN_BITS),
-    .STORAGE_TYPE                                       (STORAGE_TYPE)
-)
-fifo_queue
-(
-    .clk_in				                                (clk_in),
-    .reset_in			                                (reset_in),
-
-    .is_empty_out		                                (is_empty),
-    .is_full_out		                                (is_full),
-
-    .request_in			                                (request_in),
-    .request_valid_in	                                (request_valid_in),
-    .issue_ack_out		                                (issue_ack_from_fifo),
-    .request_out		                                (request_out),
-    .request_valid_out                                  (request_valid_out),
-    .issue_ack_in		                                (issue_ack_to_fifo)
-);
-
 assign request_in                                       = is_from_request_in_buffer? request_in_buffer[request_in_ctr] : {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
 assign request_valid_in                                 = is_from_request_in_buffer? request_valid_in_buffer[request_in_ctr] : 1'b0;
 
@@ -277,5 +253,29 @@ begin
 end
 
 always begin #`HALF_CYCLE_DELAY clk_in                                  <= ~clk_in; end
+
+fifo_queue
+#
+(
+    .QUEUE_SIZE                                         (QUEUE_SIZE),
+    .QUEUE_PTR_WIDTH_IN_BITS                            (QUEUE_PTR_WIDTH_IN_BITS),
+    .SINGLE_ENTRY_WIDTH_IN_BITS                         (SINGLE_ENTRY_WIDTH_IN_BITS),
+    .STORAGE_TYPE                                       (STORAGE_TYPE)
+)
+fifo_queue
+(
+    .clk_in				                                (clk_in),
+    .reset_in			                                (reset_in),
+
+    .is_empty_out		                                (is_empty),
+    .is_full_out		                                (is_full),
+
+    .request_in			                                (request_in),
+    .request_valid_in	                                (request_valid_in),
+    .issue_ack_out		                                (issue_ack_from_fifo),
+    .request_out		                                (request_out),
+    .request_valid_out                                  (request_valid_out),
+    .issue_ack_in		                                (issue_ack_to_fifo)
+);
 
 endmodule

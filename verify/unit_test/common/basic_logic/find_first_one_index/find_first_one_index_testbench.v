@@ -42,7 +42,7 @@ module find_first_one_index_testbench();
             $dumpvars(0, find_first_one_index_testbench);
 	    `endif
 
-        $display("\n[info-rtl] simulation begins now\n");
+        $display("\n[info-testbench] simulation for %m begins now");
 
         clk_in                                  = 1'b0;
         reset_in                                = 1'b0;

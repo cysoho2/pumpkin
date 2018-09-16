@@ -26,31 +26,6 @@ module tri_port_regfile_testbench();
     reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 test_input_1;
     reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 test_input_2;
     reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                 test_result_1;
-
-    tri_port_regfile
-    #
-    (
-        .SINGLE_ENTRY_SIZE_IN_BITS                              (SINGLE_ENTRY_SIZE_IN_BITS),
-        .NUM_ENTRY                                              (NUM_ENTRY)
-    )
-    
-    tri_port_regfile
-    (
-        .reset_in                                               (reset_in),
-        .clk_in                                                 (clk_in),
-    
-        .read_en_in                                             (read_en_in),
-        .write_en_in                                            (write_en_in),
-        .cam_en_in                                              (cam_en_in),
-
-        .read_entry_addr_decoded_in                             (read_entry_addr_decoded_in),
-        .write_entry_addr_decoded_in                            (write_entry_addr_decoded_in),
-        .cam_entry_in                                           (cam_entry_in),
-
-        .write_entry_in                                         (write_entry_in),
-        .read_entry_out                                         (read_entry_out),
-        .cam_result_decoded_out                                 (cam_result_decoded_out)
-    );
     
     initial
     begin
@@ -185,5 +160,29 @@ module tri_port_regfile_testbench();
 
     always begin #`HALF_CYCLE_DELAY clk_in <= ~clk_in; end
 
+    tri_port_regfile
+    #
+    (
+        .SINGLE_ENTRY_SIZE_IN_BITS                              (SINGLE_ENTRY_SIZE_IN_BITS),
+        .NUM_ENTRY                                              (NUM_ENTRY)
+    )
+    
+    tri_port_regfile
+    (
+        .reset_in                                               (reset_in),
+        .clk_in                                                 (clk_in),
+    
+        .read_en_in                                             (read_en_in),
+        .write_en_in                                            (write_en_in),
+        .cam_en_in                                              (cam_en_in),
+
+        .read_entry_addr_decoded_in                             (read_entry_addr_decoded_in),
+        .write_entry_addr_decoded_in                            (write_entry_addr_decoded_in),
+        .cam_entry_in                                           (cam_entry_in),
+
+        .write_entry_in                                         (write_entry_in),
+        .read_entry_out                                         (read_entry_out),
+        .cam_result_decoded_out                                 (cam_result_decoded_out)
+    );
 
 endmodule

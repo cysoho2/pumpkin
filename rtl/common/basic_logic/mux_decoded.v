@@ -1,12 +1,12 @@
 module mux_decoded
 #(
-    parameter SINGLE_WAY_SIZE_IN_BITS = 32,
+    parameter SINGLE_WAY_WIDTH_IN_BITS = 32,
     parameter NUMBER_WAY = 8
 )
 (
-    input      [SINGLE_WAY_SIZE_IN_BITS * NUMBER_WAY - 1 : 0]  way_flatted_in,
-    input      [NUMBER_WAY                           - 1 : 0]  sel_in,
-    output     [SINGLE_WAY_SIZE_IN_BITS              - 1 : 0]  way_flatted_out
+    input      [SINGLE_WAY_WIDTH_IN_BITS * NUMBER_WAY - 1 : 0]  way_flatted_in,
+    input      [NUMBER_WAY                            - 1 : 0]  sel_in,
+    output     [SINGLE_WAY_WIDTH_IN_BITS              - 1 : 0]  way_flatted_out
 );
 
 parameter NUMBER_WAY_LOG2 = $clog2(NUMBER_WAY) + 1;
@@ -24,6 +24,6 @@ find_first_one_index
     .one_is_found_out()
 );
 
-assign way_flatted_out = way_flatted_in[sel_index * SINGLE_WAY_SIZE_IN_BITS +: SINGLE_WAY_SIZE_IN_BITS];
+assign way_flatted_out = way_flatted_in[sel_index * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS];
 
 endmodule

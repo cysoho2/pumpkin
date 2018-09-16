@@ -43,29 +43,6 @@ reg     [31:0]                                          test_ctr;
 reg     [31:0]                                          test_write_ctr;
 reg     [31:0]                                          test_read_ctr;
 
-
-priority_arbiter
-#(
-    .NUM_REQUEST                                    (NUM_REQUEST),
-    .SINGLE_REQUEST_WIDTH_IN_BITS                   (SINGLE_REQUEST_WIDTH_IN_BITS)
- )
-
-priority_arbiter
-(
-    .reset_in                                       (reset_in),
-    .clk_in                                         (clk_in),
-
-    // the arbiter considers priority from right(high) to left(low)
-    .request_flatted_in                             ({request_2_to_arb,             request_1_to_arb,           request_0_to_arb}),
-    .request_valid_flatted_in                       ({request_2_valid_to_arb,       request_1_valid_to_arb,     request_0_valid_to_arb}),
-    .request_critical_flatted_in                    ({request_2_critical_to_arb,    request_1_critical_to_arb,  request_0_critical_to_arb}),
-    .issue_ack_out                                  ({issue_ack_2_from_arb,         issue_ack_1_from_arb,       issue_ack_0_from_arb}),
-
-    .request_out                                    (request_from_arb),
-    .request_valid_out                              (request_valid_from_arb),
-    .issue_ack_in                                   (issue_ack_to_arb)
-);
-
 always @(posedge clk_in or posedge reset_in)
 begin
     if(reset_in)
@@ -648,7 +625,7 @@ begin
         $dumpvars(0, priority_arbiter_testbench);
     `endif
 
-    $display("\n[info-rtl] simulation begins now\n");
+    $display("\n[info-testbench] simulation for %m begins now");
     clk_in                      = 1'b0;
     reset_in                    = 1'b0;
 
@@ -682,5 +659,27 @@ begin
 end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
+
+priority_arbiter
+#(
+    .NUM_REQUEST                                    (NUM_REQUEST),
+    .SINGLE_REQUEST_WIDTH_IN_BITS                   (SINGLE_REQUEST_WIDTH_IN_BITS)
+ )
+
+priority_arbiter
+(
+    .reset_in                                       (reset_in),
+    .clk_in                                         (clk_in),
+
+    // the arbiter considers priority from right(high) to left(low)
+    .request_flatted_in                             ({request_2_to_arb,             request_1_to_arb,           request_0_to_arb}),
+    .request_valid_flatted_in                       ({request_2_valid_to_arb,       request_1_valid_to_arb,     request_0_valid_to_arb}),
+    .request_critical_flatted_in                    ({request_2_critical_to_arb,    request_1_critical_to_arb,  request_0_critical_to_arb}),
+    .issue_ack_out                                  ({issue_ack_2_from_arb,         issue_ack_1_from_arb,       issue_ack_0_from_arb}),
+
+    .request_out                                    (request_from_arb),
+    .request_valid_out                              (request_valid_from_arb),
+    .issue_ack_in                                   (issue_ack_to_arb)
+);
 
 endmodule

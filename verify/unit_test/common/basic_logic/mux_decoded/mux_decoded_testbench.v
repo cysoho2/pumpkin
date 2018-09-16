@@ -3,14 +3,14 @@
 
 module mux_decoded_testbench();
 
-parameter SINGLE_WAY_SIZE_IN_BITS = 4;
-parameter NUMBER_WAY              = 8;
+parameter SINGLE_WAY_WIDTH_IN_BITS = 4;
+parameter NUM_WAY                  = 8;
 
-integer                                             test_case_num;
-reg                                                 test_judge;
-reg  [SINGLE_WAY_SIZE_IN_BITS * NUMBER_WAY - 1 : 0] vector_input;
-reg  [NUMBER_WAY                           - 1 : 0] select;
-wire [SINGLE_WAY_SIZE_IN_BITS              - 1 : 0] result;
+integer                                              test_case_num;
+reg                                                  test_judge;
+reg  [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0]    vector_input;
+reg  [NUM_WAY                            - 1 : 0]    select;
+wire [SINGLE_WAY_WIDTH_IN_BITS           - 1 : 0]    result;
 
 initial
 begin
@@ -19,7 +19,7 @@ begin
         $dumpvars(0, mux_decoded_testbench);
     `endif
 
-    $display("\n[info-rtl] simulation begins now\n");
+    $display("\n[info-testbench] simulation for %m begins now");
 
     test_judge         = 1'b0;
     test_case_num      = 1'b0;
@@ -35,8 +35,8 @@ end
 
 mux_decoded
 #(
-    .SINGLE_WAY_SIZE_IN_BITS(SINGLE_WAY_SIZE_IN_BITS),
-    .NUMBER_WAY(NUMBER_WAY)
+    .SINGLE_WAY_WIDTH_IN_BITS(SINGLE_WAY_WIDTH_IN_BITS),
+    .NUM_WAY(NUM_WAY)
 )
 mux_decoded
 (
