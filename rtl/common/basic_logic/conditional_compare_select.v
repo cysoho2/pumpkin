@@ -1,10 +1,10 @@
 // with 8 elements, this module will be synthesized into 4-layer of logic
-module conditional_compare_select
+module conditional_compare_select_biggest
 #
 (
-    parameter NUM_ELEMENTS                 = 8, // currently support 16-elements at most
-	parameter ELEMENT_PTR_SIZE_IN_BITS     = 3,
-	parameter SINGLE_ELEMENT_WIDTH_IN_BITS = 3
+    parameter NUM_ELEMENTS                 = 16, // currently support 16-elements at most
+	parameter ELEMENT_PTR_SIZE_IN_BITS     = $clog2(NUM_ELEMENTS) + 1,
+	parameter SINGLE_ELEMENT_WIDTH_IN_BITS = 32
 )
 (
 	input                                [NUM_ELEMENTS - 1 : 0] 	condition_in,

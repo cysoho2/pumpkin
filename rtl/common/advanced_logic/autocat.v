@@ -5,7 +5,7 @@ module autocat
     parameter CACHE_ASSOCIATIVITY = 16,
     parameter COUNTER_LEN         = 32,
     parameter SET_ADDR_LEN        = 64,
-    parameter RESET_REQUEST       = 32'h0010_0000;
+    parameter RESET_REQUEST       = 32'h0010_0000
 )
 (
     input                                              clk_in,

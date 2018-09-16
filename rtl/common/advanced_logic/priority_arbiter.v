@@ -2,7 +2,7 @@ module priority_arbiter
 #(
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
     parameter NUM_REQUEST                  = 3,
-    parameter INPUT_QUEUE_SIZE             = 2 // shouble be a power of 2
+    parameter INPUT_QUEUE_SIZE             = 2 // must be a power of 2
 )
 (
     input                                                               reset_in,
@@ -124,11 +124,11 @@ wire [NUM_REQUEST - 1 : 0] valid_mask;
 wire [NUM_REQUEST - 1 : 0] critical_mask;
 
 generate
-for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
-begin
-    assign    valid_mask[request_index]      =    valid_sel == request_index ? 1 : 0;
-    assign critical_mask[request_index]      = critical_sel == request_index ? 1 : 0;
-end
+    for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
+    begin
+        assign    valid_mask[request_index]      =    valid_sel == request_index ? 1 : 0;
+        assign critical_mask[request_index]      = critical_sel == request_index ? 1 : 0;
+    end
 endgenerate
 
 generate
