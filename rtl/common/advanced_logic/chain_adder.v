@@ -1,7 +1,6 @@
 // with 8 elements, this module will be syntheWIDTHd into 4-layer of logic
 module chain_adder
-#
-(
+#(
     parameter NUM_WAY                   = 16, // currently support 16-elements at most
 	parameter WAY_PTR_WIDTH_IN_BITS     = $clog2(NUM_WAY) + 1,
 	parameter SINGLE_WAY_WIDTH_IN_BITS  = 4
@@ -15,7 +14,6 @@ module chain_adder
 generate
     genvar i;
     wire [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] values_layer1;
-    wire [WAY_PTR_WIDTH_IN_BITS    * NUM_WAY - 1 : 0] ptrs_layer1;
 
     if(NUM_WAY != 0)
     begin : layer1
@@ -23,15 +21,12 @@ generate
         begin
             assign values_layer1[i * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS] =
             	    condition_in[i] ? way_flatted_in[i * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS] : {SINGLE_WAY_WIDTH_IN_BITS{1'b0}};
-
-            assign   ptrs_layer1[i * WAY_PTR_WIDTH_IN_BITS +: WAY_PTR_WIDTH_IN_BITS] = i;
         end
     end
 endgenerate
 
 generate
     wire [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY / 2 - 1 : 0] values_layer2;
-    wire [WAY_PTR_WIDTH_IN_BITS    * NUM_WAY / 2 - 1 : 0]   ptrs_layer2;
 
     if(NUM_WAY / 2 > 0)
     begin : layer2
@@ -39,11 +34,8 @@ generate
         begin
         	wire [SINGLE_WAY_WIDTH_IN_BITS - 1 : 0] value1 = values_layer1[i * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS];
         	wire [SINGLE_WAY_WIDTH_IN_BITS - 1 : 0] value2 = values_layer1[(i + (NUM_WAY / 2)) * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS];
-        	wire [WAY_PTR_WIDTH_IN_BITS - 1 : 0]      ptr1 =   ptrs_layer1[i * WAY_PTR_WIDTH_IN_BITS +: WAY_PTR_WIDTH_IN_BITS];
-            wire [WAY_PTR_WIDTH_IN_BITS - 1 : 0]      ptr2 =   ptrs_layer1[(i + (NUM_WAY / 2)) * WAY_PTR_WIDTH_IN_BITS +: WAY_PTR_WIDTH_IN_BITS];
 
             assign values_layer2[i * SINGLE_WAY_WIDTH_IN_BITS +: SINGLE_WAY_WIDTH_IN_BITS] = value1 > value2 ? value1 : value2;
-            assign   ptrs_layer2[i * WAY_PTR_WIDTH_IN_BITS    +: WAY_PTR_WIDTH_IN_BITS]    = value1 > value2 ? ptr1 : ptr2;
         end
     end
 
