@@ -15,7 +15,7 @@ int main()
 	}
 	
 #ifdef x64
-	cout << result_sum << " " <<result_factor<<endl;
+	cout << result_sum << endl;
 #endif	
 	return 0;
 }

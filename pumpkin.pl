@@ -240,7 +240,7 @@ sub task_begin
                                             $pumpkin_parameter_hash{'cpp_arm_compiler'}:
                                             $pumpkin_parameter_hash{'cpp_x64_compiler'};
 
-        my $compilation_flags           = " -o3 -wall -g";
+        my $compilation_flags           = " -O3 -Wall -g";
         my $compilation_log_path        = "$build_dir/compilation.log";
         my @filelist;
 
@@ -249,14 +249,16 @@ sub task_begin
             "$pumpkin_path_hash{'src_verify_dir'}/$test_scale/$test_name");
 
         $compiler_cmd .= " @filelist -o $elf_filename".$compilation_flags;
-        $compiler_cmd .= ' -dx64' if !$test_arch =~ 'arm';
+        $compiler_cmd .= ' -Dx64' if !($test_arch =~ 'arm');
         $compiler_cmd .= " 2>> $compilation_log_path";
 
         say "[info-script] starting compilation for $test_name";
         &compilation_wrapper($compilation_log_path, $compiler_cmd, @filelist);
 
-        my $dumper_path = &arm_dumper_build();
-        &arm_dumper_run($dumper_path, $elf_filename, $build_dir);
+        #my $dumper_path = &arm_dumper_build();
+        #&arm_dumper_run($dumper_path, $elf_filename, $build_dir);
+        say "$elf_filename";
+        system "$elf_filename;";
     }
 
     # unit test
