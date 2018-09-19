@@ -71,8 +71,3 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 -impl -sim_time -dump -unit fifo_queue indicates a post-implementation timing simulation of unit testcase fifo_queue with signals dumping.
 
 -./pumpkin.pl -impl -sim_time -dump -unit fifo
-
-7. (Probably) Required Packages
-
-- sudo apt-get install gtkwave
-- sudo apt-get install iverilog (MacOSX)
