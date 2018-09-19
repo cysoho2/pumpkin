@@ -12,8 +12,8 @@ Tested can be performed with a RTL simulator or on a real FPGA board.
 #Required Tools
 
 * vivado simulator (Linux)
-* gtkwave (Linux/MacOSX)
-* iverilog (MacOSX)
+* gtkwave (Linux/MacOSX)     - sudo apt-get install gtkwave
+* iverilog (MacOSX)          - sudo apt-get install iverilog (MacOSX)
 
 #Cautions 
     
