@@ -52,7 +52,7 @@ sub pumpkin_init
 
     %pumpkin_parameter_hash =
     (
-        #'device'                        => 'xczu2eg-sfva625-1-e',
+        #'device'                        => 'xc7z020clg400-1',
         'device'                        => 'xc7v2000tfhg1761-1',
         'default_test_scale'            => 'unit_test',
         'default_test_arch'             => 'arm64',

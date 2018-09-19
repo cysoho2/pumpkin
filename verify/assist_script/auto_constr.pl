@@ -55,6 +55,11 @@ sub script_init
             'clk_in' => 'L16'
         },
 
+        'xc7z020clg400-1' =>
+        {
+            'clk_in' => 'K17'
+        },
+
         'xc7vx690tffg1761-1' =>
         {
             'clk_in' => 'AK34'
