@@ -19,7 +19,7 @@ set sim_mode [lindex $argv 12]
 set sim_type [lindex $argv 13]
 set dumpon [lindex $argv 14]
 
-set parallel_thread 8
+set parallel_thread 6
 
 #reading file list
 set i 15
@@ -52,7 +52,7 @@ set_property "top" $topmodule_test [get_filesets sim_1]
 
 #setting up the synthesis and implementation run
 if {[string equal -nocase -length 5 $sim_mode "post-"]} {
-    create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2016" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
+    create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2018" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
 
     #synthesis
     launch_runs -jobs $parallel_thread -verbose "synth_run"
@@ -65,7 +65,7 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
     }
 
     if {[string equal -nocase $sim_mode "post-implementation"]} {
-        create_run -part $device -constrset constrs_1 -flow "Vivado Implementation 2016" -strategy "Vivado Implementation Defaults" -verbose -parent_run "synth_run" -name "impl_run"
+        create_run -part $device -constrset constrs_1 -flow "Vivado Implementation 2018" -strategy "Vivado Implementation Defaults" -verbose -parent_run "synth_run" -name "impl_run"
 
         #implementation
         launch_runs -jobs $parallel_thread -verbose "impl_run"
@@ -83,7 +83,7 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
             open_run -name "impl_design" -verbose "impl_run"
     }
 
-    report_utilization -verbose -hierarchical -hierarchical_depth 1000 -file $util_rpt_file_path
+    report_utilization -verbose -file $util_rpt_file_path
     report_timing_summary -check_timing_verbose -verbose -warn_on_violation -max_paths 10 -file $timing_rpt_file_path
 }
 
