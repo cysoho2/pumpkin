@@ -13,7 +13,7 @@ Tested can be performed with a RTL simulator or on a real FPGA board.
 
 * vivado simulator (Linux)
 * gtkwave (Linux/MacOSX)     - sudo apt-get install gtkwave
-* iverilog (MacOSX)          - sudo apt-get install iverilog (MacOSX)
+* iverilog (MacOSX)
 
 #Cautions 
     
