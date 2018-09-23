@@ -1,4 +1,4 @@
-`include "sim_config.h"
+//`include "sim_config.h"
 
 //`define COD_UCAS
 
@@ -30,7 +30,7 @@
         // Unified Cache - Architecture
         `define UNIFIED_CACHE_BANK_ARCHITECTURE                 "OFF" /* option: OFF, BASIC, ADVANCED*/
 
-        `define UNIFIED_CACHE_SIZE_IN_BYTES                     256 * 1024 // Bytes, must be a power of 2
+        `define UNIFIED_CACHE_SIZE_IN_BYTES                     128 * 1024 // Bytes, must be a power of 2
         `define UNIFIED_CACHE_SET_ASSOCIATIVITY                 8 // must be a power of 2
         `ifdef SIMULATION
             `define UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES           4 // must be a power of 2, and should be small enough to avoid pin allocation failure
@@ -48,7 +48,7 @@
         `define MAX_NUM_INPUT_PORT                              16
 
         // Unified Cache - Misc.
-        `define UNIFIED_CACHE_BLOCK_SIZE_IN_BITS                (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES * 8)
+        `define UNIFIED_CACHE_BLOCK_SIZE_IN_BITS                (`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS)
         `define UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS          ($clog2(`UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES))
         `define UNIFIED_CACHE_BLOCK_OFFSET_POS_HI               (`UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS - 1)
         `define UNIFIED_CACHE_BLOCK_OFFSET_POS_LO               0

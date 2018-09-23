@@ -1,8 +1,7 @@
 `include "parameters.h"
 
 module cache_packet_generator
-#
-(
+#(
     parameter NUM_WAY                                 = 2,
     parameter TIMING_OUT_CYCLE                        = 100000,
 

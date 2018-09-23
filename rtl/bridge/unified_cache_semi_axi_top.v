@@ -1,16 +1,15 @@
 `include "parameters.h"
 
 module unified_cache_semi_axi_top
-#
-(
+#(
     // cache parameters
     parameter NUM_INPUT_PORT                        = 2,
     parameter NUM_BANK                              = 4,
     parameter NUM_SET                               = 4,
     parameter NUM_WAY                               = 4,
-    parameter BLOCK_SIZE_IN_BYTES                   = 4,
+    parameter BLOCK_SIZE_IN_BYTES                   = `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES,
+    parameter BLOCK_SIZE_IN_BITS                    = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS    = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
-    parameter BLOCK_SIZE_IN_BITS                    = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter PORT_ID_WIDTH                         = $clog2(NUM_INPUT_PORT) + 1,
     parameter BANK_BITS                             = $clog2(NUM_BANK),
 
@@ -18,7 +17,7 @@ module unified_cache_semi_axi_top
     parameter C_M_TARGET_SLAVE_BASE_ADDR	        = 32'h0000_0000,
     parameter C_M_AXI_ADDR_WIDTH	                = 32,
     parameter C_M_AXI_DATA_WIDTH	                = 32,
-    parameter C_M_AXI_BURST_LEN	                    = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS / C_M_AXI_DATA_WIDTH,
+    parameter C_M_AXI_BURST_LEN	                    = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / C_M_AXI_DATA_WIDTH,
     parameter C_M_AXI_ID_WIDTH	                    = 4,
     parameter C_M_AXI_AWUSER_WIDTH	                = 1,
     parameter C_M_AXI_ARUSER_WIDTH	                = 1,

@@ -1,8 +1,7 @@
 `include "parameters.h"
 
 module packet_concat
-#
-(
+#(
     parameter ADDR_LEN   = `CPU_ADDR_LEN_IN_BITS,
     parameter DATA_LEN   = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
     parameter TYPE_LEN   = `UNIFIED_CACHE_PACKET_TYPE_WIDTH,
