@@ -208,9 +208,9 @@ sub cmd_parsing
                                             'post-implementation'
                                         );
             }
-            elsif($current_arg =~ /-sim_(?<type>func|time)/i)
+            elsif($current_arg =~ /-sim_(?<type>func|time|none)/i)
             {
-                $test_type = 'functional' =~ $+{type} ? 'functional' : 'timing';
+                $test_type = 'functional' =~ $+{type} ? 'functional' : ('time' =~ $+{type} ? 'timing' : 'none');
             }
             elsif($current_arg =~ /-dump/i)
             {

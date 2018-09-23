@@ -40,7 +40,7 @@
         `define UNIFIED_CACHE_NUM_SETS                          (`UNIFIED_CACHE_SIZE_IN_BYTES / `UNIFIED_CACHE_SET_ASSOCIATIVITY / `UNIFIED_CACHE_BLOCK_SIZE_IN_BYTES)
         `define UNIFIED_CACHE_NUM_BANK                          4 // must be greater than num of sets, musht be a power of 2                 
 
-        `define UNIFIED_CACHE_INPUT_QUEUE_SIZE                  4 // must be a power of 2
+        `define UNIFIED_CACHE_INPUT_QUEUE_SIZE                  2 // must be a power of 2
         `define UNIFIED_CACHE_WRITEBACK_BUFFER_SIZE             4 // must be a power of 2
         `define UNIFIED_CACHE_MISS_BUFFER_SIZE 				    8
         `define UNIFIED_CACHE_RETURN_QUEUE_SIZE 				16
@@ -64,11 +64,11 @@
         `define UNIFIED_CACHE_PACKET_TYPE_WIDTH                 4 // must be greater than 4
 
         // Unified Cache - Type Info
-        `define TYPE_INST_LOAD                                	(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b1000
-        `define TYPE_DATA_LOAD                                	(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0001
-        `define TYPE_DATA_PREFETCH_FROM_L1D 					(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0010
-        `define TYPE_DATA_RFO 									(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0011
-        `define TYPE_DATA_WRITEBACK 							(`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0100
+        `define TYPE_INST_LOAD                                	((`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b1000)
+        `define TYPE_DATA_LOAD                                	((`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0001)
+        `define TYPE_DATA_PREFETCH_FROM_L1D 					((`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0010)
+        `define TYPE_DATA_RFO 									((`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0011)
+        `define TYPE_DATA_WRITEBACK 							((`UNIFIED_CACHE_PACKET_TYPE_WIDTH)'b0100)
 
         // Unified Cache - Packet
         `define UNIFIED_CACHE_PACKET_ADDR_POS_LO                0

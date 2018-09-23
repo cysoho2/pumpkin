@@ -334,7 +334,8 @@ begin : Find
 
     for(loop_index = 0; loop_index < CACHE_ASSOCIATIVITY; loop_index = loop_index + 1)
     begin
-        if(accumulated_hit_counter[loop_index] +ALLOWED_GAP >= accumulated_hit_counter[CACHE_ASSOCIATIVITY - 1])
+        if(accumulated_hit_counter[loop_index * COUNTER_WIDTH +: COUNTER_WIDTH] + ALLOWED_GAP >=
+           accumulated_hit_counter[(CACHE_ASSOCIATIVITY - 1) * COUNTER_WIDTH +: COUNTER_WIDTH])
         begin
             first_best_partition <= loop_index;
             disable Find; //TO exit the loop

@@ -7,8 +7,8 @@ set util_rpt_file_path [lindex $argv 3]
 set vivado_synth_log_path [lindex $argv 4]
 
 set constr_generator_path [lindex $argv 5]
-set device_constraints_path [lindex $argv 6]
-set final_constraints_path [lindex $argv 7]
+set device_constraint_path [lindex $argv 6]
+set final_constraint_path [lindex $argv 7]
 
 set device [lindex $argv 8]
 set cycle_time [lindex $argv 9]
@@ -50,6 +50,11 @@ add_files -norecurse -fileset sim_1 $files
 set_property "top" $topmodule_src [get_filesets sources_1]
 set_property "top" $topmodule_test [get_filesets sim_1]
 
+# see more details for removed logic, propogated constant, merged instance
+set_msg_config -id {[Synth 8-3332]} -limit 1000000
+set_msg_config -id {[Synth 8-3333]} -limit 1000000
+set_msg_config -id {[Synth 8-3886]} -limit 1000000
+
 #setting up the synthesis and implementation run
 if {[string equal -nocase -length 5 $sim_mode "post-"]} {
     create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2018" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
@@ -60,8 +65,8 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
     if {[get_property PROGRESS [get_runs "synth_run"]] != "100%"} {
         error "[error-script] synthesis failed"
     } else {
-        exec $constr_generator_path $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraints_path $final_constraints_path $files
-        add_files -norecurse -fileset constrs_1 $final_constraints_path
+        exec $constr_generator_path $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraint_path $final_constraint_path $files
+        add_files -norecurse -fileset constrs_1 $final_constraint_path
     }
 
     if {[string equal -nocase $sim_mode "post-implementation"]} {
@@ -83,7 +88,8 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
             open_run -name "impl_design" -verbose "impl_run"
     }
 
-    report_utilization -verbose -file $util_rpt_file_path
+    report_utilization -hierarchical -hierarchical_depth 10000 -verbose -file $util_rpt_file_path
+    report_utilization -append -verbose -file $util_rpt_file_path
     report_timing_summary -check_timing_verbose -verbose -warn_on_violation -max_paths 10 -file $timing_rpt_file_path
 }
 
