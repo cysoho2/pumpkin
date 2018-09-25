@@ -52,7 +52,7 @@ begin:way_logic
         packet_concat test_packet_concat
         (
             .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000}}),
-            .data_in        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/2){2'b10}}),
+            .data_in        ({(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/32){request_counter + 1'b1}}),
             .type_in        ({(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}}),
             .write_mask_in  ({{(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){1'b1}}, {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){1'b1}}}),
             .port_num_in    ({(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}}),
@@ -186,7 +186,7 @@ begin:way_logic
                 begin
                     return_packet_ack[WAY_INDEX]    <= 1;
                     timeout_counter                 <= timeout_counter + 1'b1;
-                    error_way[WAY_INDEX]            <= return_data != {(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/2){2'b10}}
+                    error_way[WAY_INDEX]            <= return_data != {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/32){request_counter + 1'b1}}
                                                     | timeout_counter >= TIMING_OUT_CYCLE;
                     read_returned                   <= 1;
                 end

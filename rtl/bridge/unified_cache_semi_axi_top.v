@@ -14,15 +14,15 @@ module unified_cache_semi_axi_top
     parameter BANK_BITS                             = $clog2(NUM_BANK),
 
     // AXI parameters
-    parameter C_M_TARGET_SLAVE_BASE_ADDR	        = 32'h0000_0000,
+    parameter C_M_TARGET_SLAVE_BASE_ADDR	        = 32'h1000_0000,
     parameter C_M_AXI_ADDR_WIDTH	                = 32,
-    parameter C_M_AXI_DATA_WIDTH	                = 32,
+    parameter C_M_AXI_DATA_WIDTH	                = 64,
     parameter C_M_AXI_BURST_LEN	                    = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / C_M_AXI_DATA_WIDTH,
     parameter C_M_AXI_ID_WIDTH	                    = 4,
     parameter C_M_AXI_AWUSER_WIDTH	                = 1,
     parameter C_M_AXI_ARUSER_WIDTH	                = 1,
-    parameter C_M_AXI_WUSER_WIDTH	                = 1,
-    parameter C_M_AXI_RUSER_WIDTH	                = 1,
+    parameter C_M_AXI_WUSER_WIDTH	                = C_M_AXI_DATA_WIDTH,
+    parameter C_M_AXI_RUSER_WIDTH	                = C_M_AXI_DATA_WIDTH,
     parameter C_M_AXI_BUSER_WIDTH	                = 1
 )
 (

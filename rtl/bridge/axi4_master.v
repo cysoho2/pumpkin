@@ -8,7 +8,7 @@ module axi4_master
     // Width of Address Bus
     parameter integer C_M_AXI_ADDR_WIDTH	    = 32,
     // Width of Data Bus
-    parameter integer C_M_AXI_DATA_WIDTH	    = 32,
+    parameter integer C_M_AXI_DATA_WIDTH	    = 64,
     // Burst Length. Supports 1, 2, 4, 8, 16, 32, 64, 128, 256 burst lengths
     parameter integer C_M_AXI_BURST_LEN	        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS / C_M_AXI_DATA_WIDTH,
     // Thread ID Width
