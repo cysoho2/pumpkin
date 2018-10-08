@@ -1,8 +1,8 @@
 #What is this?
 
 Pumpkin is a non-profit personal side project aiming at building a powerful education/research-oriented CPU prototype with the following targets:
-* super-scalar & out-of-order
-* super-pipelined
+* linux-compatible
+* high-performance (superscalar & out-of-order)
 * parameterized
 * synthesizable
 
@@ -17,7 +17,7 @@ Tested can be performed with a RTL simulator or on a real FPGA board.
 
 #Cautions 
     
-1. simulation performance may drastically degrade with -dump or -sim_time option.
+1. simulatisuperon performance may drastically degrade with -dump or -sim_time option.
 
 #Pumpkin.pl usage
 
