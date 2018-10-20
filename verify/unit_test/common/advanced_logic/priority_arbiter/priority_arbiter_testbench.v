@@ -1,4 +1,3 @@
-`include "sim_config.h"
 `include "parameters.h"
 
 module priority_arbiter_testbench();

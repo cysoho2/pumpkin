@@ -31,7 +31,7 @@ module tri_port_regfile_testbench();
     begin
         `ifdef DUMP
             $dumpfile(`DUMP_FILENAME);
-            $dumpvars(0, tri_port_testbench_testbench);
+            $dumpvars(0, tri_port_regfile_testbench);
         `endif
 
         $display("\n[info-testbench] simulation for %m begins now");

@@ -1,4 +1,3 @@
-`include "sim_config.h"
 `include "parameters.h"
 
 module find_first_one_index_testbench();

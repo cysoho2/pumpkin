@@ -3,7 +3,7 @@
 //`define COD_UCAS
 
 `ifdef COD_UCAS
-    `include "parameters_cod_ucas.h".w
+    `include "parameters_cod_ucas.h"
 `else
     `ifndef PARAMETERS
         `define PARAMETERS

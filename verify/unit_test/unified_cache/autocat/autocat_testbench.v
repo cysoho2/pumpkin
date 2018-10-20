@@ -1,4 +1,3 @@
-`include "sim_config.h"
 `include "parameters.h"
 
 module autocat_testbench();
@@ -18,7 +17,7 @@ module autocat_testbench();
     begin
 	    `ifdef DUMP
         	$dumpfile(`DUMP_FILENAME);
-            $dumpvars(0, find_first_one_index_testbench);
+            $dumpvars(0, autocat_testbench);
 	    `endif
 
         $display("\n[info-testbench] simulation for %m begins now");
