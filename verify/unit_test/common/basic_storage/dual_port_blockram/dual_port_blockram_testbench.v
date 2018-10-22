@@ -1,5 +1,4 @@
 `include "parameters.h"
-`include "sim_config.h"
 
 module dual_port_blockram_testbench();
 

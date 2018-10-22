@@ -1,5 +1,4 @@
 `include "parameters.h"
-`include "sim_config.h"
 
 module single_port_lutram_testbench();
 
@@ -30,7 +29,7 @@ initial
 begin
     `ifdef DUMP
         $dumpfile(`DUMP_FILENAME);
-        $dumpvars(0, single_port_blockram_testbench);
+        $dumpvars(0, single_port_lutram_testbench);
     `endif
 
     $display("\n[info-testbench] simulation for %m begins now");

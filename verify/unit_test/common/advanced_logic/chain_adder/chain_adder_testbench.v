@@ -1,4 +1,3 @@
-`include "sim_config.h"
 `include "parameters.h"
 
 module chain_adder_testbench();
