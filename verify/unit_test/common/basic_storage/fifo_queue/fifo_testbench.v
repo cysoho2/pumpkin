@@ -2,8 +2,8 @@
 
 module fifo_queue_testbench();
 
-parameter QUEUE_SIZE = 8;
-parameter QUEUE_PTR_WIDTH_IN_BITS = 3;
+parameter QUEUE_SIZE = 16;
+parameter QUEUE_PTR_WIDTH_IN_BITS = 4;
 parameter SINGLE_ENTRY_WIDTH_IN_BITS = 32;
 parameter STORAGE_TYPE = "LUTRAM";
 
@@ -21,7 +21,7 @@ integer                                                 test_gen;
 reg                                                     test_judge;
 
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_in_buffer[QUEUE_SIZE * 2 :0];
-reg     [QUEUE_SIZE * 2 - 1 : 0]                        request_valid_in_buffer;
+reg     [QUEUE_SIZE * 2 : 0]                            request_valid_in_buffer;
 
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_out_buffer[QUEUE_SIZE - 1 : 0];
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              correct_result_buffer[QUEUE_SIZE - 1 : 0];
@@ -31,7 +31,9 @@ reg     [31:0]                                          request_in_ctr_boundary;
 reg     [31:0]                                          request_out_ctr;
 reg     [31:0]                                          result_ctr;
 reg     [31:0]                                          result_ctr_boundary;
+
 reg     [31:0]                                          request_out_clk_ctr;
+reg                                                     request_in_wait_flag;
 
 reg                                                     is_from_request_in_buffer;
 reg                                                     is_request_already_out;
@@ -49,7 +51,14 @@ wire                                                    request_valid_in;
 wire                                                    issue_ack_from_fifo;
 wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_out;
 wire                                                    request_valid_out;
+
 reg     	                                            issue_ack_to_fifo;
+
+reg                                                     is_ready_to_write;
+reg                                                     is_accepting_ack_from_fifo;
+
+reg                                                     jump_to_read_data;
+reg                                                     jump_to_check_data;
 
 assign request_in                                       = is_from_request_in_buffer? request_in_buffer[request_in_ctr] : {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
 assign request_valid_in                                 = is_from_request_in_buffer? request_valid_in_buffer[request_in_ctr] : 1'b0;
@@ -60,29 +69,74 @@ begin
     if (reset_in)
     begin
         request_in_ctr                                  <= 0;
-        is_from_request_in_buffer                       <= 1;
-        request_in_enable                               <= 1;
+        is_from_request_in_buffer                       <= 0;
+        request_in_enable                               <= 0;
+        
+        request_in_wait_flag                            <= 1;
+        is_accepting_ack_from_fifo                      <= 0;
+        
+        is_ready_to_write                               <= 0;
+        jump_to_read_data                               <= 0;
+        jump_to_check_data                              <= 0;
     end
     else if (request_in_enable)
     begin
-        // jump to read data
-        if (request_in_ctr + 1'b1 == request_in_ctr_boundary)
-        begin
-            request_in_enable                           <= 0;
-            request_out_enable                          <= 1;
-            is_request_out_frozen                       <= 1;
-        end
     
         if (issue_ack_from_fifo)
         begin
-            is_from_request_in_buffer                   <= 1;
-            request_in_ctr                              <= request_in_ctr + 1;
+            is_accepting_ack_from_fifo                  <= 1;
+
+
+            // stop writing
+            if (request_in_ctr == request_in_ctr_boundary)
+            begin
+                request_in_enable                       <= 0;       
+            end
+
         end
         
         else
         begin
-            is_from_request_in_buffer                   <= 0;
+            
+            
+            if (is_accepting_ack_from_fifo)
+            begin
+                is_from_request_in_buffer                   <= 1;
+                request_in_wait_flag                        <= 1;
+                request_in_ctr                              <= request_in_ctr + 1;
+                
+                is_accepting_ack_from_fifo                  <= 0;
+            end
+            
+            //delay 2 cycles
+            if (is_from_request_in_buffer & request_in_wait_flag)
+            begin
+                request_in_wait_flag                        <= 0;
+            end
+            else if (is_from_request_in_buffer & ~request_in_wait_flag)
+            begin
+                is_from_request_in_buffer                   <= 0;
+            end
+
         end
+    end
+    
+    //init
+    if (is_ready_to_write)
+    begin
+        is_ready_to_write                               <= 0;
+        request_in_enable                               <= 1;
+        is_from_request_in_buffer                       <= 1;
+    end
+    
+    // jump to read data
+    if (jump_to_read_data)
+    begin
+        request_in_enable                               <= 0;
+        request_out_enable                              <= 1;
+        is_request_out_frozen                           <= 1;
+        
+        is_from_request_in_buffer                       <= 0;
     end
 end
 
@@ -106,12 +160,12 @@ begin
             issue_ack_to_fifo                           <= 0;
         end
         
-        // jump to check data
-        if (request_out_ctr + 1'b1 == result_ctr_boundary)
+        // stop reading
+        if (request_out_ctr == result_ctr_boundary)
         begin
-            request_out_enable                          <= 0;
-            check_enable                                <= 1;
+            request_out_enable                          <= 0;        
         end
+
     
         if (~is_request_out_frozen)
         begin
@@ -123,6 +177,13 @@ begin
                 request_out_buffer[request_out_ctr]     <= request_out;
                 request_out_ctr                         <= request_out_ctr + 1;
             end
+            else
+            begin
+            //invalid out
+                request_out_buffer[request_out_ctr]     <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+                request_out_ctr                         <= request_out_ctr + 1;
+            end
+
             
         end
         
@@ -141,6 +202,14 @@ begin
             end    
         end
     end
+    
+    // jump to check data
+    if (jump_to_check_data)
+    begin
+        request_out_enable                              <= 0;
+        test_judge                                      <= 1;
+        check_enable                                    <= 1;
+    end
 end
 
 // check data
@@ -149,15 +218,26 @@ begin
     if (reset_in)
     begin
         result_ctr                                      <= 0;
-        test_judge                                      <= 1;
+        test_judge                                      <= 0;
         check_enable                                    <= 0;
     end
     else if (check_enable)
     begin
-        if (result_ctr + 1 < result_ctr_boundary)
+        if (result_ctr < result_ctr_boundary)
         begin
             test_judge                                  <= test_judge & (correct_result_buffer[result_ctr] == request_out_buffer[result_ctr]);
             result_ctr                                  <= result_ctr + 1;
+        end
+        else
+        begin
+            if (test_judge)
+            begin
+                test_judge                              <= 1'b1;
+            end
+            else
+            begin
+                test_judge                              <= 1'b0;
+            end
         end
     end
 end
@@ -175,13 +255,26 @@ begin
         reset_in                                                        <= 1'b0;
 
 
-        // test case 0
         test_case                                                       <= 0;
 
         request_in_ctr_boundary                                         <= 0;
         result_ctr_boundary                                             <= 0;
         
-        for (test_gen = 0; test_gen < 5; test_gen = test_gen + 1)
+        #(`FULL_CYCLE_DELAY * 50) //init
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;
+            request_valid_in_buffer[test_gen]     <= 0;
+        end
+        
+        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
+        begin
+            correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+                      
+        end        
+        
+        // test case 0
+        for (test_gen = 0; test_gen < QUEUE_SIZE / 2; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
 
@@ -193,14 +286,17 @@ begin
                                 result_ctr_boundary                     <= test_gen;
          #(`FULL_CYCLE_DELAY )  reset_in                                <= 1;
          #(`FULL_CYCLE_DELAY )  reset_in                                <= 0;
+         
+                                is_ready_to_write                       <= 1;
 
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
 
-         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write invalue data", (test_judge | (test_judge == 1'bx))? "passed" : "failed");
-        
+         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "normal write/read", ((test_judge == 1'b1))? "passed" : "failed");
         // test case 1
                                 test_case                               <= test_case + 1;
                                 
-        for (test_gen = 0; test_gen < 8; test_gen = test_gen + 1)
+        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
             
@@ -212,17 +308,21 @@ begin
             else
             begin
                                   request_valid_in_buffer[test_gen]     <= 0;
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             end
                                  
         end
-                                request_in_ctr_boundary                 <= test_gen;
-                                result_ctr_boundary                     <= test_gen - 4;
-        #(`FULL_CYCLE_DELAY )  reset_in                                 <= 1;
-        #(`FULL_CYCLE_DELAY )  reset_in                                 <= 0;
+                                request_in_ctr_boundary                 <= test_gen - QUEUE_SIZE / 2;
+                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE / 2;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
 
+                               is_ready_to_write                        <= 1;
 
-        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "normal write/read", (test_judge | (test_judge == 1'bx))? "passed" : "failed");
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
         
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write invalue data", ((test_judge == 1'b1))? "passed" : "failed");
         
         // test case 2
         test_case                                                       <= test_case + 1;
@@ -240,12 +340,17 @@ begin
         end
                                 request_in_ctr_boundary                 <= test_gen;
                                 result_ctr_boundary                     <= test_gen - QUEUE_SIZE;
-        #(`FULL_CYCLE_DELAY )  reset_in                                 <= 1;
-        #(`FULL_CYCLE_DELAY )  reset_in                                 <= 0;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
+        
+                                is_ready_to_write                       <= 1;
+        
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
 
-        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write data to full queue", (test_judge | (test_judge == 1'bx))? "passed" : "failed");
-
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
+        
 
         #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
                                    $finish;
