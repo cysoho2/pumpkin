@@ -5,9 +5,9 @@ module adder_tree_testbench();
 
 reg                     clk_in;
 reg                     reset_in;
-reg [2 * 96 - 1 : 0]    operand_package_1_in;
-reg [2 * 96 - 1 : 0]    operand_package_2_in;
-wire [2 * 128 - 1 : 0]  result_package_out;
+reg [2 * 96 - 1 : 0]    operand_packed_1_in;
+reg [2 * 96 - 1 : 0]    operand_packed_2_in;
+wire [2 * 128 - 1 : 0]  result_packed_out;
 
 
 
@@ -26,8 +26,8 @@ begin
                                     clk_in                  = 1'b0;
                                     reset_in                = 1'b1;
                                     
-     #(`FULL_CYCLE_DELAY * 2)       operand_package_1_in    = {{(96){1'b0}}, {(96){1'b1}}};
-                                    operand_package_2_in    = {{(96){1'b1}}, {(96){1'b0}}};
+     #(`FULL_CYCLE_DELAY * 2)       operand_packed_1_in    = {{(96){1'b0}}, {(96){1'b1}}};
+                                    operand_packed_2_in    = {{(96){1'b1}}, {(96){1'b0}}};
      
      #(`FULL_CYCLE_DELAY * 2)       reset_in                = 1'b0;
     
@@ -50,10 +50,10 @@ adder_tree
     .reset_in                       (reset_in),
     .clk_in                         (clk_in),
     
-    .operand_package_1_in           (operand_package_1_in),
-    .operand_package_2_in           (operand_package_2_in),
+    .operand_packed_1_in           (operand_packed_1_in),
+    .operand_packed_2_in           (operand_packed_2_in),
     
-    .result_package_out             (result_package_out)                            
+    .result_packed_out             (result_packed_out)                            
 );
 
 endmodule
