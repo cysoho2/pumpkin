@@ -360,13 +360,15 @@ sub task_begin
             die "[error-script] the waveform file $waveform_path does not exist" if !-e $waveform_path;
             say "[info-script] the waveform file is $waveform_path";
 
+            my $gtkwave_opened = `ps` =~ 'gtkwave';
+
             if($pumpkin_parameter_hash{'running_on_mac'} == 0)
             {
-                system "gtkwave --optimize -c 4 -f $waveform_path";
+                system "gtkwave --optimize -c 4 -f $waveform_path" if(!$gtkwave_opened);
             }
             else
             {
-                system "gtkwave $waveform_path";
+                system "gtkwave $waveform_path" if(!$gtkwave_opened);
             }
         }
     }
@@ -577,7 +579,7 @@ sub test_name_enumerate
 sub create_sim_config_file
 {
     my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'sim_config_filename'}";
-    
+
     system "cat /dev/null >$sim_config_path" if(-e $sim_config_path);
     #die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
 
