@@ -15,9 +15,9 @@ reg                                                     reset_in;
 reg     [31:0]                                          clk_ctr;
 
 integer                                    	            test_case;
-reg     [31:0]                                          test_ctr;
 integer                                                 test_gen;
 
+reg														test_mode;
 reg                                                     test_judge;
 
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_in_buffer[QUEUE_SIZE * 2 :0];
@@ -68,29 +68,29 @@ always@(posedge clk_in or posedge reset_in)
 begin
     if (reset_in)
     begin
-        request_in_ctr                                  <= 0;
-        is_from_request_in_buffer                       <= 0;
-        request_in_enable                               <= 0;
+        request_in_ctr                                  	<= 0;
+        is_from_request_in_buffer                       	<= 0;
+        request_in_enable                               	<= 0;
         
-        request_in_wait_flag                            <= 1;
-        is_accepting_ack_from_fifo                      <= 0;
+        request_in_wait_flag                            	<= 1;
+        is_accepting_ack_from_fifo                      	<= 0;
         
-        is_ready_to_write                               <= 0;
-        jump_to_read_data                               <= 0;
-        jump_to_check_data                              <= 0;
+        is_ready_to_write                               	<= 0;
+        jump_to_read_data                               	<= 0;
+        jump_to_check_data                              	<= 0;
     end
     else if (request_in_enable)
     begin
     
         if (issue_ack_from_fifo)
         begin
-            is_accepting_ack_from_fifo                  <= 1;
+            is_accepting_ack_from_fifo                  	<= 1;
 
 
             // stop writing
             if (request_in_ctr == request_in_ctr_boundary)
             begin
-                request_in_enable                       <= 0;       
+                request_in_enable                       	<= 0;       
             end
 
         end
@@ -108,14 +108,17 @@ begin
                 is_accepting_ack_from_fifo                  <= 0;
             end
             
-            //delay 2 cycles
-            if (is_from_request_in_buffer & request_in_wait_flag)
+            if (test_mode)
             begin
-                request_in_wait_flag                        <= 0;
-            end
-            else if (is_from_request_in_buffer & ~request_in_wait_flag)
-            begin
-                is_from_request_in_buffer                   <= 0;
+		        //delay 2 cycles
+		        if (is_from_request_in_buffer & request_in_wait_flag)
+		        begin
+		            request_in_wait_flag                        <= 0;
+		        end
+		        else if (is_from_request_in_buffer & ~request_in_wait_flag)
+		        begin
+		            is_from_request_in_buffer                   <= 0;
+		        end     
             end
 
         end
@@ -273,6 +276,7 @@ begin
                       
         end        
         
+        $display("[info-rtl] test mode 0 : request until ack");
         // test case 0
         for (test_gen = 0; test_gen < QUEUE_SIZE / 2; test_gen = test_gen + 1)
         begin
@@ -351,6 +355,87 @@ begin
 
         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
         
+        
+        
+		$display("[info-rtl] test mode 1 : request 2 cycles");	
+        // test case 0
+        for (test_gen = 0; test_gen < QUEUE_SIZE / 2; test_gen = test_gen + 1)
+        begin
+            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+
+                                  request_valid_in_buffer[test_gen]     <= 1;
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+                      
+        end
+                                request_in_ctr_boundary                 <= test_gen;
+                                result_ctr_boundary                     <= test_gen;
+         #(`FULL_CYCLE_DELAY )  reset_in                                <= 1;
+         #(`FULL_CYCLE_DELAY )  reset_in                                <= 0;
+         
+                                is_ready_to_write                       <= 1;
+
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
+
+         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "normal write/read", ((test_judge == 1'b1))? "passed" : "failed");
+        // test case 1
+                                test_case                               <= test_case + 1;
+                                
+        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
+        begin
+            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+            
+            if (test_gen < 4)
+            begin
+                                  request_valid_in_buffer[test_gen]     <= 1;
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+            end
+            else
+            begin
+                                  request_valid_in_buffer[test_gen]     <= 0;
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            end
+                                 
+        end
+                                request_in_ctr_boundary                 <= test_gen - QUEUE_SIZE / 2;
+                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE / 2;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
+
+                               is_ready_to_write                        <= 1;
+
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
+        
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write invalue data", ((test_judge == 1'b1))? "passed" : "failed");
+        
+        // test case 2
+        test_case                                                       <= test_case + 1;
+        
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2; test_gen = test_gen + 1)
+        begin
+            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+                                  request_valid_in_buffer[test_gen]     <= 1;
+            
+            if (test_gen < QUEUE_SIZE)
+            begin
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+            end
+                                 
+        end
+                                request_in_ctr_boundary                 <= test_gen;
+                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
+        
+                                is_ready_to_write                       <= 1;
+        
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
+
+
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
+  
 
         #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
                                    $finish;
