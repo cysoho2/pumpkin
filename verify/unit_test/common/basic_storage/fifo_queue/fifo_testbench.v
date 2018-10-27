@@ -84,8 +84,11 @@ begin
     
         if (issue_ack_from_fifo)
         begin
-            is_accepting_ack_from_fifo                  <= 1;
+//            is_accepting_ack_from_fifo                  <= 1;
 
+            is_from_request_in_buffer                   <= 1;
+            request_in_wait_flag                        <= 1;
+            request_in_ctr                              <= request_in_ctr + 1;
 
             // stop writing
             if (request_in_ctr == request_in_ctr_boundary)
@@ -98,7 +101,7 @@ begin
         else
         begin
             
-            
+/*            
             if (is_accepting_ack_from_fifo)
             begin
                 is_from_request_in_buffer                   <= 1;
@@ -107,8 +110,9 @@ begin
                 
                 is_accepting_ack_from_fifo                  <= 0;
             end
+*/
             
-            //delay 2 cycles
+/*            //delay 2 cycles
             if (is_from_request_in_buffer & request_in_wait_flag)
             begin
                 request_in_wait_flag                        <= 0;
@@ -117,7 +121,7 @@ begin
             begin
                 is_from_request_in_buffer                   <= 0;
             end
-
+*/
         end
     end
     
@@ -383,3 +387,4 @@ fifo_queue
 );
 
 endmodule
+
