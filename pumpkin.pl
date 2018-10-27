@@ -57,7 +57,7 @@ sub pumpkin_init
         'default_test_scale'            => 'unit_test',
         'default_test_arch'             => 'arm64',
         'default_test_mode'             => 'post-implementation',
-        'default_test_type'             => 'timing',
+        'default_test_type'             => 'none',
         'default_test_dump'             => 'off',
         'default_cycle_time'            => 8, # counting in nano second
 
