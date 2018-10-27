@@ -21,7 +21,6 @@ module fast_multiplication
     output reg  [PRODUCT_WIDTH_IN_BITS - 1 : 0]     product_out
 );
 
-
 parameter [31:0] NUM_STAGE = 6;
 
 parameter [31:0] STAGE_0_NUM_ADDER = 32;
@@ -130,7 +129,15 @@ begin
             end
             else
             begin
-                valid_bit_buffer[0] <= is_valid_in;
+                if (is_valid_in)
+                begin
+                    valid_bit_buffer[0] <= 1'b1;
+                end
+                else
+                begin
+                    valid_bit_buffer[0] <= 1'b0;
+                end
+                //valid_bit_buffer[0] <= (is_valid_in == 1'b1)? 1'b1 : 1'b0;
             end
         end 
     end
@@ -153,43 +160,98 @@ end
 //operand to stage 0
 for (gen = 0; gen < STAGE_0_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_0[(gen + 1) * STAGE_0_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_0_OPERAND_WIDTH_IN_BITS] = multiplier_in[gen * 2] ? multicand_in : {(STAGE_0_OPERAND_WIDTH_IN_BITS){1'b0}};
-    assign operand_package_1_to_stage_0[(gen + 1) * STAGE_0_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_0_OPERAND_WIDTH_IN_BITS] = multiplier_in[gen * 2 + 1] ? multicand_in : {(STAGE_0_OPERAND_WIDTH_IN_BITS){1'b0}};
+
+    parameter STAGE_0_OPERAND_PACKAGE_POS_HI = (gen + 1) * STAGE_0_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_0_OPERAND_PACKAGE_POS_LO = gen * STAGE_0_OPERAND_WIDTH_IN_BITS;
+
+    assign operand_package_2_to_stage_0[STAGE_0_OPERAND_PACKAGE_POS_HI : STAGE_0_OPERAND_PACKAGE_POS_LO] = multiplier_in[gen * 2] ? multicand_in : {(STAGE_0_OPERAND_WIDTH_IN_BITS){1'b0}};
+    assign operand_package_1_to_stage_0[STAGE_0_OPERAND_PACKAGE_POS_HI : STAGE_0_OPERAND_PACKAGE_POS_LO] = multiplier_in[gen * 2 + 1] ? multicand_in : {(STAGE_0_OPERAND_WIDTH_IN_BITS){1'b0}};
 end
 
 //operand to stage 1
 for(gen = 0; gen < STAGE_1_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_1[(gen + 1) * STAGE_1_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_1_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_0[(gen * 2 + 1) * STAGE_0_RESULT_WIDTH_IN_BITS - 1 : (gen * 2) * STAGE_0_RESULT_WIDTH_IN_BITS];
-    assign operand_package_1_to_stage_1[(gen + 1) * STAGE_1_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_1_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_0[(gen * 2 + 2) * STAGE_0_RESULT_WIDTH_IN_BITS - 1 : (gen * 2 + 1) * STAGE_0_RESULT_WIDTH_IN_BITS];
+
+    parameter STAGE_1_OPERAND_PACKAGE_POS_HI    = (gen + 1)     * STAGE_1_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_1_OPERAND_PACKAGE_POS_LO    = (gen)         * STAGE_1_OPERAND_WIDTH_IN_BITS;
+
+    parameter STAGE_1_RESULT_PACKAGE_1_POS_HI   = (gen * 2 + 1) * STAGE_0_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_1_RESULT_PACKAGE_1_POS_LO   = (gen * 2)     * STAGE_0_RESULT_WIDTH_IN_BITS;
+
+    parameter STAGE_1_RESULT_PACKAGE_2_POS_HI   = (gen * 2 + 2) * STAGE_0_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_1_RESULT_PACKAGE_2_POS_LO   = (gen * 2 + 1) * STAGE_0_RESULT_WIDTH_IN_BITS;
+
+    assign operand_package_2_to_stage_1[STAGE_1_OPERAND_PACKAGE_POS_HI : STAGE_1_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_0[STAGE_1_RESULT_PACKAGE_1_POS_HI : STAGE_1_RESULT_PACKAGE_1_POS_LO];
+    assign operand_package_1_to_stage_1[STAGE_1_OPERAND_PACKAGE_POS_HI : STAGE_1_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_0[STAGE_1_RESULT_PACKAGE_2_POS_HI : STAGE_1_RESULT_PACKAGE_2_POS_LO];
 end
 
 //operand to stage 2
 for(gen = 0; gen < STAGE_2_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_2[(gen + 1) * STAGE_2_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_2_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_1[(gen * 2 + 1) * STAGE_1_RESULT_WIDTH_IN_BITS - 1 : (gen * 2) * STAGE_1_RESULT_WIDTH_IN_BITS];
-    assign operand_package_1_to_stage_2[(gen + 1) * STAGE_2_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_2_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_1[(gen * 2 + 2) * STAGE_1_RESULT_WIDTH_IN_BITS - 1 : (gen * 2 + 1) * STAGE_1_RESULT_WIDTH_IN_BITS];
+
+    parameter STAGE_2_OPERAND_PACKAGE_POS_HI    = (gen + 1)     * STAGE_2_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_2_OPERAND_PACKAGE_POS_LO    = (gen)         * STAGE_2_OPERAND_WIDTH_IN_BITS;
+
+    parameter STAGE_2_RESULT_PACKAGE_1_POS_HI   = (gen * 2 + 1) * STAGE_1_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_2_RESULT_PACKAGE_1_POS_LO   = (gen * 2)     * STAGE_1_RESULT_WIDTH_IN_BITS;
+
+    parameter STAGE_2_RESULT_PACKAGE_2_POS_HI   = (gen * 2 + 2) * STAGE_1_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_2_RESULT_PACKAGE_2_POS_LO   = (gen * 2 + 1) * STAGE_1_RESULT_WIDTH_IN_BITS;
+
+    assign operand_package_2_to_stage_2[STAGE_2_OPERAND_PACKAGE_POS_HI : STAGE_2_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_1[STAGE_2_RESULT_PACKAGE_1_POS_HI : STAGE_2_RESULT_PACKAGE_1_POS_LO];
+    assign operand_package_1_to_stage_2[STAGE_2_OPERAND_PACKAGE_POS_HI : STAGE_2_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_1[STAGE_2_RESULT_PACKAGE_2_POS_HI : STAGE_2_RESULT_PACKAGE_2_POS_LO];
 end
 
 //operand to stage 3
 for(gen = 0; gen < STAGE_3_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_3[(gen + 1) * STAGE_3_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_3_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_2[(gen * 2 + 1) * STAGE_2_RESULT_WIDTH_IN_BITS - 1 : (gen * 2) * STAGE_2_RESULT_WIDTH_IN_BITS];
-    assign operand_package_1_to_stage_3[(gen + 1) * STAGE_3_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_3_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_2[(gen * 2 + 2) * STAGE_2_RESULT_WIDTH_IN_BITS - 1 : (gen * 2 + 1) * STAGE_2_RESULT_WIDTH_IN_BITS];
+
+    parameter STAGE_3_OPERAND_PACKAGE_POS_HI    = (gen + 1)     * STAGE_3_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_3_OPERAND_PACKAGE_POS_LO    = (gen)         * STAGE_3_OPERAND_WIDTH_IN_BITS;
+
+    parameter STAGE_3_RESULT_PACKAGE_1_POS_HI   = (gen * 2 + 1) * STAGE_2_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_3_RESULT_PACKAGE_1_POS_LO   = (gen * 2)     * STAGE_2_RESULT_WIDTH_IN_BITS;
+
+    parameter STAGE_3_RESULT_PACKAGE_2_POS_HI   = (gen * 2 + 2) * STAGE_2_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_3_RESULT_PACKAGE_2_POS_LO   = (gen * 2 + 1) * STAGE_2_RESULT_WIDTH_IN_BITS;
+
+
+    assign operand_package_2_to_stage_3[STAGE_3_OPERAND_PACKAGE_POS_HI : STAGE_3_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_2[STAGE_3_RESULT_PACKAGE_1_POS_HI : STAGE_3_RESULT_PACKAGE_1_POS_LO];
+    assign operand_package_1_to_stage_3[STAGE_3_OPERAND_PACKAGE_POS_HI : STAGE_3_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_2[STAGE_3_RESULT_PACKAGE_2_POS_HI : STAGE_3_RESULT_PACKAGE_2_POS_LO];
 end
 
 //operand to stage 4
 for(gen = 0; gen < STAGE_4_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_4[(gen + 1) * STAGE_4_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_4_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_3[(gen * 2 + 1) * STAGE_3_RESULT_WIDTH_IN_BITS - 1 : (gen * 2) * STAGE_3_RESULT_WIDTH_IN_BITS];
-    assign operand_package_1_to_stage_4[(gen + 1) * STAGE_4_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_4_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_3[(gen * 2 + 2) * STAGE_3_RESULT_WIDTH_IN_BITS - 1 : (gen * 2 + 1) * STAGE_3_RESULT_WIDTH_IN_BITS];
+
+    parameter STAGE_4_OPERAND_PACKAGE_POS_HI    = (gen + 1)     * STAGE_4_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_4_OPERAND_PACKAGE_POS_LO    = (gen)         * STAGE_4_OPERAND_WIDTH_IN_BITS;
+
+    parameter STAGE_4_RESULT_PACKAGE_1_POS_HI   = (gen * 2 + 1) * STAGE_3_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_4_RESULT_PACKAGE_1_POS_LO   = (gen * 2)     * STAGE_3_RESULT_WIDTH_IN_BITS;
+
+    parameter STAGE_4_RESULT_PACKAGE_2_POS_HI   = (gen * 2 + 2) * STAGE_3_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_4_RESULT_PACKAGE_2_POS_LO   = (gen * 2 + 1) * STAGE_3_RESULT_WIDTH_IN_BITS;
+
+    assign operand_package_2_to_stage_4[STAGE_4_OPERAND_PACKAGE_POS_HI : STAGE_4_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_3[STAGE_4_RESULT_PACKAGE_1_POS_HI : STAGE_4_RESULT_PACKAGE_1_POS_LO];
+    assign operand_package_1_to_stage_4[STAGE_4_OPERAND_PACKAGE_POS_HI : STAGE_4_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_3[STAGE_4_RESULT_PACKAGE_2_POS_HI : STAGE_4_RESULT_PACKAGE_2_POS_LO];
 end
 
 //operand to stage 5
 for(gen = 0; gen < STAGE_5_NUM_ADDER; gen = gen + 1)
 begin
-    assign operand_package_2_to_stage_5[(gen + 1) * STAGE_5_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_5_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_4[(gen * 2 + 1) * STAGE_4_RESULT_WIDTH_IN_BITS - 1 : (gen * 2) * STAGE_4_RESULT_WIDTH_IN_BITS];
-    assign operand_package_1_to_stage_5[(gen + 1) * STAGE_5_OPERAND_WIDTH_IN_BITS - 1 : gen * STAGE_5_OPERAND_WIDTH_IN_BITS] = result_package_from_stage_4[(gen * 2 + 2) * STAGE_4_RESULT_WIDTH_IN_BITS - 1 : (gen * 2 + 1) * STAGE_4_RESULT_WIDTH_IN_BITS];
+
+    parameter STAGE_5_OPERAND_PACKAGE_POS_HI    = (gen + 1)     * STAGE_5_OPERAND_WIDTH_IN_BITS - 1;
+    parameter STAGE_5_OPERAND_PACKAGE_POS_LO    = (gen)         * STAGE_5_OPERAND_WIDTH_IN_BITS;
+
+    parameter STAGE_5_RESULT_PACKAGE_1_POS_HI   = (gen * 2 + 1) * STAGE_4_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_5_RESULT_PACKAGE_1_POS_LO   = (gen * 2)     * STAGE_4_RESULT_WIDTH_IN_BITS;
+
+    parameter STAGE_5_RESULT_PACKAGE_2_POS_HI   = (gen * 2 + 2) * STAGE_4_RESULT_WIDTH_IN_BITS - 1;
+    parameter STAGE_5_RESULT_PACKAGE_2_POS_LO   = (gen * 2 + 1) * STAGE_4_RESULT_WIDTH_IN_BITS;
+
+    assign operand_package_2_to_stage_5[STAGE_5_OPERAND_PACKAGE_POS_HI : STAGE_5_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_4[STAGE_5_RESULT_PACKAGE_1_POS_HI : STAGE_5_RESULT_PACKAGE_1_POS_LO];
+    assign operand_package_1_to_stage_5[STAGE_5_OPERAND_PACKAGE_POS_HI : STAGE_5_OPERAND_PACKAGE_POS_LO] = result_package_from_stage_4[STAGE_5_RESULT_PACKAGE_2_POS_HI : STAGE_5_RESULT_PACKAGE_2_POS_LO];
 end
 
 endgenerate
@@ -302,20 +364,5 @@ adder_tree_stage_5
     .result_package_out(result_package_from_stage_5)
 );
 
-//generate
-
-
-//genvar gen, stage;
-
-////parallel tree
-//for (stage = 0; stage < NUM_STAGE; stage = stage + 1)
-//begin
-//    for (gen = 0; gen < 2 ** (NUM_STAGE - stage - 1); gen = gen + 1)
-//    begin
-        
-//    end
-//end
-
-//endgenerate
 
 endmodule

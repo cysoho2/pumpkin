@@ -34,7 +34,10 @@ begin
         clk_in                                                          <= 1'b0;
         reset_in                                                        <= 1'b1;
         
-        #(`FULL_CYCLE_DELAY)    is_valid_in = 1'b1;
+        #(`FULL_CYCLE_DELAY * 50) 
+        
+        
+        #(`FULL_CYCLE_DELAY * 1.5)    is_valid_in = 1'b1;
                                 multiplier_in = 7;
                                 multicand_in = 2;
         #(`FULL_CYCLE_DELAY)    reset_in = 1'b0;
@@ -44,14 +47,14 @@ begin
         #(`FULL_CYCLE_DELAY)    multiplier_in = 123;
                                 multicand_in = 123;
                                
-        #(`FULL_CYCLE_DELAY)    multiplier_in = 255;
+        #(`FULL_CYCLE_DELAY * 2)    multiplier_in = 255;
                                 multicand_in = 98;
                                 
         #(`FULL_CYCLE_DELAY)    multiplier_in = 999;
                                 multicand_in = 989;
                                 
-        #(`FULL_CYCLE_DELAY)    multiplier_in = {(OPERAND_WIDTH_IN_BITS){1'b1}};
-                                multicand_in = {(OPERAND_WIDTH_IN_BITS){1'b1}};
+/*        #(`FULL_CYCLE_DELAY)    multiplier_in = {(OPERAND_WIDTH_IN_BITS){1'b1}};
+                                multicand_in = {(OPERAND_WIDTH_IN_BITS){1'b1}}; */
         
         #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
                                    $finish;
