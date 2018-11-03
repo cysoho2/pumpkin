@@ -44,7 +44,7 @@ module unified_cache_bank
 
 generate
 
-if(MODE == "OFF")
+if(MODE == "Bypass")
 begin
     priority_arbiter
     #(
@@ -80,7 +80,7 @@ begin
     assign writeback_request_critical_out   = 0;
 end
 
-else if(MODE == "BASIC")
+else if(MODE == "Basic")
 begin
     priority_arbiter
     #(
@@ -195,7 +195,7 @@ begin
     );
 end
 
-else if(MODE == "ADVANCED")
+else if(MODE == "Aggressive")
 begin
     wire                                              is_miss_queue_about_to_full;
     wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] miss_replay_request;

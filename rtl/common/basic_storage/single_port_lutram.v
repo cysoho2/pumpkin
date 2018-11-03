@@ -21,7 +21,7 @@ module single_port_lutram
 
 integer index;
 integer write_lane;
-(* ram_style = "distributed" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
+(* ram_style = "distributed" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] lut_ram [NUM_SET - 1 : 0];
 
 always @(posedge clk_in)
 begin
@@ -30,12 +30,12 @@ begin
     begin
         if(write_en_in[write_lane])
         begin
-            lutram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
+            lut_ram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
                 <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
         end
     end
 end
 
-assign read_entry_out = lutram[access_set_addr_in];
+assign read_entry_out = lut_ram[access_set_addr_in];
 
 endmodule

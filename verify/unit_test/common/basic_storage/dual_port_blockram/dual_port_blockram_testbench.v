@@ -5,25 +5,31 @@ module dual_port_blockram_testbench();
 parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
 parameter NUM_SET                       = 64;
 parameter SET_PTR_WIDTH_IN_BITS         = 6;
+parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS;
 
-reg                                         reset_in;
-reg                                         clk_in;
+reg                                             reset_in;
+reg                                             clk_in;
 
-reg                                         read_en_in;
-reg  [SET_PTR_WIDTH_IN_BITS     - 1 : 0]    read_set_addr_in;
-wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    read_entry_out;
+reg                                             port_A_access_en_in;
+reg     [WRITE_MASK_LEN            - 1 : 0]     port_A_write_en_in;
+reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     port_A_access_set_addr_in;
+reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_A_write_entry_in;
+wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_A_read_entry_out;
+wire                                            port_A_read_valid_out;
 
-reg                                         write_en_in;
-reg  [SET_PTR_WIDTH_IN_BITS     - 1 : 0]    write_set_addr_in;
-reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    write_entry_in;
-wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    evict_entry_out;
+reg                                             port_B_access_en_in;
+reg     [WRITE_MASK_LEN            - 1 : 0]     port_B_write_en_in;
+reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     port_B_access_set_addr_in;
+reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_write_entry_in;
+wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_read_entry_out;
+wire                                            port_B_read_valid_out;
 
-reg  [2:0]                                  test_case_num;
-reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    test_input_1;
-reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    test_input_2;
-reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    test_result_1;
-reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]    test_result_2;
-reg                                         test_judge;
+reg  [2:0]                                      test_case_num;
+reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_input_1;
+reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_input_2;
+reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_result_1;
+reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_result_2;
+reg                                             test_judge;
 
 initial
 begin
@@ -39,137 +45,116 @@ begin
      *  reset
      **/
 
-    clk_in                  = 0;
+    clk_in                      = 0;
+    reset_in                    = 1;
 
-    test_case_num           = 0;
-    test_input_1            = 0;
+    port_A_access_en_in         = 0;
+    port_A_write_en_in          = {(WRITE_MASK_LEN){1'b0}};;
+    port_A_access_set_addr_in   = 0;
+    port_A_write_entry_in       = 0;
 
-    write_en_in             = 0;
-    write_set_addr_in       = 0;
-    write_entry_in          = 0;
+    port_B_access_en_in         = 0;
+    port_B_write_en_in          = {(WRITE_MASK_LEN){1'b0}};;
+    port_B_access_set_addr_in   = 0;
+    port_B_write_entry_in       = 0;
 
-    read_en_in              = 0;
-    read_set_addr_in        = 0;
+    test_case_num               = 0;
+    test_input_1                = 0;
 
-    test_result_1           = 0;
-    test_result_2           = 0;
-    test_judge              = 0;
+    test_result_1               = 0;
+    test_result_2               = 0;
+    test_judge                  = 0;
 
+    #(`FULL_CYCLE_DELAY) reset_in = 0;
     $display("[info-testbench] %m testbench reset completed\n");
 
     /**
-     *  write "test_input_1" to "write_set_addr_in" then read from "write_set_addr_in"
-     *  pass : the data is read should equal the data is written
+     *  write "test_input_1" to Port-B then read from Port-A
+     *  pass : the read data should be equal to the written data
      **/
 
     #(`FULL_CYCLE_DELAY)
     test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
 
-    read_en_in                              = 1;
-    write_en_in                             = 1;
+    #(`FULL_CYCLE_DELAY * 2)
+    
+    port_B_access_en_in                     = 1;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
+    port_B_access_set_addr_in               = NUM_SET - 1;
+    port_B_write_entry_in                   = test_input_1;
 
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
-    read_set_addr_in                        = NUM_SET - test_case_num;
+    #(`FULL_CYCLE_DELAY * 2)
+    
+    port_A_access_en_in                     = 1;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = NUM_SET - 1;
+    port_A_write_entry_in                   = 0;
+    
+    port_B_access_en_in                     = 0;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_B_access_set_addr_in               = 0;
+    port_B_write_entry_in                   = 0;
 
-    write_entry_in                          = test_input_1;
-    #(`FULL_CYCLE_DELAY) write_en_in        = 0;
-    #(`FULL_CYCLE_DELAY) test_result_1      = read_entry_out;
-
-    write_en_in                             = 0;
-    read_en_in                              = 0;
+    #(`FULL_CYCLE_DELAY * 2) test_result_1  = port_A_read_entry_out;
 
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "basic asynchronous write-read access",test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access", test_judge ? "passed" : "failed");
+    
+    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
+    test_judge                              = port_A_read_valid_out === 1'b1 && port_A_read_valid_out !== 1'bx;
+    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
 
     /**
-     *  write "test_input_1" to "write_set_addr_in" and read from "write_set_addr_in" simultaneously
+     *  write "test_input_1" to Port_A and read from Port-B simultaneously, with different address
      *  pass : the data is read should equal the data is written
      **/
 
-    #(`FULL_CYCLE_DELAY * 3) test_case_num  = test_case_num + 1;
-    #(`FULL_CYCLE_DELAY)     test_input_1   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
-
-    #(`FULL_CYCLE_DELAY) read_en_in         = 1;
-    write_set_addr_in                       = NUM_SET - test_case_num;
-    read_set_addr_in                        = NUM_SET - test_case_num;
-
-    #(`HALF_CYCLE_DELAY) write_entry_in     = {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}};
-
-    #(`FULL_CYCLE_DELAY) write_entry_in     = test_input_1;
-    #(`FULL_CYCLE_DELAY) write_en_in        = 1;
-
-    #(`FULL_CYCLE_DELAY * 2) test_result_1  = read_entry_out;
-
-    #(`FULL_CYCLE_DELAY * 5) write_en_in    = 0;
-    read_en_in                              = 0;
-
-    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
-
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "basic simultaneous write-read access", test_judge ? "passed" : "failed");
-
-    /**
-     *  write "test_input_2" to "write_set_addr_in"
-     *  pass : evicted data should equal the value in "test_input_1"
-     **/
+    #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 0;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = 0;
+    port_A_write_entry_in                   = 0;
+    port_B_access_en_in                     = 0;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_B_access_set_addr_in               = 0;
+    port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY * 3) test_case_num  = test_case_num + 1;
-    test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
-    test_input_2                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
+    #(`FULL_CYCLE_DELAY)     test_input_2   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
 
-    read_en_in                              = 1;
-    write_en_in                             = 1;
+    port_A_access_en_in                     = 1;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
+    port_A_access_set_addr_in               = test_case_num;
+    port_A_write_entry_in                   = test_input_2;
+    port_B_access_en_in                     = 1;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_B_access_set_addr_in               = NUM_SET - 1;
+    port_B_write_entry_in                   = 0;
 
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
-    read_set_addr_in                        = NUM_SET - test_case_num;
-
-    write_entry_in                          = test_input_1;
-
-    #(`FULL_CYCLE_DELAY) write_en_in        = 0;
-    #(`FULL_CYCLE_DELAY) write_en_in        = 1;
-
-    write_entry_in                          = test_input_2;
-    #`FULL_CYCLE_DELAY write_en_in          = 0;
-    #(`FULL_CYCLE_DELAY * 5) test_result_1  = evict_entry_out;
-
-
-    #(`FULL_CYCLE_DELAY) read_en_in         = 0;
-    write_en_in                             = 0;
-
+    #(`FULL_CYCLE_DELAY) test_result_1      = port_B_read_entry_out;
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "evict access", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic simultaneous write-read access - read data", test_judge ? "passed" : "failed");
+
+    #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 1;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = test_case_num;
+    port_A_write_entry_in                   = 0;
+
+    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
+    test_result_2                           = port_A_read_entry_out;
+    test_judge                              = (test_result_2 === test_input_2) && (test_result_2 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+
+    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic simultaneous write-read access - write data", test_judge ? "passed" : "failed");
+
+    #(`FULL_CYCLE_DELAY) test_result_2      = test_judge;
 
     /**
      *  set "write_en_in" to zero then write new data
-     *  pass : RAM should be read the old data
+     *  pass : RAM should be reading the old data
      **/
-
-    #(`FULL_CYCLE_DELAY*3) test_case_num    = test_case_num + 1;
-
-    test_input_1                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
-    test_input_2                            = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
-
-    read_en_in                              = 1;
-    write_en_in                             = 1;
-
-    #(`FULL_CYCLE_DELAY) write_set_addr_in  = NUM_SET - test_case_num;
-    read_set_addr_in                        = NUM_SET - test_case_num;
-
-    write_entry_in                          = test_input_1;
-
-    #(`FULL_CYCLE_DELAY * 10) write_en_in   = 0;
-    #(`FULL_CYCLE_DELAY) write_entry_in     = test_input_2;
-    #(`FULL_CYCLE_DELAY) write_en_in        = 0;
-
-    #(`FULL_CYCLE_DELAY) test_result_1      = read_entry_out;
-
-    #(`FULL_CYCLE_DELAY) read_en_in         = 0;
-    write_en_in                             = 0;
-
-    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
-
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "write enable verify", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY * 300) $display("\n[info-testbench] simulation for %m comes to the end\n");
     $finish;
@@ -183,19 +168,24 @@ dual_port_blockram
     .NUM_SET                        (NUM_SET),
     .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
 )
-
 dual_port_blockram
 (
     .clk_in                         (clk_in),
+    .reset_in                       (reset_in),
 
-    .read_en_in                     (read_en_in),
-    .read_set_addr_in               (read_set_addr_in),
-    .read_entry_out                 (read_entry_out),
+    .port_A_access_en_in            (port_A_access_en_in),
+    .port_A_write_en_in             (port_A_write_en_in),
+    .port_A_access_set_addr_in      (port_A_access_set_addr_in),
+    .port_A_write_entry_in          (port_A_write_entry_in),
+    .port_A_read_entry_out          (port_A_read_entry_out),
+    .port_A_read_valid_out          (port_A_read_valid_out),
 
-    .write_en_in                    (write_en_in),
-    .write_set_addr_in              (write_set_addr_in),
-    .write_entry_in                 (write_entry_in),
-    .evict_entry_out                (evict_entry_out)
+    .port_B_access_en_in            (port_B_access_en_in),
+    .port_B_write_en_in             (port_B_write_en_in),
+    .port_B_access_set_addr_in      (port_B_access_set_addr_in),
+    .port_B_write_entry_in          (port_B_write_entry_in),
+    .port_B_read_entry_out          (port_B_read_entry_out),
+    .port_B_read_valid_out          (port_B_read_valid_out)
 );
 
 endmodule
