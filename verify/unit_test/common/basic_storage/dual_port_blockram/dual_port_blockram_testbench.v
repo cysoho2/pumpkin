@@ -4,7 +4,7 @@ module dual_port_blockram_testbench();
 
 parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
 parameter NUM_SET                       = 64;
-parameter SET_PTR_WIDTH_IN_BITS         = 6;
+parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET);
 parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS;
 
 reg                                             reset_in;
@@ -74,7 +74,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY)
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}} };
+    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
 
     #(`FULL_CYCLE_DELAY)
     
@@ -111,20 +111,26 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b0}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
+    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
 
     #(`FULL_CYCLE_DELAY)
     
     port_B_access_en_in                     = 1;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
-    port_B_access_set_addr_in               = NUM_SET - 1;
+    port_B_access_set_addr_in               = 1;
     port_B_write_entry_in                   = test_input_1;
+
+    #(`FULL_CYCLE_DELAY)
+    port_B_access_en_in         = 0;
+    port_B_write_en_in          = {(WRITE_MASK_LEN){1'b0}};;
+    port_B_access_set_addr_in   = 0;
+    port_B_write_entry_in       = 0;
 
     #(`FULL_CYCLE_DELAY)
     
     port_B_access_en_in                     = 1;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
-    port_B_access_set_addr_in               = NUM_SET - 1;
+    port_B_access_set_addr_in               = 1;
     port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY) test_result_1      = port_B_read_entry_out;

@@ -4,7 +4,7 @@ module dual_port_blockram
 #(
     parameter SINGLE_ENTRY_SIZE_IN_BITS   = 64,
     parameter NUM_SET                     = 64,
-    parameter SET_PTR_WIDTH_IN_BITS       = 6,
+    parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN              = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter CONFIG_MODE                 = "Read_First", /* option: Read_First*/
     parameter WITH_VALID_REG_ARRAY        = "Yes"
