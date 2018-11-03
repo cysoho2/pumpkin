@@ -5,8 +5,12 @@ module cache_packet_generator_testbench();
 reg clk_in;
 reg reset_in;
 
-`define MEM_SIZE  64
-`define MEM_DELAY 100
+`define MEM_SIZE  65536
+`define NUM_REQUEST 8
+
+`define MEM_DELAY 10
+`define DEAD_DELAY (`MEM_DELAY * 100)
+
 reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] sim_memory [`MEM_SIZE - 1 : 0];
 reg [31:0] clk_counter;
 
@@ -53,7 +57,8 @@ endgenerate
 cache_packet_generator
 #(
     .NUM_WAY(2),
-    .TIMING_OUT_CYCLE(`MEM_DELAY * 1000)
+    .NUM_REQUEST(`NUM_REQUEST),
+    .TIMING_OUT_CYCLE(`DEAD_DELAY)
 )
 cache_packet_generator
 (
@@ -196,7 +201,7 @@ begin
         $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, cache_packet_generator_testbench);
     `endif
-
+                                 clk_in   = 1'b0;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b0;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b1;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b0;
@@ -206,7 +211,7 @@ begin
     test_case = 0;
     test_case_content = "cache packet generator";
     
-    #(`FULL_CYCLE_DELAY * 100) test_judge = done & ~error === 1;
+    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 2) test_judge = (done & ~error) === 1;
     $display("[info-testbench] test case %d %s : %s",
             test_case, test_case_content, test_judge? "passed" : "failed");
     
