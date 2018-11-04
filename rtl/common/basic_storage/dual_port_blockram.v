@@ -108,7 +108,7 @@ endgenerate
 (* ram_style = "block" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
 
 generate
-if(CONFIG_MODE == "Read_First")
+if(CONFIG_MODE == "ReadFirst")
 begin
     // port A operation
     always @(posedge clk_in)
