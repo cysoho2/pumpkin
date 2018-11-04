@@ -73,18 +73,22 @@ begin
      *  pass : the read data should be equal to the written data
      **/
 
-    #(`FULL_CYCLE_DELAY)
+    #(`FULL_CYCLE_DELAY * 200)
     test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
 
     #(`FULL_CYCLE_DELAY)
-    
     port_A_access_en_in                     = 1;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
     port_A_access_set_addr_in               = NUM_SET - 1;
     port_A_write_entry_in                   = test_input_1;
 
     #(`FULL_CYCLE_DELAY)
-    
+    port_A_access_en_in                     = 0;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = 0;
+    port_A_write_entry_in                   = 0;
+
+    #(`FULL_CYCLE_DELAY)
     port_A_access_en_in                     = 1;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_A_access_set_addr_in               = NUM_SET - 1;
@@ -100,10 +104,10 @@ begin
     test_judge                              = port_A_read_valid_out === 1'b1 && port_A_read_valid_out !== 1'bx;
     $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
     
-    port_A_access_en_in         = 0;
-    port_A_write_en_in          = {(WRITE_MASK_LEN){1'b0}};
-    port_A_access_set_addr_in   = 0;
-    port_A_write_entry_in       = 0;
+    port_A_access_en_in                     = 0;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = 0;
+    port_A_write_entry_in                   = 0;
 
     /**
      *  write "test_input_1" to Port-B then read from Port-B
@@ -114,7 +118,6 @@ begin
     test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
 
     #(`FULL_CYCLE_DELAY)
-    
     port_B_access_en_in                     = 1;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
     port_B_access_set_addr_in               = 1;
@@ -127,7 +130,6 @@ begin
     port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY)
-    
     port_B_access_en_in                     = 1;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_B_access_set_addr_in               = 1;
