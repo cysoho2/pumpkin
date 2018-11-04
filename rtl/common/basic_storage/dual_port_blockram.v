@@ -6,7 +6,7 @@ module dual_port_blockram
     parameter NUM_SET                     = 64,
     parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN              = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter CONFIG_MODE                 = "Read_First", /* option: Read_First*/
+    parameter CONFIG_MODE                 = "ReadFirst", /* option: ReadFirst*/
     parameter WITH_VALID_REG_ARRAY        = "Yes"
 )
 (
@@ -37,7 +37,7 @@ if(WITH_VALID_REG_ARRAY == "Yes")
 begin
     reg [NUM_SET - 1 : 0] valid_array;
 
-    always @(posedge clk_in, posedge reset_in)
+    always@(posedge clk_in, posedge reset_in)
     begin
         if(reset_in)
         begin
@@ -55,13 +55,13 @@ begin
             // port-A validate
             if(port_A_access_en_in & |port_A_write_en_in)
             begin
-                valid_array[port_A_access_set_addr_in] <= 1;
+                valid_array[port_A_access_set_addr_in] <= 1'b1;
             end
 
             // port-B validate
-            else if(port_B_access_en_in & |port_B_write_en_in & port_A_access_set_addr_in != port_B_access_set_addr_in)
+            else if(port_B_access_en_in & |port_B_write_en_in & (port_A_access_set_addr_in != port_B_access_set_addr_in))
             begin
-                valid_array[port_B_access_set_addr_in] <= 1;
+                valid_array[port_B_access_set_addr_in] <= 1'b1;
             end
 
             // port-A output
