@@ -56,10 +56,16 @@ begin
             if(port_A_access_en_in & |port_A_write_en_in)
             begin
                 valid_array[port_A_access_set_addr_in] <= 1'b1;
+
+                if(port_B_access_en_in & |port_B_write_en_in &
+                   (port_A_access_set_addr_in != port_B_access_set_addr_in))
+                begin
+                    valid_array[port_B_access_set_addr_in] <= 1'b1;
+                end
             end
 
             // port-B validate
-            else if(port_B_access_en_in & |port_B_write_en_in & (port_A_access_set_addr_in != port_B_access_set_addr_in))
+            else if(port_B_access_en_in & |port_B_write_en_in)
             begin
                 valid_array[port_B_access_set_addr_in] <= 1'b1;
             end
