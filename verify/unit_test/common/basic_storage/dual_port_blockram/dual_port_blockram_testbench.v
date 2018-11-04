@@ -198,7 +198,7 @@ begin
     test_judge                              = (test_result_1 === {{(WRITE_MASK_LEN/2){8'hxx}},{(WRITE_MASK_LEN/2){8'hff}}}) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}}) &&
                                               (test_result_2 === {{(WRITE_MASK_LEN/2){8'hff}},{(WRITE_MASK_LEN/2){8'hxx}}}) && (test_result_2 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic simultaneous write-read access with write-enable", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic simultaneous write-read access with write-enable - read data", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
     test_judge                              = port_A_read_valid_out === 1'b1 && port_A_read_valid_out !== 1'bx &&
