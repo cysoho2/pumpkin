@@ -1,13 +1,13 @@
 module fifo_queue
 #(
-    parameter STORAGE_TYPE = "FlipFlop", /* option: FlipFlop, LUTRAM, BlockRAM */
+    parameter STORAGE_TYPE = "LUTRAM", /* option: FlipFlop, LUTRAM */
     parameter QUEUE_SIZE = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS = 4,
     parameter SINGLE_ENTRY_WIDTH_IN_BITS = 32
 )
 (
-    input                                                                   reset_in,
     input                                                                   clk_in,
+    input                                                                   reset_in,
 
     output                                                                  is_empty_out,
     output                                                                  is_full_out,
@@ -145,28 +145,75 @@ end
 
 else if(STORAGE_TYPE == "LUTRAM")
 begin
-    single_port_lutram
-    #(
-        .SINGLE_ENTRY_SIZE_IN_BITS      (SINGLE_ENTRY_SIZE_IN_BITS),
-        .NUM_SET                        (NUM_SET),
-        .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
-    )
-    single_port_lutram
-    (
-        .clk_in                         (clk_in),
-        .reset_in                       (reset_in),
+    for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
+    begin:entry
+        
+        reg                                       entry_valid;
+        assign fifo_entry_valid_packed[gen]  =    entry_valid;
 
-        .access_en_in                   (access_en_in),
-        .write_en_in                    (write_en_in),
-        .access_set_addr_in             (access_set_addr_in),
+        assign write_qualified[gen] = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+                                        & ~issue_ack_out & request_valid_in & gen == write_ptr;
 
-        .write_entry_in                 (write_entry_in),
-        .read_entry_out                 (read_entry_out),
-        .read_valid_out                 ()
-    );
+        assign read_qualified[gen]  = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+
+        always @(posedge clk_in, posedge reset_in)
+        begin
+            if (reset_in)
+            begin
+                entry_valid <= 1'b0;
+            end
+
+            else
+            begin
+                if(write_qualified[gen] & read_qualified[gen])
+                begin
+                    entry_valid <= 1'b1;
+                end
+
+                else
+                begin
+                    if(read_qualified[gen])
+                    begin
+                        entry_valid <= 1'b0;
+                    end
+
+                    else if(write_qualified[gen])
+                    begin
+                        entry_valid <= 1'b1;
+                    end
+
+                    else
+                    begin
+                        entry_valid <= entry_valid;
+                    end
+                end
+            end
+        end
+
+        single_port_lutram
+        #(
+            .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
+            .NUM_SET                        (1),
+            .SET_PTR_WIDTH_IN_BITS          (1),
+            .WITH_VALID_REG_ARRAY           ("No")
+        )
+        single_port_lutram
+        (
+            .clk_in                         (clk_in),
+            .reset_in                       (reset_in),
+
+            .access_en_in                   (1'b1),
+            .write_en_in                    (write_qualified[gen] ?
+                                            {(SINGLE_ENTRY_WIDTH_IN_BITS/8){1'b1}} :
+                                            {(SINGLE_ENTRY_WIDTH_IN_BITS/8){1'b0}}),
+            .access_set_addr_in             (1'b0),
+
+            .write_entry_in                 (request_in),
+            .read_entry_out                 (fifo_entry_packed[gen]),
+            .read_valid_out                 ()
+        );
+    end
 end
 
-
 endgenerate
-
 endmodule
