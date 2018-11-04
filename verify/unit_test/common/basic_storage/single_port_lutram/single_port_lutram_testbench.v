@@ -135,7 +135,8 @@ single_port_lutram
     .access_set_addr_in             (access_set_addr_in),
 
     .write_entry_in                 (write_entry_in),
-    .read_entry_out                 (read_entry_out)
+    .read_entry_out                 (read_entry_out),
+    .read_valid_out                 ()
 );
 
 endmodule
