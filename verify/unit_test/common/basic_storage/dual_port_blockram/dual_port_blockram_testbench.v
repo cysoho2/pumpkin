@@ -24,7 +24,7 @@ reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_write_entry_in;
 wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_read_entry_out;
 wire                                            port_B_read_valid_out;
 
-reg  [2:0]                                      test_case_num;
+reg  [3:0]                                      test_case_num;
 reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_input_1;
 reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_input_2;
 reg  [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]        test_result_1;
@@ -83,14 +83,14 @@ begin
     port_A_access_set_addr_in               = NUM_SET - 1;
     port_A_write_entry_in                   = test_input_1;
 
-    #(`FULL_CYCLE_DELAY)
+    #(`FULL_CYCLE_DELAY * 2)
     
     port_A_access_en_in                     = 1;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_A_access_set_addr_in               = NUM_SET - 1;
     port_A_write_entry_in                   = 0;
 
-    #(`FULL_CYCLE_DELAY) test_result_1      = port_A_read_entry_out;
+    #(`FULL_CYCLE_DELAY * 2) test_result_1      = port_A_read_entry_out;
 
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
@@ -121,10 +121,10 @@ begin
     port_B_write_entry_in                   = test_input_1;
 
     #(`FULL_CYCLE_DELAY)
-    port_B_access_en_in         = 0;
-    port_B_write_en_in          = {(WRITE_MASK_LEN){1'b0}};;
-    port_B_access_set_addr_in   = 0;
-    port_B_write_entry_in       = 0;
+    port_B_access_en_in                     = 0;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};;
+    port_B_access_set_addr_in               = 0;
+    port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY)
     
