@@ -2,11 +2,11 @@
 
 module associative_single_port_array
 #(
-    parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
     parameter NUM_SET                       = 64,
     parameter NUM_WAY                       = 16,
     parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET) + 1,
-    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
+    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter STORAGE_TYPE                  = "LUTRAM", /* option: LUTRAM, BlockRAM*/
     parameter WITH_VALID_REG_ARRAY          = "Yes"
 )
@@ -20,12 +20,12 @@ module associative_single_port_array
     input  [SET_PTR_WIDTH_IN_BITS                   - 1 : 0]    access_set_addr_in,
     input  [NUM_WAY                                 - 1 : 0]    way_select_in,
 
-    output [SINGLE_ENTRY_SIZE_IN_BITS * NUM_WAY     - 1 : 0]    read_set_out,
-    output [SINGLE_ENTRY_SIZE_IN_BITS               - 1 : 0]    read_single_entry_out,
-    input  [SINGLE_ENTRY_SIZE_IN_BITS               - 1 : 0]    write_single_entry_in
+    output [SINGLE_ENTRY_WIDTH_IN_BITS * NUM_WAY     - 1 : 0]   read_set_out,
+    output [SINGLE_ENTRY_WIDTH_IN_BITS               - 1 : 0]   read_single_entry_out,
+    input  [SINGLE_ENTRY_WIDTH_IN_BITS               - 1 : 0]   write_single_entry_in
 );
 
-wire   [SINGLE_ENTRY_SIZE_IN_BITS * NUM_WAY - 1 : 0] data_to_mux;
+wire   [SINGLE_ENTRY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] data_to_mux;
 assign read_set_out = data_to_mux;
 
 generate
@@ -37,7 +37,7 @@ generate
         begin
             single_port_lutram
             #(
-                .SINGLE_ENTRY_SIZE_IN_BITS  (SINGLE_ENTRY_SIZE_IN_BITS),
+                .SINGLE_ENTRY_WIDTH_IN_BITS (SINGLE_ENTRY_WIDTH_IN_BITS),
                 .NUM_SET                    (NUM_SET),
                 .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
                 .WITH_VALID_REG_ARRAY       (WITH_VALID_REG_ARRAY)
@@ -53,7 +53,7 @@ generate
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS]),
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_WIDTH_IN_BITS +: SINGLE_ENTRY_WIDTH_IN_BITS]),
                 .read_valid_out             ()
             );
         end
@@ -64,7 +64,7 @@ generate
         begin
             single_port_blockram
             #(
-                .SINGLE_ENTRY_SIZE_IN_BITS  (SINGLE_ENTRY_SIZE_IN_BITS),
+                .SINGLE_ENTRY_WIDTH_IN_BITS (SINGLE_ENTRY_WIDTH_IN_BITS),
                 .NUM_SET                    (NUM_SET),
                 .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
                 .WITH_VALID_REG_ARRAY       (WITH_VALID_REG_ARRAY)
@@ -79,7 +79,7 @@ generate
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS]),
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_WIDTH_IN_BITS +: SINGLE_ENTRY_WIDTH_IN_BITS]),
                 .read_valid_out             ()
             );
         end
@@ -103,7 +103,7 @@ end
 mux_decoded_8
 #(
     .NUM_WAY(NUM_WAY),
-    .SINGLE_ENTRY_SIZE_IN_BITS(SINGLE_ENTRY_SIZE_IN_BITS)
+    .SINGLE_ENTRY_WIDTH_IN_BITS(SINGLE_ENTRY_WIDTH_IN_BITS)
 )
 mux_8
 (

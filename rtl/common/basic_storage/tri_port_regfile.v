@@ -1,26 +1,26 @@
 module tri_port_regfile
 #(
-    parameter SINGLE_ENTRY_SIZE_IN_BITS = 8,
-    parameter NUM_ENTRY                 = 4
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS = 8,
+    parameter NUM_ENTRY                  = 4
 )
 (
-    input                                                   reset_in,
-    input                                                   clk_in,
+    input                                           reset_in,
+    input                                           clk_in,
 
-    input                                                   read_en_in,
-    input                                                   write_en_in,
-    input                                                   cam_en_in,
+    input                                           read_en_in,
+    input                                           write_en_in,
+    input                                           cam_en_in,
 
-    input      [NUM_ENTRY   - 1 : 0]                        read_entry_addr_decoded_in,
-    input      [NUM_ENTRY   - 1 : 0]                        write_entry_addr_decoded_in,
-    input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          cam_entry_in,
+    input      [NUM_ENTRY                  - 1 : 0] read_entry_addr_decoded_in,
+    input      [NUM_ENTRY                  - 1 : 0] write_entry_addr_decoded_in,
+    input      [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] cam_entry_in,
 
-    input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          write_entry_in,
-    output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]          read_entry_out,
-    output reg [NUM_ENTRY              - 1 : 0]             cam_result_decoded_out
+    input      [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] write_entry_in,
+    output reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] read_entry_out,
+    output reg [NUM_ENTRY                  - 1 : 0] cam_result_decoded_out
 );
 
-wire [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]                    entry_packed [NUM_ENTRY - 1 : 0];
+wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] entry_packed [NUM_ENTRY - 1 : 0];
 
 generate
 genvar gen;
@@ -28,7 +28,7 @@ genvar gen;
     for(gen = 0; gen < NUM_ENTRY; gen = gen + 1)
     begin
 
-        reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] entry;
+        reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] entry;
 
         assign entry_packed[gen] = entry;
 
@@ -36,7 +36,7 @@ genvar gen;
         begin
             if(reset_in)
             begin
-                entry <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+                entry <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             end
 
             else
@@ -82,7 +82,7 @@ always@(posedge clk_in, posedge reset_in)
 begin
     if(reset_in)
     begin
-        read_entry_out <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+        read_entry_out <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
     end
 
     else if(read_en_in)
@@ -92,7 +92,7 @@ begin
 
     else
     begin
-        read_entry_out <= {(SINGLE_ENTRY_SIZE_IN_BITS){1'b0}};
+        read_entry_out <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
     end
 end
 

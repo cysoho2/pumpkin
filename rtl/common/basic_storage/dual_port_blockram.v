@@ -2,10 +2,10 @@
 
 module dual_port_blockram
 #(
-    parameter SINGLE_ENTRY_SIZE_IN_BITS   = 64,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS  = 64,
     parameter NUM_SET                     = 64,
     parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
-    parameter WRITE_MASK_LEN              = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
+    parameter WRITE_MASK_LEN              = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter CONFIG_MODE                 = "ReadFirst", /* option: ReadFirst*/
     parameter WITH_VALID_REG_ARRAY        = "Yes"
 )
@@ -14,17 +14,17 @@ module dual_port_blockram
     input                                               clk_in,
 
     input                                               port_A_access_en_in,
-    input      [WRITE_MASK_LEN            - 1 : 0]      port_A_write_en_in,
-    input      [SET_PTR_WIDTH_IN_BITS     - 1 : 0]      port_A_access_set_addr_in,
-    input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      port_A_write_entry_in,
-    output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      port_A_read_entry_out,
+    input      [WRITE_MASK_LEN             - 1 : 0]     port_A_write_en_in,
+    input      [SET_PTR_WIDTH_IN_BITS      - 1 : 0]     port_A_access_set_addr_in,
+    input      [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]     port_A_write_entry_in,
+    output reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]     port_A_read_entry_out,
     output reg                                          port_A_read_valid_out,
 
     input                                               port_B_access_en_in,
-    input      [WRITE_MASK_LEN            - 1 : 0]      port_B_write_en_in,
-    input      [SET_PTR_WIDTH_IN_BITS     - 1 : 0]      port_B_access_set_addr_in,
-    input      [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      port_B_write_entry_in,
-    output reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]      port_B_read_entry_out,
+    input      [WRITE_MASK_LEN             - 1 : 0]     port_B_write_en_in,
+    input      [SET_PTR_WIDTH_IN_BITS      - 1 : 0]     port_B_access_set_addr_in,
+    input      [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]     port_B_write_entry_in,
+    output reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]     port_B_read_entry_out,
     output reg                                          port_B_read_valid_out
 );
 
@@ -105,7 +105,7 @@ end
 
 endgenerate
 
-(* ram_style = "block" *) reg [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
+(* ram_style = "block" *) reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
 
 generate
 if(CONFIG_MODE == "ReadFirst")
@@ -146,7 +146,5 @@ begin
         end
     end
 end
-
-
 endgenerate
 endmodule

@@ -2,38 +2,38 @@
 
 module dual_port_blockram_testbench();
 
-parameter SINGLE_ENTRY_SIZE_IN_BITS     = 64;
+parameter SINGLE_ENTRY_WIDTH_IN_BITS     = 64;
 parameter NUM_SET                       = 64;
 parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET);
-parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS;
+parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS;
 
 reg                                             reset_in;
 reg                                             clk_in;
 
 reg                                             port_A_access_en_in;
-reg     [WRITE_MASK_LEN            - 1 : 0]     port_A_write_en_in;
-reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     port_A_access_set_addr_in;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_A_write_entry_in;
-wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_A_read_entry_out;
+reg     [WRITE_MASK_LEN             - 1 : 0]    port_A_write_en_in;
+reg     [SET_PTR_WIDTH_IN_BITS      - 1 : 0]    port_A_access_set_addr_in;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    port_A_write_entry_in;
+wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    port_A_read_entry_out;
 wire                                            port_A_read_valid_out;
 
 reg                                             port_B_access_en_in;
-reg     [WRITE_MASK_LEN            - 1 : 0]     port_B_write_en_in;
-reg     [SET_PTR_WIDTH_IN_BITS     - 1 : 0]     port_B_access_set_addr_in;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_write_entry_in;
-wire    [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     port_B_read_entry_out;
+reg     [WRITE_MASK_LEN             - 1 : 0]    port_B_write_en_in;
+reg     [SET_PTR_WIDTH_IN_BITS      - 1 : 0]    port_B_access_set_addr_in;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    port_B_write_entry_in;
+wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    port_B_read_entry_out;
 wire                                            port_B_read_valid_out;
 
 reg     [3:0]                                   test_case_num;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_input_1;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_input_2;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_result_1;
-reg     [SINGLE_ENTRY_SIZE_IN_BITS - 1 : 0]     test_result_2;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_input_1;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_input_2;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_result_1;
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_result_2;
 reg                                             test_judge;
 
 dual_port_blockram
 #(
-    .SINGLE_ENTRY_SIZE_IN_BITS      (SINGLE_ENTRY_SIZE_IN_BITS),
+    .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
     .NUM_SET                        (NUM_SET),
     .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
 )
@@ -100,7 +100,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY * 200)
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b01}}};
+    test_input_1                            = {{(SINGLE_ENTRY_WIDTH_IN_BITS/2){2'b01}}};
 
     #(`FULL_CYCLE_DELAY)
     port_A_access_en_in                     = 1;
@@ -116,7 +116,7 @@ begin
 
     #(`FULL_CYCLE_DELAY) test_result_1      = port_A_read_entry_out;
 
-    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
 
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - to Port A", test_judge ? "passed" : "failed");
 
@@ -135,7 +135,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
+    test_input_1                            = {{(SINGLE_ENTRY_WIDTH_IN_BITS/2){2'b10}}};
 
     #(`FULL_CYCLE_DELAY)
     port_B_access_en_in                     = 1;
@@ -151,7 +151,7 @@ begin
 
     #(`FULL_CYCLE_DELAY) test_result_1      = port_B_read_entry_out;
 
-    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
 
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - to Port B", test_judge ? "passed" : "failed");
 
@@ -170,8 +170,8 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/8){8'b1111_1111}}};
-    test_input_2                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/8){8'b1111_1111}}};
+    test_input_1                            = {{(SINGLE_ENTRY_WIDTH_IN_BITS/8){8'b1111_1111}}};
+    test_input_2                            = {{(SINGLE_ENTRY_WIDTH_IN_BITS/8){8'b1111_1111}}};
 
     #(`FULL_CYCLE_DELAY)
     port_A_access_en_in                     = 1;
@@ -224,7 +224,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY)     test_case_num  = test_case_num + 1;
-    #(`FULL_CYCLE_DELAY)     test_input_1   = {(SINGLE_ENTRY_SIZE_IN_BITS/4){4'b0011}};
+    #(`FULL_CYCLE_DELAY)     test_input_1   = {(SINGLE_ENTRY_WIDTH_IN_BITS/4){4'b0011}};
 
     port_A_access_en_in                     = 1;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
@@ -238,7 +238,7 @@ begin
     port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY) test_result_1      = port_B_read_entry_out;
-    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+    test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
 
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic cross-port write-read access - read data", test_judge ? "passed" : "failed");
 
