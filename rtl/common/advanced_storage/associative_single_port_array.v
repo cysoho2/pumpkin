@@ -7,7 +7,8 @@ module associative_single_port_array
     parameter NUM_WAY                       = 16,
     parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET) + 1,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter STORAGE_TYPE                  = "LUTRAM" /* option: LUTRAM, BlockRAM*/
+    parameter STORAGE_TYPE                  = "LUTRAM", /* option: LUTRAM, BlockRAM*/
+    parameter WITH_VALID_REG_ARRAY          = "Yes"
 )
 (
     input                                                       reset_in,
@@ -38,7 +39,8 @@ generate
             #(
                 .SINGLE_ENTRY_SIZE_IN_BITS  (SINGLE_ENTRY_SIZE_IN_BITS),
                 .NUM_SET                    (NUM_SET),
-                .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS)
+                .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
+                .WITH_VALID_REG_ARRAY       (WITH_VALID_REG_ARRAY)
             )
             entry_way
             (
@@ -51,7 +53,8 @@ generate
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS])
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS]),
+                .read_valid_out             ()
             );
         end
     end
@@ -63,19 +66,21 @@ generate
             #(
                 .SINGLE_ENTRY_SIZE_IN_BITS  (SINGLE_ENTRY_SIZE_IN_BITS),
                 .NUM_SET                    (NUM_SET),
-                .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS)
+                .SET_PTR_WIDTH_IN_BITS      (SET_PTR_WIDTH_IN_BITS),
+                .WITH_VALID_REG_ARRAY       (WITH_VALID_REG_ARRAY)
             )
             entry_way
             (
                 .clk_in                     (clk_in),
+                .reset_in                   (reset_in),
 
                 .access_en_in               (access_en_in & way_select_in[gen]),
                 .write_en_in                (write_en_in  & {(WRITE_MASK_LEN){way_select_in[gen]}}),
-
                 .access_set_addr_in         (access_set_addr_in),
 
                 .write_entry_in             (write_single_entry_in),
-                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS])
+                .read_entry_out             (data_to_mux[gen * SINGLE_ENTRY_SIZE_IN_BITS +: SINGLE_ENTRY_SIZE_IN_BITS]),
+                .read_valid_out             ()
             );
         end
     end
