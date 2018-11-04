@@ -25,6 +25,26 @@ wire    [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    read_entry_out;
 
 integer                                         test_latency;
 
+single_port_lutram
+#(
+    .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
+    .NUM_SET                        (NUM_SET),
+    .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
+)
+single_port_lutram
+(
+    .clk_in                         (clk_in),
+    .reset_in                       (reset_in),
+
+    .access_en_in                   (access_en_in),
+    .write_en_in                    (write_en_in),
+    .access_set_addr_in             (access_set_addr_in),
+
+    .write_entry_in                 (write_entry_in),
+    .read_entry_out                 (read_entry_out),
+    .read_valid_out                 ()
+);
+
 initial
 begin
     `ifdef DUMP
@@ -118,25 +138,5 @@ begin
 end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
-
-single_port_lutram
-#(
-    .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
-    .NUM_SET                        (NUM_SET),
-    .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
-)
-single_port_lutram
-(
-    .clk_in                         (clk_in),
-    .reset_in                       (reset_in),
-
-    .access_en_in                   (access_en_in),
-    .write_en_in                    (write_en_in),
-    .access_set_addr_in             (access_set_addr_in),
-
-    .write_entry_in                 (write_entry_in),
-    .read_entry_out                 (read_entry_out),
-    .read_valid_out                 ()
-);
 
 endmodule
