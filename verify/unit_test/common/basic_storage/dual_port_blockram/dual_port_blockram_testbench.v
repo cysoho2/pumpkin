@@ -74,7 +74,7 @@ begin
      **/
 
     #(`FULL_CYCLE_DELAY * 200)
-    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b10}}};
+    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/2){2'b01}}};
 
     #(`FULL_CYCLE_DELAY)
     port_A_access_en_in                     = 1;
@@ -98,12 +98,12 @@ begin
 
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - to Port A", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - to Port A", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
     test_judge                              = port_A_read_valid_out === 1'b1 && port_A_read_valid_out !== 1'bx;
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
-    
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
+
     port_A_access_en_in                     = 0;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_A_access_set_addr_in               = 0;
@@ -139,60 +139,121 @@ begin
 
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - to Port B", test_judge ? "passed" : "failed");
-    
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - to Port B", test_judge ? "passed" : "failed");
+
     #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
     test_judge                              = port_B_read_valid_out === 1'b1 && port_B_read_valid_out !== 1'bx;
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
-    
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access - get valid", test_judge ? "passed" : "failed");
+
     port_B_access_en_in         = 0;
     port_B_write_en_in          = {(WRITE_MASK_LEN){1'b0}};
     port_B_access_set_addr_in   = 0;
     port_B_write_entry_in       = 0;
 
     /**
-     *  write "test_input_1" to Port_A and read from Port-B simultaneously, with different address
-     *  pass : the data is read should equal the data is written
+     *  write "test_input_1" to both Ports then read from both Ports
+     *  pass : the read data should be equal to the written data
      **/
 
+    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
+    test_input_1                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/8){8'b1111_1111}}};
+    test_input_2                            = {{(SINGLE_ENTRY_SIZE_IN_BITS/8){8'b1111_1111}}};
+
     #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 1;
+    port_A_write_en_in                      = {{(WRITE_MASK_LEN/2){1'b0}},{(WRITE_MASK_LEN/2){1'b1}}};
+    port_A_access_set_addr_in               = 2;
+    port_A_write_entry_in                   = test_input_1;
+
+    port_B_access_en_in                     = 1;
+    port_B_write_en_in                      = {{(WRITE_MASK_LEN/2){1'b1}},{(WRITE_MASK_LEN/2){1'b0}}};
+    port_B_access_set_addr_in               = NUM_SET - 2;
+    port_B_write_entry_in                   = test_input_2;
+
+    #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 0;
+    port_A_write_en_in                      = 0;
+    port_A_access_set_addr_in               = 0;
+    port_A_write_entry_in                   = 0;
+
+    port_B_access_en_in                     = 0;
+    port_B_write_en_in                      = 0;
+    port_B_access_set_addr_in               = 0;
+    port_B_write_entry_in                   = 0;
+
+    #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 1;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = 2;
+    port_A_write_entry_in                   = 0;
+
+    port_B_access_en_in                     = 1;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_B_access_set_addr_in               = NUM_SET - 2;
+    port_B_write_entry_in                   = 0;
+
+    #(`FULL_CYCLE_DELAY) test_result_1      = port_A_read_entry_out;
+                         test_result_2      = port_B_read_entry_out;
+
+    test_judge                              = (test_result_1 === {{(WRITE_MASK_LEN/2){8'hxx}},{(WRITE_MASK_LEN/2){8'hff}}}) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}}) &&
+                                              (test_result_2 === {{(WRITE_MASK_LEN/2){8'hff}},{(WRITE_MASK_LEN/2){8'hxx}}}) && (test_result_2 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic simultaneous write-read access with write-enable", test_judge ? "passed" : "failed");
+
+    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
+    test_judge                              = port_A_read_valid_out === 1'b1 && port_A_read_valid_out !== 1'bx &&
+                                              port_B_read_valid_out === 1'b1 && port_B_read_valid_out !== 1'bx;
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic simultaneous write-read access with write-enable - get valid", test_judge ? "passed" : "failed");
+
     port_A_access_en_in                     = 0;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_A_access_set_addr_in               = 0;
     port_A_write_entry_in                   = 0;
+
     port_B_access_en_in                     = 0;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
     port_B_access_set_addr_in               = 0;
     port_B_write_entry_in                   = 0;
 
-    #(`FULL_CYCLE_DELAY * 3) test_case_num  = test_case_num + 1;
-    #(`FULL_CYCLE_DELAY)     test_input_2   = { {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_SIZE_IN_BITS/2){1'b1}} };
+    /**
+     *  write "test_input_1" to Port_A and read from Port-B simultaneously, with different address
+     *  pass : the data is read should equal the data is written
+     **/
+
+    #(`FULL_CYCLE_DELAY)     test_case_num  = test_case_num + 1;
+    #(`FULL_CYCLE_DELAY)     test_input_1   = {(SINGLE_ENTRY_SIZE_IN_BITS/4){4'b0011}};
 
     port_A_access_en_in                     = 1;
     port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b1}};
     port_A_access_set_addr_in               = test_case_num;
-    port_A_write_entry_in                   = test_input_2;
+    port_A_write_entry_in                   = test_input_1;
+    
+    #(`FULL_CYCLE_DELAY)
+    port_A_access_en_in                     = 0;
+    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_A_access_set_addr_in               = 0;
+    port_A_write_entry_in                   = 0;
+    
     port_B_access_en_in                     = 1;
     port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
-    port_B_access_set_addr_in               = NUM_SET - 1;
+    port_B_access_set_addr_in               = test_case_num;
     port_B_write_entry_in                   = 0;
 
     #(`FULL_CYCLE_DELAY) test_result_1      = port_B_read_entry_out;
     test_judge                              = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
 
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic simultaneous write-read access - read data", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic cross-port write-read access - read data", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY)
-    port_A_access_en_in                     = 1;
-    port_A_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
-    port_A_access_set_addr_in               = test_case_num;
-    port_A_write_entry_in                   = 0;
+    port_B_access_en_in                     = 1;
+    port_B_write_en_in                      = {(WRITE_MASK_LEN){1'b0}};
+    port_B_access_set_addr_in               = test_case_num + 1;
+    port_B_write_entry_in                   = 0;
 
-    #(`FULL_CYCLE_DELAY) test_case_num      = test_case_num + 1;
-    test_result_2                           = port_A_read_entry_out;
-    test_judge                              = (test_result_2 === test_input_2) && (test_result_2 !== {(SINGLE_ENTRY_SIZE_IN_BITS){1'bx}});
+    #(`FULL_CYCLE_DELAY) 
+    test_judge                              = (port_B_read_valid_out === 1'b0) && (port_B_read_valid_out !== 1'bx);
 
-    $display("[info-testbench] test case %d %60s : \t%s", test_case_num, "basic simultaneous write-read access - write data", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic cross-port write-read access - get valid", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) test_result_2      = test_judge;
 
