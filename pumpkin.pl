@@ -18,11 +18,13 @@ our %full_test_queue_hash;
 our %unit_test_queue_hash;
 our @x64_test_queue;
 
+our @failed_test;
+
 ###################  main logic ####################
 
 &pumpkin_init();
 &cmd_parsing();
-
+# main task begin
 foreach my $test_name (@x64_test_queue)
 {
     &task_begin($test_name, 'full_test', 'x64');
@@ -37,10 +39,8 @@ foreach my $test_name (keys %full_test_queue_hash)
 {
     &task_begin($test_name, 'full_test', 'arm64');
 }
-
-say "\n";
-say " ******* Developed by Pobu - huangbowen\@ict.ac.cn";
-say "\n";
+# main task end
+&pumpkin_done();
 
 #################### major subrountines ###############
 
@@ -163,15 +163,35 @@ sub cmd_parsing
                         my $target_queue_ref = $test_scale =~ 'full' ?
                                                 \%full_test_queue_hash:
                                                 \%unit_test_queue_hash;
+                        my @test_name_list;
 
-                        ${$target_queue_ref}{$test_name}=
+                        if($test_name ne 'all')
                         {
-                            'mode'           => $test_mode,
-                            'type'           => $test_type,
-                            'dump'           => $test_dump,
-                            'test_src_dir'   => $unit_test_info_hash{$test_name}{'test_src_dir'},
-                            'topmodule_test' => $unit_test_info_hash{$test_name}{'topmodule_test'},
-                            'topmodule_src'  => $unit_test_info_hash{$test_name}{'topmodule_src'}
+                            push @test_name_list, $test_name;
+                        }
+                        else
+                        {
+                            next if scalar @test_name_list != 0;
+                            say "[info-script] will include all the test case ... \n";
+
+                            my @full_test_name_list = $test_scale =~ 'full' ? keys %full_test_info_hash : keys %unit_test_info_hash;
+                            foreach my $test_name_in_list (@full_test_name_list)
+                            {
+                                push @test_name_list, $test_name_in_list;
+                            }
+                        }
+
+                        foreach my $test_name_in_list (@test_name_list)
+                        {
+                            ${$target_queue_ref}{$test_name_in_list}=
+                            {
+                                'mode'           => $test_mode,
+                                'type'           => $test_type,
+                                'dump'           => $test_dump,
+                                'test_src_dir'   => $unit_test_info_hash{$test_name_in_list}{'test_src_dir'},
+                                'topmodule_test' => $unit_test_info_hash{$test_name_in_list}{'topmodule_test'},
+                                'topmodule_src'  => $unit_test_info_hash{$test_name_in_list}{'topmodule_src'}
+                            }
                         }
                     }
                 }
@@ -324,6 +344,11 @@ sub task_begin
                     say "\n[critical-warning-script] timing constraints for ".(1/$cycle_time*1000)."MHz (${cycle_time}ns) is NOT met";
                 }
             }
+
+            if(check_test_failure($sim_log_path))
+            {
+                push @failed_test, $test_name;
+            }
         }
         # invoke icarus for mac
         else
@@ -404,9 +429,9 @@ sub vivado_wrapper
     ) = @_;
 
     # prepare log dir and file pathes
-    my $sim_dirname_mode    = 'behavioral' =~ $test_mode ? 'behav' : ( 'post-synthesis' =~ $test_mode ? 'synth' : 'impl');
-    my $sim_dirname_type    = 'behavioral' =~ $test_mode ? '' : 'functional' =~ $test_type ? 'func/' : 'timing/';
-    my $sim_dir             = "$build_dir/${test_name}.sim/sim_1/$sim_dirname_mode/"."$sim_dirname_type";
+    my $sim_dirname_mode    = $test_mode =~ 'behavioral' ? 'behav' : ( 'post-synthesis' =~ $test_mode ? 'synth' : 'impl');
+    my $sim_dirname_type    = $test_mode =~ 'behavioral' ? '' : 'functional' =~ $test_type ? 'func/' : 'timing/';
+    my $sim_dir             = "$build_dir/${test_name}.sim/sim_1/$sim_dirname_mode/"."$sim_dirname_type"."xsim/";
 
     my $sim_log_path   = $sim_dir.'simulate.log';
     my $synth_log_path = "$build_dir/${test_name}.runs/synth_run/runme.log";
@@ -429,24 +454,6 @@ sub vivado_wrapper
     system $vivado_cmd;
 
     return ($sim_log_path, $synth_log_path, $impl_log_path);
-}
-
-sub check_timing
-{
-    my ($timing_rpt_path) = @_;
-
-    die "[error-script] fail to open $timing_rpt_path"
-    if !open log_handle, "<$timing_rpt_path";
-
-    while(my $current_line = <log_handle>)
-    {
-        if($current_line =~ 'All user specified timing constraints are met.')
-        {
-            return 'pass';
-        }
-    }
-
-    return 'failed';
 }
 
 sub arm_dumper_build
@@ -517,9 +524,27 @@ sub arm_dumper_run
     close log_handle;
 }
 
+sub pumpkin_done()
+{
+    say "\n\n[critical-warning-script] the following tests are failed - \n" if(scalar @failed_test > 0);
+    foreach my $test_name (@failed_test)
+    {
+        say "$test_name";
+    }
+
+    say "\n\n";
+    say " ******* Developed by Pobu - huangbowen\@ict.ac.cn";
+    say "\n";
+}
+
+
+############################# generic subroutines #########################
+
 sub is_test_name_matched
 {
     my ($arg_name, $test_scale) = @_;
+
+    return 'all' if $arg_name =~ 'all';
 
     my @test_name = $test_scale =~ 'full' ? keys %full_test_info_hash : keys %unit_test_info_hash;
     foreach my $current_name (@test_name)
@@ -573,8 +598,6 @@ sub test_name_enumerate
         die "[error-script] the specified test_scale $test_scale is wrong";
     }
 }
-
-############################# generic subroutines #########################
 
 sub create_sim_config_file
 {
@@ -631,6 +654,43 @@ sub compilation_wrapper
     say "[info-script] compilation is successful\n";
 
     return $compilaton_failed;
+}
+
+sub check_timing
+{
+    my ($timing_rpt_path) = @_;
+
+    die "[error-script] fail to open $timing_rpt_path"
+    if !open log_handle, "<$timing_rpt_path";
+
+    while(my $current_line = <log_handle>)
+    {
+        if($current_line =~ 'All user specified timing constraints are met.')
+        {
+            return 'pass';
+        }
+    }
+
+    return 'failed';
+}
+
+sub check_test_failure
+{
+    my ($sim_log_path) = @_;
+
+    die "[error-script] fail to open simulation logfile $sim_log_path"
+    if !open log_handle, "<$sim_log_path";
+
+    my $failure = 0;
+
+    while(my $line = <log_handle>)
+    {
+        next unless $line =~ /failed/gx;
+        $failure = 1;
+    }
+
+    close log_handle;
+    return $failure;
 }
 
 sub create_dir
