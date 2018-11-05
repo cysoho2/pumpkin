@@ -6,7 +6,7 @@ Pumpkin is a non-profit personal side project aiming at building a powerful educ
 * parameterized
 * synthesizable
 
-This package includes RTL codes, simulation scripts, an ELF loader, along with a series of cpp source files which can be compiled by a standard compiler. 
+This package includes RTL codes, simulation scripts, unit tests, an ELF loader, along with a series of cpp source files which can be compiled by a standard compiler. 
 Tested can be performed with a RTL simulator or on a real FPGA board. 
 
 #Required Tools
@@ -17,7 +17,7 @@ Tested can be performed with a RTL simulator or on a real FPGA board.
 
 #Cautions 
     
-1. simulatisuperon performance may drastically degrade with -dump or -sim_time option.
+1. simulation performance may drastically degrades with -dump or -sim_time option.
 
 #Pumpkin.pl usage
 
@@ -51,11 +51,12 @@ synthesis will be automatically performed before implementation, so `-impl` impl
 - `-sim_none` indicates that no         simulation will be performed.
 - `-dump` indicates that signals will be dumped out for debugging, simulation will run without signals dumpling if this option is not specified.
 
-default is `-sim_func` and without `-dump`.
+default is `-sim_none` and without `-dump`.
 
 5. Testcase Name (required)
     
 `001_basic_loop` indicates a full chip simulation run with the testcase from $PUMPKIN_ROOT/verif/full_test/001_basic_loop
+`all`		 indicates all the test cases of the specified test type will be performed.
     
 you must not put a hyphen before the testcase name, and that's the only kind of options that can go without hyphen.
 the unit test is specified in $PUMPKIN_ROOT/verif/unit_test/unit.cfg, the script will parse that .cfg file to get necessary info.

@@ -345,7 +345,7 @@ sub task_begin
                 }
             }
 
-            if(check_test_failure($sim_log_path))
+            if($test_type ne 'none' && check_test_failure($sim_log_path))
             {
                 push @failed_test, $test_name;
             }
