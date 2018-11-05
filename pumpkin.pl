@@ -362,17 +362,34 @@ sub task_begin
 
             say "[info-script] invoking icarus compiler ...";
 
-            my $icarus_cmd = "iverilog -o $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'} -s $topmodule_test"
-                         ." -I$pumpkin_path_hash{'src_rtl_dir'}/definitions";
-               $icarus_cmd .= " -DDUMP" if $test_dump eq 'on';
-               $icarus_cmd .= " @rtl_filelist @testbench_filelist";
-            #say "[info-script] icarus cmd is - $icarus_cmd";
-            system $icarus_cmd;
+            my $icarus_compilation_cmd = "iverilog -o $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}"
+                                         ." -s $topmodule_test -I$pumpkin_path_hash{'src_rtl_dir'}/definitions";
+               $icarus_compilation_cmd .= " -DDUMP" if $test_dump eq 'on';
+               $icarus_compilation_cmd .= " @rtl_filelist @testbench_filelist";
+
+            #say "[info-script] icarus cmd is - $icarus_compilation_cmd";
+            system $icarus_compilation_cmd;
 
             if(-e "$build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}")
             {
                 say "[info-script] invoking icarus simulator ...";
-                system "vvp $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'} IVERILOG_DUMPER=fst -fst";
+                my $icarus_run_cmd      = "vvp $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}"
+                                          ." IVERILOG_DUMPER=fst -fst";
+
+                my $icarus_run_log      = `$icarus_run_cmd`;
+                my $icarus_run_log_path = "$report_dir/$pumpkin_parameter_hash{'sim_log_filename'}";
+
+                die "[error-script] fail to open $icarus_run_log_path"
+                if !open log_handle, ">$icarus_run_log_path";
+                printf log_handle $icarus_run_log;
+                close log_handle;
+
+                say $icarus_run_log;
+
+                if(check_test_failure($icarus_run_log_path))
+                {
+                    push @failed_test, $test_name;
+                }
             }
             else
             {
