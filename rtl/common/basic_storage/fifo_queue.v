@@ -1,6 +1,6 @@
 module fifo_queue
 #(
-    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 512,
     parameter QUEUE_SIZE                    = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS       = 4,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,

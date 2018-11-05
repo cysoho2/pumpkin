@@ -2,7 +2,7 @@
 
 module single_port_lutram
 #(
-    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 512,
     parameter NUM_SET                       = 64,
     parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
