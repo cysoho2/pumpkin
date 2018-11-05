@@ -43,7 +43,7 @@ begin
         else
         begin
             // validate
-            if(access_en_in & |write_en_in)
+            if(|write_en_in)
             begin
                 valid_array[access_set_addr_in] <= 1'b1;
             end

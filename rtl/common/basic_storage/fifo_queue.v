@@ -1,9 +1,10 @@
 module fifo_queue
 #(
-    parameter STORAGE_TYPE = "LUTRAM", /* option: FlipFlop, LUTRAM */
-    parameter QUEUE_SIZE = 16,
-    parameter QUEUE_PTR_WIDTH_IN_BITS = 4,
-    parameter SINGLE_ENTRY_WIDTH_IN_BITS = 32
+    parameter STORAGE_TYPE                  = "LUTRAM", /* option: FlipFlop, LUTRAM */
+    parameter QUEUE_SIZE                    = 16,
+    parameter QUEUE_PTR_WIDTH_IN_BITS       = 4,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 32,
+    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS
 )
 (
     input                                                                   clk_in,
@@ -146,7 +147,7 @@ end
 else if(STORAGE_TYPE == "LUTRAM")
 begin
     for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
-    begin:entry
+    begin
         
         reg                                       entry_valid;
         assign fifo_entry_valid_packed[gen]  =    entry_valid;
@@ -203,9 +204,8 @@ begin
             .reset_in                       (reset_in),
 
             .access_en_in                   (1'b1),
-            .write_en_in                    (write_qualified[gen] ?
-                                            {(SINGLE_ENTRY_WIDTH_IN_BITS/8){1'b1}} :
-                                            {(SINGLE_ENTRY_WIDTH_IN_BITS/8){1'b0}}),
+            .write_en_in                    (write_qualified[gen] ? {(WRITE_MASK_LEN){1'b1}} :
+                                                                    {(WRITE_MASK_LEN){1'b0}}),
             .access_set_addr_in             (1'b0),
 
             .write_entry_in                 (request_in),
