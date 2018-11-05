@@ -2,7 +2,7 @@ module priority_arbiter
 #(
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
     parameter NUM_REQUEST                  = 3,
-    parameter INPUT_QUEUE_SIZE             = 2 // must be a power of 2
+    parameter INPUT_QUEUE_SIZE             = 4 // must be a power of 2
 )
 (
     input                                                               reset_in,
@@ -42,7 +42,6 @@ begin : request_queue
     fifo_queue
     #(
         .QUEUE_SIZE                     (INPUT_QUEUE_SIZE),
-        .QUEUE_PTR_WIDTH_IN_BITS        ($clog2(INPUT_QUEUE_SIZE)),
         .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_REQUEST_WIDTH_IN_BITS + 1)
     )
     request_queue
