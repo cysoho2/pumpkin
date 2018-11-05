@@ -1,3 +1,5 @@
+`include "parameters.h"
+
 module fifo_queue
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
