@@ -1,10 +1,10 @@
 module fifo_queue
 #(
-    parameter STORAGE_TYPE                  = "LUTRAM", /* option: FlipFlop, LUTRAM */
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
     parameter QUEUE_SIZE                    = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS       = 4,
-    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 32,
-    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS
+    parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
+    parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
 )
 (
     input                                                                   clk_in,
