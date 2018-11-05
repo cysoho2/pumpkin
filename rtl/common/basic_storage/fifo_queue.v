@@ -1,6 +1,6 @@
 module fifo_queue
 #(
-    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 512,
+    parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
     parameter QUEUE_SIZE                    = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS       = 4,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
@@ -149,13 +149,17 @@ begin
     for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
     begin
         
-        reg                                       entry_valid;
-        assign fifo_entry_valid_packed[gen]  =    entry_valid;
+        wire   [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] ram_output;
+        
+        reg                                   entry_valid;
+        assign fifo_entry_valid_packed[gen] = entry_valid;
 
-        assign write_qualified[gen] = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+        assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
                                         & ~issue_ack_out & request_valid_in & gen == write_ptr;
 
-        assign read_qualified[gen]  = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+        assign read_qualified[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+
+        assign fifo_entry_packed[gen] = read_ptr == gen ? ram_output : 0;
 
         always @(posedge clk_in, posedge reset_in)
         begin
@@ -194,8 +198,8 @@ begin
         single_port_lutram
         #(
             .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
-            .NUM_SET                        (1),
-            .SET_PTR_WIDTH_IN_BITS          (1),
+            .NUM_SET                        (QUEUE_SIZE),
+            .SET_PTR_WIDTH_IN_BITS          ($clog2(QUEUE_SIZE)),
             .WITH_VALID_REG_ARRAY           ("No")
         )
         single_port_lutram
@@ -206,10 +210,10 @@ begin
             .access_en_in                   (1'b1),
             .write_en_in                    (write_qualified[gen] ? {(WRITE_MASK_LEN){1'b1}} :
                                                                     {(WRITE_MASK_LEN){1'b0}}),
-            .access_set_addr_in             (1'b0),
+            .access_set_addr_in             (read_ptr),
 
             .write_entry_in                 (request_in),
-            .read_entry_out                 (fifo_entry_packed[gen]),
+            .read_entry_out                 (ram_output),
             .read_valid_out                 ()
         );
     end
