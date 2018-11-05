@@ -81,10 +81,9 @@ integer write_lane;
 
 always @(posedge clk_in)
 begin
-
     for(write_lane = 0; write_lane < WRITE_MASK_LEN; write_lane = write_lane + 1)
     begin
-        if(write_en_in[write_lane] & access_en_in)
+        if(write_en_in[write_lane])
         begin
             lut_ram[access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
                 <= write_entry_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
@@ -92,6 +91,6 @@ begin
     end
 end
 
-assign read_entry_out = lut_ram[access_set_addr_in];
+assign read_entry_out = access_en_in ? lut_ram[access_set_addr_in] : 0;
 
 endmodule
