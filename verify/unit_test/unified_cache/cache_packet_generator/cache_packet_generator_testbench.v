@@ -117,7 +117,7 @@ unified_cache
     .to_mem_packet_ack_in           (to_cache_ack)
 );
 
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin

@@ -87,7 +87,7 @@ generate
 endgenerate
 
 reg [NUM_WAY - 1 : 0] way_select_stage;
-always @(posedge clk_in or posedge reset_in)
+always @(posedge clk_in)
 begin
     if(reset_in)
     begin

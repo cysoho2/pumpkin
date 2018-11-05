@@ -111,7 +111,7 @@ packet_concat mem_to_cache_packet_concat
 
 reg [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS  - 1 : 0]   cache_to_mem_packet_last_cycle;
 
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin
@@ -139,7 +139,7 @@ begin
 end
 
 // release to cache ack
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin
@@ -167,7 +167,7 @@ begin
 end
 
 // generate to cache packet
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin

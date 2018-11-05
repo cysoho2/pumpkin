@@ -65,7 +65,7 @@ begin:way_logic
             .packet_out     (packet_concatenated)
         );
 
-        always@(posedge clk_in or posedge reset_in)
+        always@(posedge clk_in)
         begin
             if(reset_in)
             begin
@@ -134,7 +134,7 @@ begin:way_logic
             .packet_out     (packet_concatenated)
         );
 
-        always@(posedge clk_in or posedge reset_in)
+        always@(posedge clk_in)
         begin
             if(reset_in)
             begin
@@ -172,7 +172,7 @@ begin:way_logic
         return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_DATA_POS_LO +:
                                                                                     UNIFIED_CACHE_BLOCK_SIZE_IN_BITS];
 
-        always@(posedge clk_in or posedge reset_in)
+        always@(posedge clk_in)
         begin
             if(reset_in)
             begin

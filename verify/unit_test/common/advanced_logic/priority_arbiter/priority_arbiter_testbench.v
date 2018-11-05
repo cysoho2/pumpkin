@@ -42,7 +42,7 @@ reg     [31:0]                                          test_ctr;
 reg     [31:0]                                          test_write_ctr;
 reg     [31:0]                                          test_read_ctr;
 
-always @(posedge clk_in or posedge reset_in)
+always @(posedge clk_in)
 begin
     if(reset_in)
     begin

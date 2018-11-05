@@ -32,7 +32,7 @@ genvar gen;
 
         assign entry_packed[gen] = entry;
 
-        always @(posedge clk_in, posedge reset_in)
+        always @(posedge clk_in)
         begin
             if(reset_in)
             begin
@@ -78,7 +78,7 @@ find_read_index
     .one_is_found_out()
 );
 
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin

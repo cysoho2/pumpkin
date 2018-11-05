@@ -50,7 +50,7 @@ assign data_from_remainder_left_reg                                             
 assign is_negative_to_control                                                               = ~subtract_result_to_remainder_reg[OPERAND_WIDTH_IN_BITS];
 
 //idle to busy & busy to idle
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -133,7 +133,7 @@ begin
 end
 
 //control
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -167,7 +167,7 @@ begin
 end
 
 //stage counter
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in | is_ready_out)
     begin

@@ -83,7 +83,7 @@ reg  bank_lock_release;
 wire issue_grant = access_packet_in[`UNIFIED_CACHE_PACKET_VALID_POS] & ~bank_lock;
 reg  [2 : 0] stage;
 
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin
@@ -141,7 +141,7 @@ packet_concat return_packet_concat
     .packet_out     (return_packet_concatenated)
 );
 
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin

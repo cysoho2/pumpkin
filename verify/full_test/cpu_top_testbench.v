@@ -18,7 +18,7 @@ generate
     genvar i;
     for(i = 0; i < (`OFF_CORE_ACCESS_WIDTH_IN_BYTES); i = i + 1)
     begin : payload_delivery
-        always@(posedge clk_in, posedge reset_in)
+        always@(posedge clk_in)
         begin
             if(reset_in)
             begin

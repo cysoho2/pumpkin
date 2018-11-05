@@ -27,7 +27,7 @@ module fifo_queue
 wire [QUEUE_SIZE - 1 : 0] write_qualified;
 wire [QUEUE_SIZE - 1 : 0] read_qualified;
 
-wire [QUEUE_SIZE - 1 : 0] fifo_entry_valid_packed;
+wire [QUEUE_SIZE - 1 : 0]                  fifo_entry_valid_packed;
 wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] fifo_entry_packed [QUEUE_SIZE - 1 : 0];
 
 reg  [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] write_ptr;
@@ -36,15 +36,15 @@ reg  [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] read_ptr;
 assign is_full_out  = &fifo_entry_valid_packed;
 assign is_empty_out = &(~fifo_entry_valid_packed);
 
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin
-        write_ptr     <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
-        issue_ack_out <= 1'b0;
-        read_ptr      <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
-        request_out   <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-        request_valid_out <= 1'b0;
+        write_ptr           <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
+        issue_ack_out       <= 1'b0;
+        read_ptr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
+        request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+        request_valid_out   <= 1'b0;
     end
 
     else
@@ -53,36 +53,36 @@ begin
         // generate write_ptr when the queue is full but the issue_ack_in is high, save 1 cycle
         if(|write_qualified)
         begin
-            write_ptr           <= write_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : write_ptr + 1'b1;
-            issue_ack_out       <= 1'b1;
+            write_ptr               <= write_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : write_ptr + 1'b1;
+            issue_ack_out           <= 1'b1;
         end
 
         else
         begin
-            write_ptr           <= write_ptr;
-            issue_ack_out       <= 1'b0;
+            write_ptr               <= write_ptr;
+            issue_ack_out           <= 1'b0;
         end
 
         // read logic
         if(|read_qualified)
         begin
-            read_ptr            <= read_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : read_ptr + 1'b1;
-            request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-            request_valid_out   <= 1'b0;
+            read_ptr                <= read_ptr == {(QUEUE_PTR_WIDTH_IN_BITS){1'b1}} ? {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} : read_ptr + 1'b1;
+            request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_valid_out       <= 1'b0;
         end
 
         else if(fifo_entry_valid_packed[read_ptr])
         begin
-            read_ptr             <= read_ptr;
-            request_out          <= fifo_entry_packed[read_ptr];
-            request_valid_out    <= 1'b1;
+            read_ptr                <= read_ptr;
+            request_out             <= fifo_entry_packed[read_ptr];
+            request_valid_out       <= 1'b1;
         end
 
         else
         begin
-            read_ptr             <= read_ptr;
-            request_out          <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-            request_valid_out    <= 1'b0;
+            read_ptr                <= read_ptr;
+            request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_valid_out       <= 1'b0;
         end
     end
 end
@@ -105,7 +105,7 @@ begin
 
         assign read_qualified[gen]  = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
 
-        always @(posedge clk_in, posedge reset_in)
+        always @(posedge clk_in)
         begin
             if (reset_in)
             begin
@@ -163,7 +163,7 @@ begin
 
         assign fifo_entry_packed[gen] = read_ptr == gen ? ram_output : 0;
 
-        always @(posedge clk_in, posedge reset_in)
+        always @(posedge clk_in)
         begin
             if (reset_in)
             begin

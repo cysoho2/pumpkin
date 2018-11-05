@@ -23,7 +23,7 @@ reg [63                      : 0] access_counter;
 wire reset_with_request_limit = reset_in | access_counter == 2 ** RESET_BIN_POWER;
 wire request_limit            = access_counter == 2 ** RESET_BIN_POWER;
 
-always@(posedge clk_in, posedge reset_with_request_limit)
+always@(posedge clk_in)
 begin
     if(reset_with_request_limit)
     begin
@@ -54,7 +54,7 @@ begin
     reg [COUNTER_WIDTH - 1 : 0] hit_counter;
     assign counter_flatted[gen * COUNTER_WIDTH +: COUNTER_WIDTH] = hit_counter;
 
-    always@(posedge clk_in, posedge reset_with_request_limit)
+    always@(posedge clk_in)
     begin
         if(reset_with_request_limit)
         begin
@@ -111,7 +111,7 @@ begin : Find
     end
 end
 
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin

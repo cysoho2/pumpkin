@@ -37,7 +37,7 @@ if(WITH_VALID_REG_ARRAY == "Yes")
 begin
     reg [NUM_SET - 1 : 0] valid_array;
 
-    always@(posedge clk_in, posedge reset_in)
+    always@(posedge clk_in)
     begin
         if(reset_in)
         begin

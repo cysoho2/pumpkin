@@ -64,7 +64,7 @@ assign request_in                                       = is_from_request_in_buf
 assign request_valid_in                                 = is_from_request_in_buffer? request_valid_in_buffer[request_in_ctr] : 1'b0;
 
 // write data
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -145,7 +145,7 @@ begin
 end
 
 // read data
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -217,7 +217,7 @@ begin
 end
 
 // check data
-always@(posedge clk_in or posedge reset_in)
+always@(posedge clk_in)
 begin
     if (reset_in)
     begin

@@ -25,7 +25,7 @@ reg [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] stage_1_flatted;
 reg [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] stage_2_flatted;
 reg [SINGLE_WAY_WIDTH_IN_BITS * NUM_WAY - 1 : 0] stage_3_flatted;
 
-always@(posedge clk_in, posedge reset_in)
+always@(posedge clk_in)
 begin
     if(reset_in)
     begin
