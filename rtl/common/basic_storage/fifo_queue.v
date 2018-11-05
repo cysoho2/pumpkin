@@ -6,7 +6,7 @@ module fifo_queue
     parameter QUEUE_SIZE                    = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS       = 4,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
+    parameter STORAGE_TYPE                  = "BlockRAM" /* option: FlipFlop, BlockRAM */
 )
 (
     input                                                                   clk_in,
@@ -146,7 +146,7 @@ begin
     end
 end
 
-else if(STORAGE_TYPE == "LUTRAM")
+else if(STORAGE_TYPE == "BlockRAM")
 begin
     for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
     begin
@@ -197,26 +197,32 @@ begin
             end
         end
 
-        single_port_lutram
+        dual_port_blockram
         #(
             .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
             .NUM_SET                        (QUEUE_SIZE),
             .SET_PTR_WIDTH_IN_BITS          ($clog2(QUEUE_SIZE)),
             .WITH_VALID_REG_ARRAY           ("No")
         )
-        single_port_lutram
+        dual_port_blockram
         (
             .clk_in                         (clk_in),
             .reset_in                       (reset_in),
 
-            .access_en_in                   (1'b1),
-            .write_en_in                    (write_qualified[gen] ? {(WRITE_MASK_LEN){1'b1}} :
+            .port_A_access_en_in            (write_qualified[gen]),
+            .port_A_write_en_in             (write_qualified[gen] ? {(WRITE_MASK_LEN){1'b1}} :
                                                                     {(WRITE_MASK_LEN){1'b0}}),
-            .access_set_addr_in             (read_ptr),
+            .port_A_access_set_addr_in      (write_ptr),
+            .port_A_write_entry_in          (request_in),
+            .port_A_read_entry_out          (),
+            .port_A_read_valid_out          (),
 
-            .write_entry_in                 (request_in),
-            .read_entry_out                 (ram_output),
-            .read_valid_out                 ()
+            .port_B_access_en_in            (1'b1),
+            .port_B_write_en_in             ({(WRITE_MASK_LEN){1'b0}}),
+            .port_B_access_set_addr_in      (read_ptr),
+            .port_B_write_entry_in          ({(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}}),
+            .port_B_read_entry_out          (ram_output),
+            .port_B_read_valid_out          ()
         );
     end
 end
