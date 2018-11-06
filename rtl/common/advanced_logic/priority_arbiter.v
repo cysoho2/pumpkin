@@ -4,7 +4,7 @@ module priority_arbiter
     parameter NUM_REQUEST                  = 3,
     parameter INPUT_QUEUE_SIZE             = 4, // must be a power of 2
     parameter BYTE_PADDING_WIDTH           = 8,
-    parameter integer NUM_REQUEST_LOG2     = $ceil($clog2(NUM_REQUEST))
+    parameter integer NUM_REQUEST_LOG2     = 2 // $ceil($clog2(NUM_REQUEST))
 )
 (
     input                                                               reset_in,
