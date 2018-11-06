@@ -47,8 +47,6 @@ generate
 genvar gen;
     for (gen = 0; gen < NUM_REQUEST; gen = gen + 1)
     begin
-        parameter   START_POSITION_IN_BUFFER                = gen * NUM_SINGLE_REQUEST_TEST;
-        parameter   END_POSITION_IN_BUFFER                  = (gen + 1) * NUM_SINGLE_REQUEST_TEST - 1;   
         
         reg [31:0]  request_to_arb_buffer_pointer;
         
@@ -56,7 +54,7 @@ genvar gen;
         wire        issue_ack_from_arb;
         
         assign packed_end_write_flag[gen]                   = end_write_flag;
-        assign end_write_flag                               = (request_to_arb_buffer_pointer == END_POSITION_IN_BUFFER + 2);
+        assign end_write_flag                               = (request_to_arb_buffer_pointer == (gen + 1) * NUM_SINGLE_REQUEST_TEST - 1 + 2);
         assign issue_ack_from_arb                           = packed_issue_ack_from_arb[gen];
         
         always @(posedge clk_in)
@@ -64,10 +62,10 @@ genvar gen;
             if (reset_in)
             begin
                 packed_request_valid_to_arb[gen]            <= 1'b0;            
-                packed_request_to_arb[gen]                  <= request_to_arb_buffer[START_POSITION_IN_BUFFER];
-                packed_request_critical_to_arb[gen]         <= request_critical_to_arb_array[START_POSITION_IN_BUFFER];
+                packed_request_to_arb[gen]                  <= request_to_arb_buffer[gen * NUM_SINGLE_REQUEST_TEST];
+                packed_request_critical_to_arb[gen]         <= request_critical_to_arb_array[gen * NUM_SINGLE_REQUEST_TEST];
                 
-                request_to_arb_buffer_pointer               <= START_POSITION_IN_BUFFER + 1'b1;
+                request_to_arb_buffer_pointer               <= gen * NUM_SINGLE_REQUEST_TEST + 1'b1;
                 
             end
             else
