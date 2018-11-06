@@ -2,7 +2,8 @@ module priority_arbiter
 #(
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
     parameter NUM_REQUEST                  = 3,
-    parameter INPUT_QUEUE_SIZE             = 4 // must be a power of 2
+    parameter INPUT_QUEUE_SIZE             = 4, // must be a power of 2
+    parameter BYTE_PADDING_WIDTH           = 8
 )
 (
     input                                                               reset_in,
@@ -29,7 +30,7 @@ wire [NUM_REQUEST                   - 1 : 0] arbiter_ack_flatted_to_request_queu
 wire [SINGLE_REQUEST_WIDTH_IN_BITS  - 1 : 0] request_packed_from_request_queue [NUM_REQUEST - 1 : 0];
 wire [NUM_REQUEST                   - 1 : 0] request_valid_flatted_from_request_queue;
 wire [NUM_REQUEST                   - 1 : 0] request_queue_full;
-wire [NUM_REQUEST                   - 1 : 0] request_critical_flatted_from_request_queue;
+wire [BYTE_PADDING_WIDTH            - 1 : 0] request_critical_flatted_from_request_queue [NUM_REQUEST - 1 : 0];
 
 generate
 genvar request_index;
@@ -42,7 +43,7 @@ begin : request_queue
     fifo_queue
     #(
         .QUEUE_SIZE                     (INPUT_QUEUE_SIZE),
-        .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_REQUEST_WIDTH_IN_BITS + 1)
+        .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_REQUEST_WIDTH_IN_BITS + 8)
     )
     request_queue
     (
@@ -52,7 +53,7 @@ begin : request_queue
         .is_empty_out                   (), // intended left unconnected
         .is_full_out                    (request_queue_full[request_index]), // intended left unconnected
 
-        .request_in                     ({request_critical_flatted_in[request_index],
+        .request_in                     ({{(BYTE_PADDING_WIDTH){request_critical_flatted_in[request_index]}},
                                           request_packed_in[request_index]}),
         .request_valid_in               (request_valid_flatted_in[request_index]),
         .issue_ack_out                  (issue_ack_out[request_index]),
@@ -65,8 +66,11 @@ begin : request_queue
 end
 endgenerate
 
-wire [NUM_REQUEST - 1 : 0] request_critical_final = request_critical_flatted_from_request_queue | request_queue_full;
-
+wire [NUM_REQUEST - 1 : 0] request_critical_final;
+for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
+begin
+    assign request_critical_final[request_index] = |request_critical_flatted_from_request_queue[request_index] | request_queue_full;
+end
 reg [NUM_REQUEST_LOG2 - 1 : 0] last_send_index;
 
 // shift the request valid/critical flatted wire
