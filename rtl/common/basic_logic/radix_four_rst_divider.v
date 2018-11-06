@@ -41,7 +41,13 @@ reg [CSA_OPERAND_WIDTH_IN_BITS - 1 : 0] sum_reg;
 reg [OPERAND_WIDTH_IN_BITS - 1 : 0] remainder_reg;
 reg [OPERAND_WIDTH_IN_BITS - 1 : 0] quotient_reg;
 
-reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] recoding_data_reg;
+reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] recoding_data_reg_stage_0;
+reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] fixed_recoding_data_reg_stage_0;
+reg sign_bit_from_selector_stage_0;
+
+reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] recoding_data_reg_stage_1;
+reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] fixed_recoding_data_reg_stage_1;
+
 reg [CSA_OPERAND_WIDTH_IN_BITS - 1 : 0] proprocess_divisor_reg_file [NUM_PROPROCESS_DIVISOR_REG_FILE - 1 : 0]; //weight : [-2, 2]
 
 reg [2 ** PARTIAL_REMAINDER_INSPECTED_WIDTH_IN_BITS - 1 : 0] non_bit_lookup_table [2 ** DIVISOR_INSPECTED_WIDTH_IN_BITS - 1 : 0];
@@ -71,8 +77,6 @@ wire [CSA_OPERAND_WIDTH_IN_BITS - 1 : 0] generation_data_to_csa;
 wire [CSA_OPERAND_WIDTH_IN_BITS - 1 : 0] carry_data_from_csa;
 wire [CSA_OPERAND_WIDTH_IN_BITS - 1 : 0] sum_data_from_csa;
 
-reg [PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS - 1 : 0] fixed_data_from_recoding_reg;
-
 //select
 
 wire [DIVISOR_INSPECTED_WIDTH_IN_BITS - 1 : 0] inspected_bits_from_divisor_reg;
@@ -90,10 +94,6 @@ wire least_significant_bit_from_quotient;
 
 wire [PARTIAL_REMAINDER_INSPECTED_WIDTH_IN_BITS - 1 : 0] p;
 wire [DIVISOR_INSPECTED_WIDTH_IN_BITS - 1 : 0] d;
-
-//wire [NUM_PD_PLOT_CASE - 1 : 0] p_case_hit;
-//wire [NUM_PD_PLOT_CASE - 1 : 0] d_case_hit;
-//wire [NUM_PD_PLOT_CASE - 1 : 0] pd_plot_case_hit;
 
 //find first one index
 assign fixed_dividend_first_one_index = (OPERAND_WIDTH_IN_BITS - dividend_first_one_index - 1 - (2'b11 - dividend_first_one_index % 4));
@@ -121,25 +121,6 @@ assign d = inspected_bits_from_divisor_reg;
 assign non_from_selector_to_generation = is_running_flag? non_bit_lookup_table[d][31 - p] : 0;
 assign power_from_selector_to_generation = is_running_flag? power_bit_lookup_table[d][31 - p] : 0;
 assign sign_from_selector_to_generation = is_running_flag ? p[4] : 0;
-
-//generate
-//genvar gen;
-//    for (gen = 0; gen < NUM_PD_PLOT_CASE; gen = gen + 1)
-//    begin
-//        if (gen < NUM_PD_PLOT_CASE / 2)
-//        begin
-//            assign p_case_hit[gen] = (shifted_partial_remainder_to_generation == (P_DIVIDED_BASE_VALUE + gen));
-//        end
-//        else
-//        begin
-//            assign p_case_hit[gen] = (shifted_partial_remainder_to_generation == (P_DIVIDED_BASE_VALUE + NUM_PD_PLOT_CASE / 2 + (gen + 1) / 4));
-//        end
-
-//        assign d_case_hit[gen] = (inspected_bits_from_divisor_reg == ({{1'b1}, {{(DIVISOR_INSPECTED_WIDTH_IN_BITS - 1){1'b0}} + gen}}));
-
-//        assign pd_plot_case_hit[gen] = p_case_hit[gen] & d_case_hit[gen];
-//    end
-//endgenerate
 
 //Booth's Recoding
 assign least_significant_bit_from_quotient = quotient_reg[0];
@@ -183,34 +164,38 @@ begin
         sum_reg <= {(CSA_OPERAND_WIDTH_IN_BITS){1'b0}};
         remainder_reg <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
         quotient_reg <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-        
+
         for (vector_index = 0; vector_index < NUM_PROPROCESS_DIVISOR_REG_FILE; vector_index = vector_index + 1)
         begin
             proprocess_divisor_reg_file[vector_index] <= 0;
         end
-    
+
         non_bit_lookup_table[0] <= {32'b1110_0000_0000_0000_0000_0000_0000_0001};
         non_bit_lookup_table[1] <= {32'b1110_0000_0000_0000_0000_0000_0000_0001};
         non_bit_lookup_table[2] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
         non_bit_lookup_table[3] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
-        
+
         non_bit_lookup_table[4] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
         non_bit_lookup_table[5] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
         non_bit_lookup_table[6] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
         non_bit_lookup_table[7] <= {32'b1111_0000_0000_0000_0000_0000_0000_0011};
-    
+
         power_bit_lookup_table[0] <= {32'b0000_0001_1111_1111_1111_1111_1110_0000};
         power_bit_lookup_table[1] <= {32'b0000_0000_1111_1111_1111_1111_1100_0000};
         power_bit_lookup_table[2] <= {32'b0000_0000_0111_1111_1111_1111_1000_0000};
         power_bit_lookup_table[3] <= {32'b0000_0000_0011_1111_1111_1111_0000_0000};
-        
+
         power_bit_lookup_table[4] <= {32'b0000_0000_0001_1111_1111_1110_0000_0000};
         power_bit_lookup_table[5] <= {32'b0000_0000_0001_1111_1111_1110_0000_0000};
         power_bit_lookup_table[6] <= {32'b0000_0000_0000_1111_1111_1100_0000_0000};
-        power_bit_lookup_table[7] <= {32'b0000_0000_0000_1111_1111_1100_0000_0000};        
-    
-        fixed_data_from_recoding_reg <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
-        recoding_data_reg <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
+        power_bit_lookup_table[7] <= {32'b0000_0000_0000_1111_1111_1100_0000_0000};
+
+        fixed_recoding_data_reg_stage_0 <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
+        recoding_data_reg_stage_0 <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
+        sign_bit_from_selector_stage_0 <= 0;
+
+        fixed_recoding_data_reg_stage_1 <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
+        recoding_data_reg_stage_1 <= {(PRODUCT_QUOTIENT_PER_CYCLE_IN_BITS){1'b0}};
 
         quotient_ctr <= 1'b0;
 
@@ -246,7 +231,7 @@ begin
             proprocess_divisor_reg_file[2'b01] <= {{1'b0}, {shifted_divisor_to_reg_file[OPERAND_WIDTH_IN_BITS - 1 : 0]}, {1'b0}};
             proprocess_divisor_reg_file[2'b10] <= {{1'b1}, {~{{1'b0}, {shifted_divisor_to_reg_file[OPERAND_WIDTH_IN_BITS - 1 : 0]}} + 1'b1}};
             proprocess_divisor_reg_file[2'b11] <= {{1'b1}, {~shifted_divisor_to_reg_file[OPERAND_WIDTH_IN_BITS - 1 : 0] + 1'b1}, {1'b0}};
-        
+
             //goto
             is_initing_flag <= 1'b0;
             is_running_flag <= 1'b1;
@@ -269,23 +254,26 @@ begin
         begin
             //quetient
             quotient_ctr <= quotient_ctr + 2;
-            if (quotient_ctr == OPERAND_WIDTH_IN_BITS)
+            if (quotient_ctr == OPERAND_WIDTH_IN_BITS + 2)
             begin
                 recoding_enable <= 1'b0;
-                quotient_reg = {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, fixed_data_from_recoding_reg};                        
+                quotient_reg = {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, fixed_recoding_data_reg_stage_1};
             end
             else
             begin
-                recoding_data_reg <= recoding_data_to_quotient;
-                fixed_data_from_recoding_reg = (~power_from_selector_to_generation & ~non_from_selector_to_generation)? {recoding_data_to_quotient[0], recoding_data_to_quotient[1]} : recoding_data_to_quotient;
-                quotient_reg = (sign_from_selector_to_generation)? {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, {recoding_data_reg}} : {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, {fixed_data_from_recoding_reg}};         
-                $display("%d", );
-   //             quotient_reg = {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, recoding_data_reg};         
+                recoding_data_reg_stage_0 <= recoding_data_to_quotient;
+                fixed_recoding_data_reg_stage_0 <= (~power_from_selector_to_generation & ~non_from_selector_to_generation)? {recoding_data_to_quotient[0], recoding_data_to_quotient[1]} : recoding_data_to_quotient;
+                sign_bit_from_selector_stage_0 <= sign_from_selector_to_generation;
 
-            end 
+                recoding_data_reg_stage_1 <= recoding_data_reg_stage_0;
+                fixed_recoding_data_reg_stage_1 <= fixed_recoding_data_reg_stage_0;
+
+                quotient_reg = (sign_bit_from_selector_stage_0)? {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, {recoding_data_reg_stage_1}} : {{quotient_reg[OPERAND_WIDTH_IN_BITS - 3 : 0]}, {fixed_recoding_data_reg_stage_1}};
+
+            end
 
         end
-    
+
     end
 end
 
@@ -314,4 +302,3 @@ find_last_one_index_dividend
 );
 
 endmodule
-

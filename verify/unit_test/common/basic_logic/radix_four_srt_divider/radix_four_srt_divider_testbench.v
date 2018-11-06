@@ -34,8 +34,8 @@ begin
     reset_in = 1;
     clk_in = 1;
 
-    #(`FULL_CYCLE_DELAY * 10) dividend_in <= 53;
-                              divisor_in <= 7;
+    #(`FULL_CYCLE_DELAY * 10) dividend_in <= 299;
+                              divisor_in <= 31;
     #(`FULL_CYCLE_DELAY * 10) reset_in <= 0;
 
     #(`FULL_CYCLE_DELAY * 50) $display("\n[info-rtl] simulation comes to the end\n");
