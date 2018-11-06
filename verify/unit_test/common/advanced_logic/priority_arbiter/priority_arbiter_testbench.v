@@ -202,10 +202,11 @@ begin
         sim_write_pointer_array[index]          <= index * NUM_SINGLE_REQUEST_TEST;
     end
     
+    #(`FULL_CYCLE_DELAY * 2)
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
     begin
-        passed_request_buffer[index]            <= request_to_arb_buffer[sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]];
-        sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST] <= sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST] + 1'b1;
+        #(`FULL_CYCLE_DELAY) passed_request_buffer[index]           <= request_to_arb_buffer[sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]];
+        sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]  <= sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST] + 1'b1;
     end
     
     test_case                                   <= 1'b0;
