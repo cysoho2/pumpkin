@@ -3,7 +3,8 @@ module priority_arbiter
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
     parameter NUM_REQUEST                  = 3,
     parameter INPUT_QUEUE_SIZE             = 4, // must be a power of 2
-    parameter BYTE_PADDING_WIDTH           = 8
+    parameter BYTE_PADDING_WIDTH           = 8,
+    parameter integer NUM_REQUEST_LOG2     = $ceil($clog2(NUM_REQUEST))
 )
 (
     input                                                               reset_in,
@@ -18,9 +19,6 @@ module priority_arbiter
     output reg                                                          request_valid_out,
     input                                                               issue_ack_in
 );
-// vivado 2016.4 doesn't support $ceil function, may add in the future
-parameter [31:0] NUM_REQUEST_LOG2_LOW = $clog2(NUM_REQUEST);
-parameter [31:0] NUM_REQUEST_LOG2     = 2 ** NUM_REQUEST_LOG2_LOW < NUM_REQUEST ? NUM_REQUEST_LOG2_LOW + 1 : NUM_REQUEST_LOG2_LOW;
 
 // separete requests to input queue
 wire [SINGLE_REQUEST_WIDTH_IN_BITS  - 1 : 0] request_packed_in [NUM_REQUEST - 1 : 0];
