@@ -191,8 +191,16 @@ begin
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
     begin
         request_to_arb_buffer[index]            <= index;
-        request_critical_to_arb_array[index]    <= 1'b0;
         request_from_arb_buffer[index]          <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+        
+        if (index < NUM_SINGLE_REQUEST_TEST - 1)
+        begin
+                request_critical_to_arb_array[index]    <= 1'b1;    
+        end
+        else
+        begin
+                request_critical_to_arb_array[index]    <= 1'b0;
+        end
     end
     
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST; index = index + 1)
