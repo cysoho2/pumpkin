@@ -2,10 +2,11 @@
 
 module dual_port_blockram_testbench();
 
-parameter SINGLE_ENTRY_WIDTH_IN_BITS     = 64;
+parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64;
 parameter NUM_SET                       = 64;
 parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET);
 parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS;
+parameter CONFIG_MODE                   = "WriteFirst"; /* option: ReadFirst, WriteFirst*/
 
 reg                                             reset_in;
 reg                                             clk_in;
@@ -35,7 +36,8 @@ dual_port_blockram
 #(
     .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
     .NUM_SET                        (NUM_SET),
-    .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS)
+    .SET_PTR_WIDTH_IN_BITS          (SET_PTR_WIDTH_IN_BITS),
+    .CONFIG_MODE                    (CONFIG_MODE)
 )
 dual_port_blockram
 (
