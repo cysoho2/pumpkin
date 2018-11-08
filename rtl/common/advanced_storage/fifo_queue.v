@@ -75,16 +75,8 @@ begin
         begin
             read_ptr                <= next_read_ptr;
             
-            if(fifo_entry_valid_packed[next_read_ptr])
-            begin
-                request_out             <= fifo_entry_packed[next_read_ptr];
-                request_valid_out       <= 1'b1;
-            end
-            else
-            begin
-                request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-                request_valid_out       <= 1'b0;
-            end
+            request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_valid_out       <= 1'b0;
         end
 
         // hold on the current read
@@ -198,9 +190,9 @@ begin
         .port_A_read_valid_out          (),
 
         .port_B_access_en_in            (1'b1),
-        .port_B_write_en_in             ({(WRITE_MASK_LEN){1'b1}}),
-        .port_B_access_set_addr_in      (read_ptr),
-        .port_B_write_entry_in          (port_B_ram_output),
+        .port_B_write_en_in             ({(WRITE_MASK_LEN){1'b0}}),
+        .port_B_access_set_addr_in      (|read_complete ? next_read_ptr : read_ptr),
+        .port_B_write_entry_in          ({SINGLE_ENTRY_WIDTH_IN_BITS{1'b0}}),
         .port_B_read_entry_out          (port_B_ram_output),
         .port_B_read_valid_out          ()
     );
