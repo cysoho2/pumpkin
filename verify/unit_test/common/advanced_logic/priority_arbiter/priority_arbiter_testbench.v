@@ -229,12 +229,12 @@ begin
 
     #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "normal request", test_judge? "passed": "failed");
 
-    /*test case 2 */
+    /*test case 1 */
     test_case                                   <= test_case + 1'b1;
     reset_in                                    <= 1'b1;
 
     //init
-    end_read_boundary                           <= {(32){1'b0}};
+    end_read_boundary                           <= NUM_SINGLE_REQUEST_TEST * NUM_REQUEST;
     passed_request_buffer_pointer               <= {(32){1'b0}};
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
     begin
@@ -257,17 +257,24 @@ begin
         sim_write_pointer_array[index]          <= index * NUM_SINGLE_REQUEST_TEST;
     end
 
+    //Conditions of passage
     #(`FULL_CYCLE_DELAY * 2)
-    for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
+
+    //Critical request
+    for (index = 0; index < NUM_SINGLE_REQUEST_TEST; index = index + 1)
     begin
-        #(`FULL_CYCLE_DELAY) passed_request_buffer[index]           <= (request_valid_to_arb_array[index])? request_to_arb_buffer[sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]] : {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
-        end_read_boundary                                           <= (request_valid_to_arb_array[index])? (end_read_boundary + 1'b1) : end_read_boundary;
-        sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]  <= sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST] + 1'b1;
+         passed_request_buffer[index]                                               <= request_to_arb_buffer[index];
+    end
+
+    for (index = NUM_SINGLE_REQUEST_TEST; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
+    begin
+        #(`FULL_CYCLE_DELAY) passed_request_buffer[index]                           <= request_to_arb_buffer[sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)]];
+        sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)]    <= sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)] + 1'b1;
     end
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "normal request", test_judge? "passed": "failed");
+    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "critical request", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY * 10)   $display("\n[info-rtl] simulation comes to the end\n");
     $finish;
