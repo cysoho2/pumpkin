@@ -6,7 +6,7 @@ parameter NUM_REQUEST  = 3;
 parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64;
 parameter NUM_SINGLE_REQUEST_TEST = 16;
 
-parameter FIRST_WAY = 1; 
+parameter FIRST_WAY = 1;
 
 reg                                                     clk_in;
 reg                                                     reset_in;
@@ -24,16 +24,16 @@ reg                                                     issue_ack_to_arb;
 integer                                                 test_case;
 integer                                                 index;
 
-reg                                                     test_judge;                                      
+reg                                                     test_judge;
 
 reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          request_to_arb_buffer   [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0];
 reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          request_from_arb_buffer [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0];
-reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          passed_request_buffer   [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0]; 
- 
-reg     [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0] request_critical_to_arb_array; 
+reg     [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          passed_request_buffer   [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0];
+
+reg     [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0] request_critical_to_arb_array;
 reg     [(NUM_SINGLE_REQUEST_TEST * NUM_REQUEST - 1):0] check_request_judge_array;
 
-reg     [31:0]                                          request_from_arb_buffer_pointer; 
+reg     [31:0]                                          request_from_arb_buffer_pointer;
 reg     [31:0]                                          passed_request_buffer_pointer;
 reg     [31:0]                                          sim_write_pointer_array [(NUM_REQUEST - 1):0];
 
@@ -47,41 +47,41 @@ generate
 genvar gen;
     for (gen = 0; gen < NUM_REQUEST; gen = gen + 1)
     begin
-        
+
         reg [31:0]  request_to_arb_buffer_pointer;
-        
+
         wire        end_write_flag;
         wire        issue_ack_from_arb;
-        
+
         assign packed_end_write_flag[gen]                   = end_write_flag;
         assign end_write_flag                               = (request_to_arb_buffer_pointer == (gen + 1) * NUM_SINGLE_REQUEST_TEST - 1 + 2);
         assign issue_ack_from_arb                           = packed_issue_ack_from_arb[gen];
-        
+
         always @(posedge clk_in)
         begin
             if (reset_in)
             begin
-                packed_request_valid_to_arb[gen]            <= 1'b0;            
+                packed_request_valid_to_arb[gen]            <= 1'b0;
                 packed_request_to_arb[gen]                  <= request_to_arb_buffer[gen * NUM_SINGLE_REQUEST_TEST];
                 packed_request_critical_to_arb[gen]         <= request_critical_to_arb_array[gen * NUM_SINGLE_REQUEST_TEST];
-                
+
                 request_to_arb_buffer_pointer               <= gen * NUM_SINGLE_REQUEST_TEST + 1'b1;
-                
+
             end
             else
             begin
                 if (~end_write_flag)
                 begin
                     packed_request_valid_to_arb[gen]        <= 1'b1;
-                    
+
                     if (issue_ack_from_arb)
                     begin
                         packed_request_to_arb[gen]          <= request_to_arb_buffer[request_to_arb_buffer_pointer];
                         packed_request_critical_to_arb[gen] <= request_critical_to_arb_array[request_to_arb_buffer_pointer];
-                        request_to_arb_buffer_pointer       <= request_to_arb_buffer_pointer + 1'b1; 
+                        request_to_arb_buffer_pointer       <= request_to_arb_buffer_pointer + 1'b1;
                     end
                 end
-                
+
                 //finish writing
                 else
                 begin
@@ -89,8 +89,8 @@ genvar gen;
                 end
             end
         end
-         
-    
+
+
     end
 endgenerate
 
@@ -118,19 +118,19 @@ begin
                 begin
                     request_from_arb_buffer[request_from_arb_buffer_pointer] <= request_from_arb;
                     issue_ack_to_arb                                         <= 1'b1;
-                    
+
                     request_from_arb_buffer_pointer                          <= request_from_arb_buffer_pointer + 1'b1;
                 end
                 else
                 begin
                     request_from_arb_buffer[request_from_arb_buffer_pointer] <= request_from_arb_buffer[request_from_arb_buffer_pointer];
                     issue_ack_to_arb                                         <= issue_ack_to_arb;
-                    
+
                     request_from_arb_buffer_pointer                          <= request_from_arb_buffer_pointer;
                 end
             end
         end
-    end 
+    end
 end
 
 //check
@@ -141,7 +141,7 @@ generate
         begin
             if (reset_in)
             begin
-                check_request_judge_array[gen]                              <= 1'b0; 
+                check_request_judge_array[gen]                              <= 1'b0;
             end
             else if (end_read_flag & (&(packed_end_write_flag)))
             begin
@@ -185,41 +185,41 @@ begin
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      <= 1'b0;
     reset_in                                    <= 1'b1;
-    
+
     //init
     passed_request_buffer_pointer               <= {(32){1'b0}};
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
     begin
         request_to_arb_buffer[index]            <= index;
         request_from_arb_buffer[index]          <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
-        
+
         if (index < NUM_SINGLE_REQUEST_TEST - 1)
         begin
-                request_critical_to_arb_array[index]    <= 1'b1;    
+                request_critical_to_arb_array[index]    <= 1'b1;
         end
         else
         begin
                 request_critical_to_arb_array[index]    <= 1'b0;
         end
     end
-    
+
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST; index = index + 1)
     begin
         sim_write_pointer_array[index]          <= index * NUM_SINGLE_REQUEST_TEST;
     end
-    
+
     #(`FULL_CYCLE_DELAY * 2)
     for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
     begin
         #(`FULL_CYCLE_DELAY) passed_request_buffer[index]           <= request_to_arb_buffer[sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]];
         sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST]  <= sim_write_pointer_array[(FIRST_WAY + index) % NUM_REQUEST] + 1'b1;
     end
-    
+
     test_case                                   <= 1'b0;
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "normal request", test_judge? "passed": "failed");
-    
+    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "critical request", test_judge? "passed": "failed");
+
     #(`FULL_CYCLE_DELAY * 10) $display("\n[info-rtl] simulation comes to the end\n");
     $finish;
 end
