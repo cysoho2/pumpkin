@@ -135,12 +135,6 @@ begin
                 request_out_buffer[request_out_ctr]     <= request_out;
                 request_out_ctr                         <= request_out_ctr + 1;
             end
-            else
-            begin
-            //invalid out
-                request_out_buffer[request_out_ctr]     <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-                request_out_ctr                         <= request_out_ctr + 1;
-            end 
         end
         
         // stop reading
@@ -236,17 +230,23 @@ begin
         #(`FULL_CYCLE_DELAY * 50) //init
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
         begin
-            request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;
-            request_valid_in_buffer[test_gen]     <= 0;
+            request_in_buffer[test_gen]                                 <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;
+            request_valid_in_buffer[test_gen]                           <= 0;
         end
         
         for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
         begin
-            correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            correct_result_buffer[test_gen]                             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
                       
         end        
         
         // test case 0
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
+        end
+        
         for (test_gen = 0; test_gen < QUEUE_SIZE / 2; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
@@ -268,7 +268,12 @@ begin
          #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "normal write/read", ((test_judge == 1'b1))? "passed" : "failed");
         // test case 1
                                 test_case                               <= test_case + 1;
-                                
+ 
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
+        end
+                                                               
         for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
@@ -300,6 +305,11 @@ begin
         // test case 2
         test_case                                                       <= test_case + 1;
         
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
+        end
+           
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
