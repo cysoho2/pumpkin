@@ -33,6 +33,8 @@ module float_point_adder
 
 parameter ROUND_TYPE = "CHOP",
 
+parameter EXTENDED_FRACTION_WIDTH_IN_BITS = OPERAND_FRACTION_WIDTH_IN_BITS * 2 + 2;
+parameter OVERFLOW_BIT_POS = EXTENDED_FRACTION_WIDTH_IN_BITS - 1;
 
 parameter ADD_OPERANTION = 0;
 parameter SUB_OPERANTION = 1;
@@ -55,6 +57,9 @@ reg       [1:0] ctrl_state;
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    baseline_exponent_buffer;
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    fraction_pre_shift_len_buffer;
 
+reg       [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   rounded_product_buffer;
+
+
 //control sign
 reg       operand_buffer_write_enable;
 reg       baseline_exponent_write_enable;
@@ -74,9 +79,9 @@ wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    difference_of_exponents;
 
 wire                                                  operand_0_exponent_is_larger;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_baseline_exponent_buffer;
-
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_fraction_pre_shift_len_buffer;
 
+wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   
 
 assign    valid_input_flag = operand_0_valid_in & operand_1_valid_in;
 
@@ -84,7 +89,6 @@ assign    difference_of_exponents = operand_0_exponent_in - operand_1_exponent_i
 
 assign    operand_0_exponent_is_larger = ~ difference_of_exponents[(OPERAND_EXPONENT_WIDTH_IN_BITS - 1'b1)];
 assign    data_to_baseline_exponent_buffer = (operand_0_exponent_is_larger)? operand_0_exponent_in : operand_1_exponent_in;
-
 assign    data_to_fraction_pre_shift_len_buffer = (operand_0_exponent_is_larger)? difference_of_exponents : ~(difference_of_exponents - 1'b1);
 
 //input
