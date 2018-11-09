@@ -53,7 +53,7 @@ reg       [(OPERAND_FRACTION_WIDTH_IN_BITS - 1):0]    operand_1_fraction_buffer;
 reg       [1:0] ctrl_state;
 
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    baseline_exponent_buffer;
-reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    fraction_pre_shift_len;
+reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    fraction_pre_shift_len_buffer;
 
 //control sign
 reg       operand_buffer_write_enable;
@@ -67,64 +67,63 @@ reg       exponent_out_write_enable;
 reg       fraction_out_write_enable;
 reg       clear_output_enable;
 
+
 wire      valid_input_flag;
 
-wire                                                  operand_0_exponent_is_larger;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    difference_of_exponents;
+
+wire                                                  operand_0_exponent_is_larger;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_baseline_exponent_buffer;
+
+wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_fraction_pre_shift_len_buffer;
+
 
 assign    valid_input_flag = operand_0_valid_in & operand_1_valid_in;
 
 assign    difference_of_exponents = operand_0_exponent_in - operand_1_exponent_in;
-assign    operand_0_exponent_is_larger = ~ difference_of_exponents[(OPERAND_EXPONENT_WIDTH_IN_BITS - 1)];
+
+assign    operand_0_exponent_is_larger = ~ difference_of_exponents[(OPERAND_EXPONENT_WIDTH_IN_BITS - 1'b1)];
 assign    data_to_baseline_exponent_buffer = (operand_0_exponent_is_larger)? operand_0_exponent_in : operand_1_exponent_in;
+
+assign    data_to_fraction_pre_shift_len_buffer = (operand_0_exponent_is_larger)? difference_of_exponents : ~(difference_of_exponents - 1'b1);
 
 //input
 always @(posedge clk_in)
 begin
     if (reset_in)
     begin
+        operantion_mode_buffer  <= 1'b0;
+
         operand_0_sign_buffer <= 1'b0;
         operand_0_fraction_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
 
         operand_1_sign_buffer <= 1'b0;
         operand_1_fraction_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
+
+        baseline_exponent_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
+        fraction_pre_shift_len_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
     end
     else
     begin
-        if (issue_ack_out)
+        if (operand_buffer_write_enable)
         begin
-            issue_ack_out <= 1'b0;
+            operantion_mode_buffer <= operantion_mode_in;
+
+            operand_0_sign_buffer <= operand_0_sign_in;
+            operand_0_fraction_buffer <= operand_0_fraction_in;
+
+            operand_1_sign_buffer <= operand_1_sign_in;
+            operand_1_fraction_buffer <= operand_1_fraction_in;
         end
-        else
+
+        if (baseline_exponent_write_enable)
         begin
-            if (input_enable)
-            begin
-                if (valid_input_flag)
-                begin
-                    issue_ack_out <= 1'b1;
+            baseline_exponent_buffer <= data_to_baseline_exponent_buffer;
+        end
 
-                    operand_0_sign_buffer <= operand_0_sign_in;
-                    operand_0_exponent_buffer <= operand_0_exponent_in;
-                    operand_0_fraction_buffer <= operand_0_fraction_in;
-
-                    operand_1_sign_buffer <= operand_1_sign_in;
-                    operand_1_exponent_buffer <= operand_1_exponent_in;
-                    operand_1_fraction_buffer <= operand_1_fraction_in;
-                end
-            end
-            else
-            begin
-                issue_ack_out <= issue_ack_out;
-
-                operand_0_sign_buffer <= operand_0_sign_buffer;
-                operand_0_exponent_buffer <= operand_0_exponent_buffer;
-                operand_0_fraction_buffer <= operand_0_fraction_buffer;
-
-                operand_1_sign_buffer <= operand_1_sign_buffer;
-                operand_1_exponent_buffer <= operand_1_exponent_buffer;
-                operand_1_fraction_buffer <= operand_1_fraction_buffer;
-            end
+        if (fraction_pre_shift_len_write_enable)
+        begin
+            fraction_pre_shift_len_buffer  <= data_to_baseline_exponent_buffer;
         end
     end
 end
@@ -193,6 +192,8 @@ begin
         end
 
         STATE_PRE_SHIFT: begin
+            issue_ack_out                           <= 1'b1;
+
             operand_buffer_write_enable             <= 1'b1;
             baseline_exponent_write_enable          <= 1'b1;
             fraction_pre_shift_len_write_enable     <= 1'b1;
@@ -206,6 +207,8 @@ begin
         end
 
         STATE_COMPUTE: begin
+            issue_ack_out                           <= 1'b0;
+
             operand_buffer_write_enable             <= 1'b0;
             baseline_exponent_write_enable          <= 1'b0;
             fraction_pre_shift_len_write_enable     <= 1'b0;
@@ -219,6 +222,8 @@ begin
         end
 
         STATE_POST_SHIFT: begin
+            issue_ack_out                           <= 1'b0;
+
             operand_buffer_write_enable             <= 1'b0;
             baseline_exponent_write_enable          <= 1'b0;
             fraction_pre_shift_len_write_enable     <= 1'b0;
@@ -232,6 +237,8 @@ begin
         end
 
         default: begin
+            issue_ack_out                           <= 1'b0;
+
             operand_buffer_write_enable             <= 1'b0;
             baseline_exponent_write_enable          <= 1'b0;
             fraction_pre_shift_len_write_enable     <= 1'b0;
