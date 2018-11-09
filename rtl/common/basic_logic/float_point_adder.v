@@ -10,6 +10,7 @@ module float_point_adder
     input                                                   clk_in,
 
     input                                                   operantion_mode_in,
+    input                                                   float_point_precision_in,
 
     input                                                   operand_0_valid_in,
     input                                                   operand_0_sign_in,
@@ -26,7 +27,7 @@ module float_point_adder
     output reg                                              product_valid_out,
     output reg                                              product_sign_out,
     output reg  [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    product_exponent_out,
-    output reg  [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    product_fraction_out,
+    output reg  [(c - 1):0]    product_fraction_out,
 
     input                                                   issue_ack_in,
 );
@@ -34,7 +35,8 @@ module float_point_adder
 parameter ROUND_TYPE = "CHOP",
 
 parameter EXTENDED_FRACTION_WIDTH_IN_BITS = OPERAND_FRACTION_WIDTH_IN_BITS * 2 + 2;
-parameter OVERFLOW_BIT_POS = EXTENDED_FRACTION_WIDTH_IN_BITS - 1;
+parameter NUMBER_ROUND_INPUT_WIDTH_IN_BITS = EXTENDED_FRACTION_WIDTH_IN_BITS;
+parameter NUMBER_ROUND_OUTPUT_WIDTH_IN_BITS = OPERAND_FRACTION_WIDTH_IN_BITS + 1;
 
 parameter ADD_OPERANTION = 0;
 parameter SUB_OPERANTION = 1;
@@ -57,7 +59,7 @@ reg       [1:0] ctrl_state;
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    baseline_exponent_buffer;
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    fraction_pre_shift_len_buffer;
 
-reg       [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   rounded_product_buffer;
+reg       [(EXTENDED_FRACTION_WIDTH_IN_BITS):0]       rounded_product_buffer;
 
 
 //control sign
@@ -72,6 +74,9 @@ reg       exponent_out_write_enable;
 reg       fraction_out_write_enable;
 reg       clear_output_enable;
 
+wire      [(`FLOAT_POINT_NUMBER_FORMAT_WIDTH - 1):0]  opearand_0_float_point_classify_out;
+wire      [(`FLOAT_POINT_NUMBER_FORMAT_WIDTH - 1):0]  opearand_1_float_point_classify_out;
+
 
 wire      valid_input_flag;
 
@@ -81,7 +86,15 @@ wire                                                  operand_0_exponent_is_larg
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_baseline_exponent_buffer;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_fraction_pre_shift_len_buffer;
 
-wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   
+wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_operand_0_fraction;
+wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_operand_1_fraction;
+wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_product_fraction;
+
+wire      overflow_bit_in_extended_product_fraction;
+
+wire
+wire      [(OPERAND_FRACTION_WIDTH_IN_BITS):0]    data_to_rounded_product_buffer
+
 
 assign    valid_input_flag = operand_0_valid_in & operand_1_valid_in;
 
@@ -90,6 +103,10 @@ assign    difference_of_exponents = operand_0_exponent_in - operand_1_exponent_i
 assign    operand_0_exponent_is_larger = ~ difference_of_exponents[(OPERAND_EXPONENT_WIDTH_IN_BITS - 1'b1)];
 assign    data_to_baseline_exponent_buffer = (operand_0_exponent_is_larger)? operand_0_exponent_in : operand_1_exponent_in;
 assign    data_to_fraction_pre_shift_len_buffer = (operand_0_exponent_is_larger)? difference_of_exponents : ~(difference_of_exponents - 1'b1);
+
+assign    overflow_bit_in_extended_product_fraction = extended_product_fraction[(EXTENDED_FRACTION_WIDTH_IN_BITS - 1)];
+
+assign    data_to_rounded_product_buffer = (operantion_mode_buffer == ADD_OPERANTION) ? (extended_operand_0_fraction + extended_operand_1_fraction) : (extended_operand_0_fraction - extended_operand_1_fraction);
 
 //input
 always @(posedge clk_in)
@@ -132,10 +149,10 @@ begin
     end
 end
 
+//Exception
 
 
-
-//control logic
+//State Machine
 always @(posedge clk_in)
 begin
     if (reset_in)
@@ -176,7 +193,7 @@ begin
     end
 end
 
-//state machine
+//Control Sign
 always @ ( * )
 begin
     case (ctrl_state)
@@ -257,11 +274,43 @@ begin
     endcase
 end
 
+float_point_classify
+#(
+	.FLOAT_POINT_EXPONENT_WIDTH_IN_BITS(`DOUBLE_FLOAT_POINT_EXPONENT_WIDTH_IN_BITS),
+    .FLOAT_POINT_FRACTION_WIDTH_IN_BITS(`DOUBLE_FLOAT_POINT_FRACTION_WIDTH_IN_BITS)
+)
+float_point_classify_operand_0
+(
+    .float_point_precision_in(float_point_precision_in),
+
+    .float_point_sign_bit_in(operand_0_sign_in),
+    .float_point_exponent_in(operand_0_exponent_in),
+    .float_point_fraction_in(operand_0_fraction_in),
+
+	.float_point_classify_out(opearand_0_float_point_classify_out)
+);
+
+float_point_classify
+#(
+	.FLOAT_POINT_EXPONENT_WIDTH_IN_BITS(`DOUBLE_FLOAT_POINT_EXPONENT_WIDTH_IN_BITS),
+    .FLOAT_POINT_FRACTION_WIDTH_IN_BITS(`DOUBLE_FLOAT_POINT_FRACTION_WIDTH_IN_BITS)
+)
+float_point_classify_operand_1
+(
+    .float_point_precision_in(float_point_precision_in),
+
+    .float_point_sign_bit_in(operand_1_sign_in),
+    .float_point_exponent_in(operand_1_exponent_in),
+    .float_point_fraction_in(operand_1_fraction_in),
+
+	.float_point_classify_out(opearand_1_float_point_classify_out)
+);
+
 number_round
 #(
-    .INPUT_WIDTH_IN_BITS(),
-    .OUTPUT_WIDTH_IN_BITS(), //output width should be smaller than input width
-    .ROUND_TYPE()
+    .INPUT_WIDTH_IN_BITS(NUMBER_ROUND_INPUT_WIDTH_IN_BITS),
+    .OUTPUT_WIDTH_IN_BITS(OPERAND_FRACTION_WIDTH_IN_BITS + 1), //output width should be smaller than input width
+    .ROUND_TYPE(ROUND_TYPE)
 )
 number_round
 (
