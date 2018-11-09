@@ -27,7 +27,7 @@ module float_point_adder
     output reg                                              product_valid_out,
     output reg                                              product_sign_out,
     output reg  [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    product_exponent_out,
-    output reg  [(c - 1):0]    product_fraction_out,
+    output reg  [(OPERAND_FRACTION_WIDTH_IN_BITS - 1):0]    product_fraction_out,
 
     input                                                   issue_ack_in,
 );
@@ -60,7 +60,7 @@ reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    baseline_exponent_buffer;
 reg       [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    fraction_pre_shift_len_buffer;
 
 reg       [(EXTENDED_FRACTION_WIDTH_IN_BITS):0]       rounded_product_buffer;
-
+reg                                                   product_sign_buffer;
 
 //control sign
 reg       operand_buffer_write_enable;
@@ -68,20 +68,17 @@ reg       baseline_exponent_write_enable;
 reg       fraction_pre_shift_len_write_enable;
 
 reg       rounded_product_buffer_write_enable;
+reg       product_sign_buffer_write_enable;
 
-reg       sign_out_write_enable;
-reg       exponent_out_write_enable;
-reg       fraction_out_write_enable;
+reg       product_output_write_enable;
 reg       clear_output_enable;
 
 wire      [(`FLOAT_POINT_NUMBER_FORMAT_WIDTH - 1):0]  opearand_0_float_point_classify_out;
 wire      [(`FLOAT_POINT_NUMBER_FORMAT_WIDTH - 1):0]  opearand_1_float_point_classify_out;
 
-
 wire      valid_input_flag;
 
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    difference_of_exponents;
-
 wire                                                  operand_0_exponent_is_larger;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_baseline_exponent_buffer;
 wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_fraction_pre_shift_len_buffer;
@@ -89,24 +86,33 @@ wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_fraction_pre_shift
 wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_operand_0_fraction;
 wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_operand_1_fraction;
 wire      [(EXTENDED_FRACTION_WIDTH_IN_BITS - 1):0]   extended_product_fraction;
-
 wire      overflow_bit_in_extended_product_fraction;
 
-wire
-wire      [(OPERAND_FRACTION_WIDTH_IN_BITS):0]    data_to_rounded_product_buffer
+wire      [(OPERAND_FRACTION_WIDTH_IN_BITS):0]        data_to_rounded_product_buffer;
+wire                                                  data_to_product_sign_buffer;
+
+wire                                                  data_to_product_sign_out;
+wire      [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    data_to_product_exponent_out;
+wire      [(OPERAND_FRACTION_WIDTH_IN_BITS - 1):0]    data_to_product_fraction_out;
 
 
 assign    valid_input_flag = operand_0_valid_in & operand_1_valid_in;
 
 assign    difference_of_exponents = operand_0_exponent_in - operand_1_exponent_in;
-
 assign    operand_0_exponent_is_larger = ~ difference_of_exponents[(OPERAND_EXPONENT_WIDTH_IN_BITS - 1'b1)];
 assign    data_to_baseline_exponent_buffer = (operand_0_exponent_is_larger)? operand_0_exponent_in : operand_1_exponent_in;
 assign    data_to_fraction_pre_shift_len_buffer = (operand_0_exponent_is_larger)? difference_of_exponents : ~(difference_of_exponents - 1'b1);
 
+assign    extended_operand_0_fraction = (operand_0_exponent_is_larger)? operand_0_fraction_buffer : (operand_0_fraction_buffer >> data_to_fraction_pre_shift_len_buffer);
+assign    extended_operand_1_fraction = (~operand_0_exponent_is_larger)? operand_1_fraction_buffer : (operand_1_fraction_buffer >> data_to_fraction_pre_shift_len_buffer);
+assign    extended_product_fraction = (operantion_mode_buffer == ADD_OPERANTION) ? (extended_operand_0_fraction + extended_operand_1_fraction) : (extended_operand_0_fraction - extended_operand_1_fraction);
 assign    overflow_bit_in_extended_product_fraction = extended_product_fraction[(EXTENDED_FRACTION_WIDTH_IN_BITS - 1)];
 
-assign    data_to_rounded_product_buffer = (operantion_mode_buffer == ADD_OPERANTION) ? (extended_operand_0_fraction + extended_operand_1_fraction) : (extended_operand_0_fraction - extended_operand_1_fraction);
+assign    data_to_product_sign_buffer = (operand_0_exponent_is_larger)? operand_0_sign_buffer;
+
+assign    data_to_product_sign_out = ;
+assign    data_to_product_exponent_out;
+assign    data_to_product_fraction_out;
 
 //input
 always @(posedge clk_in)
@@ -123,6 +129,12 @@ begin
 
         baseline_exponent_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
         fraction_pre_shift_len_buffer <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
+
+        rounded_product_buffer <= {(EXTENDED_FRACTION_WIDTH_IN_BITS){1'b0}};
+
+        product_sign_out <= 1'b0;
+        product_exponent_out <= {(OPERAND_EXPONENT_WIDTH_IN_BITS){1'b0}};
+        product_fraction_out <= {(OPERAND_FRACTION_WIDTH_IN_BITS){1'b0}};
     end
     else
     begin
@@ -144,7 +156,24 @@ begin
 
         if (fraction_pre_shift_len_write_enable)
         begin
-            fraction_pre_shift_len_buffer  <= data_to_baseline_exponent_buffer;
+            fraction_pre_shift_len_buffer  <= data_to_fraction_pre_shift_len_buffer;
+        end
+
+        if (rounded_product_buffer_write_enable)
+        begin
+            rounded_product_buffer <= data_to_rounded_product_buffer;
+        end
+
+        if (product_sign_buffer_write_enable)
+        begin
+            product_sign_buffer <= data_to_product_sign_buffer;
+        end
+
+        if (product_output_write_enable)
+        begin
+            product_sign_out <= data_to_product_sign_out;
+            product_exponent_out <= data_to_product_exponent_out;
+            product_fraction_out <= data_to_product_fraction_out;
         end
     end
 end
@@ -182,7 +211,10 @@ begin
             end
 
             STATE_POST_SHIFT: begin
-                ctrl_state <= STATE_PRE_SHIFT
+                if (issue_ack_in)
+                begin
+                    ctrl_state <= STATE_PRE_SHIFT;
+                end
             end
 
             default: begin
@@ -205,11 +237,10 @@ begin
             fraction_pre_shift_len_write_enable     <= 1'b0;
 
             rounded_product_buffer_write_enable     <= 1'b0;
+            product_sign_buffer_write_enable        <= 1'b0;
 
-            sign_out_write_enable                   <= 1'b0;
-            exponent_out_write_enable               <= 1'b0;
-            fraction_out_write_enable               <= 1'b0;
-            clear_output_enable                     <= 1'b0;
+            product_output_write_enable             <= 1'b0;
+            clear_output_enable                     <= 1'b1;
         end
 
         STATE_PRE_SHIFT: begin
@@ -220,11 +251,10 @@ begin
             fraction_pre_shift_len_write_enable     <= 1'b1;
 
             rounded_product_buffer_write_enable     <= 1'b0;
+            product_sign_buffer_write_enable        <= 1'b0;
 
-            sign_out_write_enable                   <= 1'b0;
-            exponent_out_write_enable               <= 1'b0;
-            fraction_out_write_enable               <= 1'b0;
-            clear_output_enable                     <= 1'b0;
+            product_output_write_enable             <= 1'b0;
+            clear_output_enable                     <= 1'b1;
         end
 
         STATE_COMPUTE: begin
@@ -235,11 +265,10 @@ begin
             fraction_pre_shift_len_write_enable     <= 1'b0;
 
             rounded_product_buffer_write_enable     <= 1'b1;
+            product_sign_buffer_write_enable        <= 1'b1;
 
-            sign_out_write_enable                   <= 1'b0;
-            exponent_out_write_enable               <= 1'b0;
-            fraction_out_write_enable               <= 1'b0;
-            clear_output_enable                     <= 1'b0;
+            product_output_write_enable             <= 1'b0;
+            clear_output_enable                     <= 1'b1;
         end
 
         STATE_POST_SHIFT: begin
@@ -250,11 +279,10 @@ begin
             fraction_pre_shift_len_write_enable     <= 1'b0;
 
             rounded_product_buffer_write_enable     <= 1'b0;
+            product_sign_buffer_write_enable        <= 1'b0;
 
-            sign_out_write_enable                   <= 1'b1;
-            exponent_out_write_enable               <= 1'b1;
-            fraction_out_write_enable               <= 1'b1;
-            clear_output_enable                     <= 1'b1;
+            product_output_write_enable             <= 1'b1;
+            clear_output_enable                     <= 1'b0;
         end
 
         default: begin
@@ -265,11 +293,10 @@ begin
             fraction_pre_shift_len_write_enable     <= 1'b0;
 
             rounded_product_buffer_write_enable     <= 1'b0;
+            product_sign_buffer_write_enable        <= 1'b0;
 
-            sign_out_write_enable                   <= 1'b0;
-            exponent_out_write_enable               <= 1'b0;
-            fraction_out_write_enable               <= 1'b0;
-            clear_output_enable                     <= 1'b0;
+            product_output_write_enable             <= 1'b0;
+            clear_output_enable                     <= 1'b1;
         end
     endcase
 end
@@ -309,13 +336,13 @@ float_point_classify_operand_1
 number_round
 #(
     .INPUT_WIDTH_IN_BITS(NUMBER_ROUND_INPUT_WIDTH_IN_BITS),
-    .OUTPUT_WIDTH_IN_BITS(OPERAND_FRACTION_WIDTH_IN_BITS + 1), //output width should be smaller than input width
+    .OUTPUT_WIDTH_IN_BITS(NUMBER_ROUND_OUTPUT_WIDTH_IN_BITS), //output width should be smaller than input width
     .ROUND_TYPE(ROUND_TYPE)
 )
 number_round
 (
-    .original_data_in(),
-    .rounded_data_out();
+    .original_data_in(extended_product_fraction),
+    .rounded_data_out(data_to_rounded_product_buffer);
 );
 
 endmodule
