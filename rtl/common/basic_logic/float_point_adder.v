@@ -29,7 +29,7 @@ module float_point_adder
     output reg  [(OPERAND_EXPONENT_WIDTH_IN_BITS - 1):0]    product_exponent_out,
     output reg  [(OPERAND_FRACTION_WIDTH_IN_BITS - 1):0]    product_fraction_out,
 
-    input                                                   issue_ack_in,
+    input                                                   issue_ack_in
 );
 
 parameter ROUND_TYPE = "CHOP",

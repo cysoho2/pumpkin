@@ -87,7 +87,7 @@
 
         `define UNIFIED_CACHE_PACKET_WIDTH_IN_BITS              (`UNIFIED_CACHE_PACKET_CACHEABLE_POS - `UNIFIED_CACHE_PACKET_ADDR_POS_LO + 1)
 
-        // Float-point Number
+        // Float-Point Number
         `define FLOAT_POINT_NUMBER_PRECISION_TYPE_WIDTH         1
         `define FLOAT_POINT_NUMBER_FORMAT_WIDTH                 10
 
@@ -124,6 +124,23 @@
         `define DOUBLE_FLOAT_POINT_EXPONENT_POS_LO              (DOUBLE_FLOAT_POINT_FRACTION_ADDR_POS_HI + 1)
         `define DOUBLE_FLOAT_POINT_EXPONENT_POS_HI              (DOUBLE_FLOAT_POINT_EXPONENT_ADDR_POS_LO + DOUBLE_FLOAT_POINT_EXPONENT_WIDTH_IN_BITS - 1)
         `define DOUBLE_FLOAT_POINT_SIGN_POS                     (DOUBLE_FLOAT_POINT_EXPONENT_POS_HI + 1)
+
+        // Float-Point NUmber Rounding Mode Encoding
+        `define FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS     3
+        `define FLOAT_POINT_ROUNDING_MODE_RNE                   ((FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS)'b000)    // Round to Nearest, ties to Even
+        `define FLOAT_POINT_ROUNDING_MODE_RTZ                   ((FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS)'b001)    // Round towards Zero
+        `define FLOAT_POINT_ROUNDING_MODE_RDN                   ((FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS)'b010)    // Round Down
+        `define FLOAT_POINT_ROUNDING_MODE_RUP                   ((FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS)'b011)    // Round Up
+        `define FLOAT_POINT_ROUNDING_MODE_RMM                   ((FLOAT_POINT_ROUNDING_MODE_FIELD_LEN_IN_BITS)'b100)    // Round to Nearest, ties to Max Magnitude
+
+        // Float-Point Number Accrued Exception Flag Encoding
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS 5
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_NV                ((FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS)'b1_0000)     // Invalid Operation
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_DZ                ((FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS)'b0_1000)     // Divide by Zero
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_OF                ((FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS)'b0_0100)     // Overflow
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_UF                ((FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS)'b0_0010)     // Underflow
+        `define FLOAT_POINT_ACCRUED_EXCEPTION_NX                ((FLOAT_POINT_ACCRUED_EXCEPTION_FIELD_LEN_IN_BITS)'b0_0001)     // Inexact
+
 
     `endif
 `endif
