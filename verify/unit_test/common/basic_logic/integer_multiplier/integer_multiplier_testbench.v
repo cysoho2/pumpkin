@@ -30,15 +30,28 @@ reg  issue_ack_from_mul;
 integer operand_index;
 
 reg [31:0] test_case;
-reg [5:0] multiplicand_data_pointer;
-reg [5:0] multiplier_data_pointer;
-reg [(NUM_TEST_DIGIT - 1):0] test_operand_buffer [(OPERAND_WIDTH_IN_BITS - 1):0];
+reg test_judge;
+
+reg [5:0] operand_data_pointer;
+reg [5:0] product_data_pointer;
+
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplier_data_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplicand_data_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_product_data_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] data_from_mul_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(NUM_TEST_DIGIT - 1):0] match_array;
+
+wire read_end_flag;
+wire write_and_flag;
 
 wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplicand_data_from_buffer;
 wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplier_data_from_buffer;
 
-assign test_multiplier_data_from_buffer = test_operand_buffer[multiplier_data_pointer];
-assign test_multiplicand_data_from_buffer = test_operand_buffer[multiplicand_data_pointer];
+assign read_end_flag = (product_data_pointer == NUM_TEST_DIGIT);
+assign write_and_flag = (operand_data_pointer == NUM_TEST_DIGIT);
+
+assign test_multiplier_data_from_buffer = test_operand_buffer[operand_data_pointer];
+assign test_multiplicand_data_from_buffer = test_operand_buffer[operand_data_pointer];
 
 //write
 always @(posedge clk_in)
@@ -48,26 +61,74 @@ begin
         multiplier_in <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
         multiplicand_in <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
 
-        multiplier_data_pointer <= 5'b0;
-        multiplicand_data_pointer <= NUM_TEST_DIGIT - 5'b0;
+        operand_data_pointer <= 5'b0;
     end
     else
     begin
-        multiplier_in <= test_multiplier_data_from_buffer;
-        multiplicand_in <= test_multiplicand_data_from_buffer;
-
-        if (issue_ack_from_mul)
+        if (~write_and_flag)
         begin
-            multiplier_data_pointer <= multiplier_data_pointer + 1'b1;
-            test_multiplicand_data_from_buffer <= test_multiplicand_data_from_buffer - 1'b1;
+            multiplier_in <= test_multiplier_data_from_buffer;
+            multiplicand_in <= test_multiplicand_data_from_buffer;
+
+            if (issue_ack_from_mul)
+            begin
+                operand_data_pointer <= operand_data_pointer + 1'b1;
+            end
         end
     end
 end
 
 //read
+always @ (posedge clk_in)
+begin
+    if (reset_in)
+    begin
+        product_data_pointer <= 0;
+    end
+    else
+    begin
+        if (~read_end_flag)
+        begin
+            if (issue_ack_to_mul)
+            begin
+                issue_ack_to_mul <= 1'b0;
+            end
+            else
+            begin
+                if (product_valid_out)
+                begin
+                    data_from_mul_buffer[product_data_pointer] <= product_out;
+                    product_data_pointer <= product_data_pointer + 1'b1;
+                end
+            end
+        end
+    end
+end
 
 //check
+always @ (posedge clk_in)
+begin
+    if (reset_in)
+    begin
+        test_judge <= 0;
+    end
+    else
+    begin
+        for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1)
+        begin
+            match_array[operand_index] <= data_from_mul_buffer[operand_index] == test_product_data_buffer[operand_index];
+        end
 
+        if (&match_array)
+        begin
+            test_judge <= 1'b1;
+        end
+        else
+        begin
+            test_judge <= 1'b0;
+        end
+    end
+end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
@@ -114,7 +175,12 @@ begin
 
     for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b0)
     begin
-        test_operand_buffer[operand_index] <= {{(NUM_TEST_DIGIT - operand_index){1'b1}}, {(operand_index){1'b0}}};
+        test_multiplier_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT - operand_index){1'b1}}, {(operand_index){1'b0}}};
+        test_multiplicand_data_buffer[operand_index] <= {{(operand_index){1'b1}}, {(NUM_TEST_DIGIT - operand_index){1'b0}}};
+        test_product_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT - operand_index){1'b1}}, {(operand_index){1'b0}}} * {{(operand_index){1'b1}}, {(NUM_TEST_DIGIT - operand_index){1'b0}}};
+        data_from_mul_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b0}};
+
+        match_array[operand_index] <= 0;
     end
 
     //begin
@@ -124,7 +190,7 @@ begin
     //end
 
     $display("\n[info-testbench] simulation for %m begins now");
-
+    #(`FULL_CYCLE_DELAY * 200)  $display("%s", test_judge? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY * 5)  $display("\n[info-testbench] simulation for %m comes to the end\n");
                               $finish;
