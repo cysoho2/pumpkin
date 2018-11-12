@@ -85,7 +85,7 @@ begin
     end
 end
 
-if(WITH_VALID_REG_ARRAY == "Yes" && CONFIG_MODE == "WriteFirst")
+else if(WITH_VALID_REG_ARRAY == "Yes" && CONFIG_MODE == "WriteFirst")
 begin
     reg [NUM_SET - 1 : 0] valid_array;
 
