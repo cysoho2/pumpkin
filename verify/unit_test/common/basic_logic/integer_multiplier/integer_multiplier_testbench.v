@@ -60,6 +60,9 @@ begin
     begin
         multiplicand_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
         multiplier_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        
+        multiplier_valid_to_mul <= 1'b0;
+        multiplicand_valid_to_mul <= 1'b0;
 
         operand_data_pointer <= 5'b0;
     end
@@ -69,11 +72,20 @@ begin
         begin
             multiplier_to_mul <= test_multiplier_data_from_buffer;
             multiplicand_to_mul <= test_multiplicand_data_from_buffer;
+            multiplier_valid_to_mul <= 1'b1;
+            multiplicand_valid_to_mul <= 1'b1;
 
             if (issue_ack_from_mul)
             begin
                 operand_data_pointer <= operand_data_pointer + 1'b1;
             end
+        end
+        else
+        begin
+            multiplier_to_mul <= 0;
+            multiplicand_to_mul <= 0;
+            multiplier_valid_to_mul <= 1'b0;
+            multiplicand_valid_to_mul <= 1'b0;        
         end
     end
 end
@@ -84,6 +96,7 @@ begin
     if (reset_in)
     begin
         product_data_pointer <= 0;
+        issue_ack_to_mul <= 0;
     end
     else
     begin
@@ -97,6 +110,7 @@ begin
             begin
                 if (product_valid_from_mul)
                 begin
+                    issue_ack_to_mul <= 1'b1;
                     data_from_mul_buffer[product_data_pointer] <= product_from_mul;
                     product_data_pointer <= product_data_pointer + 1'b1;
                 end
@@ -168,33 +182,33 @@ begin
         $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, integer_multiplier_testbench);
     `endif
-
+    
+    $display("\n[info-testbench] simulation for %m begins now");
     //initial
     clk_in <= 1'b0;
     reset_in <= 1'b1;
 
-    for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b0)
+    test_case <= 0;
+    for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b1)
     begin
         test_multiplier_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index);
         test_multiplicand_data_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index);
         test_product_data_buffer[operand_index] <= ({{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index)) * ({(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index));
+
         data_from_mul_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b0}};
 
         match_array[operand_index] <= 0;
-    end
+   end
 
-    //begin
-    #(`FULL_CYCLE_DELAY * 5) test_case <= 0;
+
+    #(`FULL_CYCLE_DELAY * 5)
     reset_in <= 1'b0;
 
-    //end
 
-    $display("\n[info-testbench] simulation for %m begins now");
-    #(`FULL_CYCLE_DELAY * 200)  $display("%s", test_judge? "passed" : "failed");
+    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "multiplier", test_judge ? "passed" : "failed");
 
                                 
     #(`FULL_CYCLE_DELAY * 5)  $display("\n[info-testbench] simulation for %m comes to the end\n");
-                              $stop;
                               $finish;
 
 end
