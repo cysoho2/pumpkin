@@ -1,9 +1,9 @@
-`include parameters.h
+`include "parameters.h"
 
 module float_point_adder
 #(
-    parameter OPERAND_EXPONENT_WIDTH_IN_BITS = `DOUBLE_POINT_NUMBER_EXPONENT_WIDTH_IN_BITS,
-    parameter OPERAND_FRACTION_WIDTH_IN_BITS = `DOUBLE_POINT_NUMBER_FRACTION_WIDTH_IN_BITS
+    parameter OPERAND_EXPONENT_WIDTH_IN_BITS = `DOUBLE_FLOAT_POINT_EXPONENT_WIDTH_IN_BITS,
+    parameter OPERAND_FRACTION_WIDTH_IN_BITS = `DOUBLE_FLOAT_POINT_FRACTION_WIDTH_IN_BITS
 )
 (
     input                                                   reset_in,
@@ -32,7 +32,7 @@ module float_point_adder
     input                                                   issue_ack_in
 );
 
-parameter ROUND_TYPE = "CHOP",
+parameter ROUND_TYPE = "CHOP";
 
 parameter EXTENDED_FRACTION_WIDTH_IN_BITS = OPERAND_FRACTION_WIDTH_IN_BITS * 2 + 2;
 parameter NUMBER_ROUND_INPUT_WIDTH_IN_BITS = EXTENDED_FRACTION_WIDTH_IN_BITS;
@@ -41,12 +41,12 @@ parameter NUMBER_ROUND_OUTPUT_WIDTH_IN_BITS = OPERAND_FRACTION_WIDTH_IN_BITS + 1
 parameter ADD_OPERANTION = 0;
 parameter SUB_OPERANTION = 1;
 
-parameter STATE_WAIT_RESET  = 0;
+parameter STATE_RESET  = 0;
 parameter STATE_PRE_SHIFT   = 1;
 parameter STATE_COMPUTE     = 2;
 parameter STATE_POST_SHIFT  = 3;
 
-reg                                                   operantion_mode_buffer,
+reg                                                   operantion_mode_buffer;
 
 reg                                                   operand_0_sign_buffer;
 reg       [(OPERAND_FRACTION_WIDTH_IN_BITS - 1):0]    operand_0_fraction_buffer;
@@ -108,11 +108,11 @@ assign    extended_operand_1_fraction = (~operand_0_exponent_is_larger)? operand
 assign    extended_product_fraction = (operantion_mode_buffer == ADD_OPERANTION) ? (extended_operand_0_fraction + extended_operand_1_fraction) : (extended_operand_0_fraction - extended_operand_1_fraction);
 assign    overflow_bit_in_extended_product_fraction = extended_product_fraction[(EXTENDED_FRACTION_WIDTH_IN_BITS - 1)];
 
-assign    data_to_product_sign_buffer = (operand_0_exponent_is_larger)? operand_0_sign_buffer;
+//assign    data_to_product_sign_buffer = (operand_0_exponent_is_larger)? operand_0_sign_buffer;
 
-assign    data_to_product_sign_out = ;
-assign    data_to_product_exponent_out;
-assign    data_to_product_fraction_out;
+//assign    data_to_product_sign_out = ;
+//assign    data_to_product_exponent_out;
+//assign    data_to_product_fraction_out;
 
 //input
 always @(posedge clk_in)
@@ -342,7 +342,7 @@ number_round
 number_round
 (
     .original_data_in(extended_product_fraction),
-    .rounded_data_out(data_to_rounded_product_buffer);
+    .rounded_data_out(data_to_rounded_product_buffer)
 );
 
 endmodule

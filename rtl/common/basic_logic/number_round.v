@@ -5,17 +5,20 @@ module number_round
     parameter ROUND_TYPE = "CHOP"
 )
 (
-    input [(INPUT_WIDTH_IN_BITS - 1):0] original_data_in;
+    input [(INPUT_WIDTH_IN_BITS - 1):0] original_data_in,
 
-    output reg is_rounded;
-    output reg [(OUTPUT_WIDTH_IN_BITS - 1):0] rounded_data_out;
+    output reg is_rounded,
+    output reg [(OUTPUT_WIDTH_IN_BITS - 1):0] rounded_data_out
 );
 
 generate
 
     if (ROUND_TYPE == "CHOP")
     begin
-        rounded_data_out <= original_data_in[(INPUT_WIDTH_IN_BITS - 1):(INPUT_WIDTH_IN_BITS - OUTPUT_WIDTH_IN_BITS)];
+        always@(*)
+        begin
+            rounded_data_out <= original_data_in[(INPUT_WIDTH_IN_BITS - 1):(INPUT_WIDTH_IN_BITS - OUTPUT_WIDTH_IN_BITS)];
+        end
     end
 
 endgenerate

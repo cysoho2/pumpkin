@@ -1,13 +1,11 @@
 module integer_multiplier
 #(
-    parameter OPERAND_WIDTH_IN_BITS = 64;
-    parameter PRODUCT_WIDTH_IN_BITS = 64;
+    parameter OPERAND_WIDTH_IN_BITS = 64,
+    parameter PRODUCT_WIDTH_IN_BITS = 64
 )
 (
     input reset_in,
     input clk_in,
-
-    output reg multiply_exception_out,
 
     input multiplicand_valid_in,
     input multiplicand_sign_in,
@@ -23,7 +21,9 @@ module integer_multiplier
     output reg product_sign_out,
     output [(PRODUCT_WIDTH_IN_BITS - 1):0] product_out,
 
-    input issue_ack_in
+    input issue_ack_in,
+    
+    output reg multiply_exception_out
 );
 
 parameter PRODUCT_BUFFER_WIDTH_IN_BITS = OPERAND_WIDTH_IN_BITS * 2;

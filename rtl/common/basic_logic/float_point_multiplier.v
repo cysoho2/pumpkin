@@ -1,9 +1,9 @@
-`include parameter.h
+`include "parameters.h"
 
 module float_point_multiplier
 #(
-    parameter OPERAND_EXPONENT_WIDTH_IN_BITS = `DOUBLE_POINT_NUMBER_EXPONENT_WIDTH_IN_BITS,
-    parameter OPERAND_FRACTION_WIDTH_IN_BITS = `DOUBLE_POINT_NUMBER_FRACTION_WIDTH_IN_BITS
+    parameter OPERAND_EXPONENT_WIDTH_IN_BITS = `DOUBLE_FLOAT_POINT_EXPONENT_WIDTH_IN_BITS,
+    parameter OPERAND_FRACTION_WIDTH_IN_BITS = `DOUBLE_FLOAT_POINT_FRACTION_WIDTH_IN_BITS
 )
 (
     input                                                               reset_in,
@@ -39,7 +39,7 @@ parameter MUL_OPERAND_WIDTH_IN_BITS = (OPERAND_FRACTION_WIDTH_IN_BITS + 1'b1) * 
 
 integer_multiplier
 #(
-    .OPERAND_WIDTH_IN_BITS(MUL_DIV_OPERAND_WIDTH_IN_BITS)
+    .OPERAND_WIDTH_IN_BITS(MUL_OPERAND_WIDTH_IN_BITS)
 )
 (
     .reset_in(reset_in),

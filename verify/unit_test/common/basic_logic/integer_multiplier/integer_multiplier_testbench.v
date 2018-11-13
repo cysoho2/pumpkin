@@ -9,23 +9,23 @@ parameter NUM_TEST_DIGIT = OPERAND_WIDTH_IN_BITS;
 reg  reset_in;
 reg  clk_in;
 
-wire multiply_exception_out;
+wire multiply_exception_from_mul;
 
-reg  multiplicand_valid_from_mul;
-reg  multiplicand_sign_from_mul;
-reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplicand_from_mul;
+reg  multiplicand_valid_to_mul;
+reg  multiplicand_sign_to_mul;
+reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplicand_to_mul;
 
-reg  multiplier_valid_from_mul;
-reg  multiplier_sign_from_mul;
-reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplier_from_mul;
+reg  multiplier_valid_to_mul;
+reg  multiplier_sign_to_mul;
+reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplier_to_mul;
 
-wire issue_ack_to_mul;
+wire issue_ack_from_mul;
 
-wire product_valid_to_mul;
-wire product_sign_to_mul;
-wire [(PRODUCT_WIDTH_IN_BITS - 1):0] product_to_mul;
+wire product_valid_from_mul;
+wire product_sign_from_mul;
+wire [(PRODUCT_WIDTH_IN_BITS - 1):0] product_from_mul;
 
-reg  issue_ack_from_mul;
+reg  issue_ack_to_mul;
 
 integer operand_index;
 
@@ -50,16 +50,16 @@ wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplier_data_from_buffer;
 assign read_end_flag = (product_data_pointer == NUM_TEST_DIGIT);
 assign write_and_flag = (operand_data_pointer == NUM_TEST_DIGIT);
 
-assign test_multiplier_data_from_buffer = test_operand_buffer[operand_data_pointer];
-assign test_multiplicand_data_from_buffer = test_operand_buffer[operand_data_pointer];
+assign test_multiplier_data_from_buffer = test_multiplier_data_buffer[operand_data_pointer];
+assign test_multiplicand_data_from_buffer = test_multiplicand_data_buffer[operand_data_pointer];
 
 //write
 always @(posedge clk_in)
 begin
     if (reset_in)
     begin
-        multiplier_in <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-        multiplicand_in <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        multiplicand_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        multiplier_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
 
         operand_data_pointer <= 5'b0;
     end
@@ -67,8 +67,8 @@ begin
     begin
         if (~write_and_flag)
         begin
-            multiplier_in <= test_multiplier_data_from_buffer;
-            multiplicand_in <= test_multiplicand_data_from_buffer;
+            multiplier_to_mul <= test_multiplier_data_from_buffer;
+            multiplicand_to_mul <= test_multiplicand_data_from_buffer;
 
             if (issue_ack_from_mul)
             begin
@@ -95,9 +95,9 @@ begin
             end
             else
             begin
-                if (product_valid_out)
+                if (product_valid_from_mul)
                 begin
-                    data_from_mul_buffer[product_data_pointer] <= product_out;
+                    data_from_mul_buffer[product_data_pointer] <= product_from_mul;
                     product_data_pointer <= product_data_pointer + 1'b1;
                 end
             end
@@ -134,31 +134,31 @@ always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
 integer_multiplier
 #(
-    .OPERAND_WIDTH_IN_BITS(OPERAND_WIDTH_IN_BITS);
-    .PRODUCT_WIDTH_IN_BITS(PRODUCT_WIDTH_IN_BITS);
+    .OPERAND_WIDTH_IN_BITS(OPERAND_WIDTH_IN_BITS),
+    .PRODUCT_WIDTH_IN_BITS(PRODUCT_WIDTH_IN_BITS)
 )
 integer_multiplier
 (
     .reset_in(reset_in),
     .clk_in(clk_in),
 
-    .multiply_exception_out(multiply_exception_to_mul),
+    .multiplicand_valid_in(multiplicand_valid_to_mul),
+    .multiplicand_sign_in(multiplicand_sign_to_mul),
+    .multiplicand_in(multiplicand_to_mul),
 
-    .multiplicand_valid_in(multiplicand_valid_from_mul),
-    .multiplicand_sign_in(multiplicand_sign_from_mul),
-    .multiplicand_in(multiplicand_from_mul),
+    .multiplier_valid_in(multiplier_valid_to_mul),
+    .multiplier_sign_in(multiplier_sign_to_mul),
+    .multiplier_in(multiplier_to_mul),
 
-    .multiplier_valid_in(multiplier_valid_from_mul),
-    .multiplier_sign_in(multiplier_sign_from_mul),
-    .multiplier_in(multiplier_from_mul),
+    .issue_ack_out(issue_ack_from_mul),
 
-    .issue_ack_out(issue_ack_to_mul),
+    .product_valid_out(product_valid_from_mul),
+    .product_sign_out(product_sign_from_mul),
+    .product_out(product_from_mul),
 
-    .product_valid_out(product_valid_to_mul),
-    .product_sign_out(product_sign_to_mul),
-    .product_out(product_to_mul),
-
-    .issue_ack_in(issue_ack_from_mul)
+    .issue_ack_in(issue_ack_to_mul),
+    
+    .multiply_exception_out(multiply_exception_from_mul)
 );
 
 initial
@@ -175,9 +175,9 @@ begin
 
     for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b0)
     begin
-        test_multiplier_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT - operand_index){1'b1}}, {(operand_index){1'b0}}};
-        test_multiplicand_data_buffer[operand_index] <= {{(operand_index){1'b1}}, {(NUM_TEST_DIGIT - operand_index){1'b0}}};
-        test_product_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT - operand_index){1'b1}}, {(operand_index){1'b0}}} * {{(operand_index){1'b1}}, {(NUM_TEST_DIGIT - operand_index){1'b0}}};
+        test_multiplier_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index);
+        test_multiplicand_data_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index);
+        test_product_data_buffer[operand_index] <= ({{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index)) * ({(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index));
         data_from_mul_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b0}};
 
         match_array[operand_index] <= 0;
@@ -192,7 +192,9 @@ begin
     $display("\n[info-testbench] simulation for %m begins now");
     #(`FULL_CYCLE_DELAY * 200)  $display("%s", test_judge? "passed" : "failed");
 
+                                
     #(`FULL_CYCLE_DELAY * 5)  $display("\n[info-testbench] simulation for %m comes to the end\n");
+                              $stop;
                               $finish;
 
 end

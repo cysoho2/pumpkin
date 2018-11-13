@@ -1,4 +1,4 @@
-`include parameters.h
+`include "parameters.h"
 
 module float_point_classify
 #(
@@ -24,7 +24,7 @@ wire        is_negetive;
 wire        is_exponent_all_deassert;
 wire        is_exponent_all_assert;
 wire        is_fraction_all_deassert;
-wire        is_exponent_all_assert;
+wire        is_fraction_all_assert;
 
 wire        is_fraction_most_significant_assert;
 
@@ -52,7 +52,7 @@ begin
 
         else if (is_negetive & is_exponent_all_deassert & ~is_fraction_all_deassert)
         begin
-            float_point_classify_out                                    <= 'FLOAT_POINT_FORMAT_NEGATIVE_SUBNORMAL_NUMBER;
+            float_point_classify_out                                    <= `FLOAT_POINT_FORMAT_NEGATIVE_SUBNORMAL_NUMBER;
         end
 
         else if (is_negetive & is_exponent_all_deassert & is_fraction_all_deassert)
@@ -80,7 +80,7 @@ begin
             float_point_classify_out                                    <= `FLOAT_POINT_FORMAT_POSITIVE_INFINITY;
         end
 
-        else if (is_exponent_all_assert & ~is_fraction_most_significant_assert ~is_fraction_all_deassert)
+        else if (is_exponent_all_assert & ~is_fraction_most_significant_assert & ~is_fraction_all_deassert)
         begin
             float_point_classify_out                                    <= `FLOAT_POINT_FORMAT_SIGNALING_NAN;
         end
