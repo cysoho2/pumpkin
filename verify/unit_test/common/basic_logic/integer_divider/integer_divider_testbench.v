@@ -3,28 +3,30 @@
 module integer_divider_testbench();
 
 parameter OPERAND_WIDTH_IN_BITS = 64;
-parameter NUM_TEST_DIGIT = OPERAND_WIDTH_IN_BITS;
+parameter NUM_TEST_DIGIT = OPERAND_WIDTH_IN_BITS / 4;
 
 reg  reset_in;
 reg  clk_in;
 
-wire multiply_exception_from_mul;
+reg valid_to_div;
+reg dividend_sign_to_div;
+reg  [(OPERAND_WIDTH_IN_BITS - 1):0] dividend_to_div;
 
-reg  multiplicand_valid_to_mul;
-reg  multiplicand_sign_to_mul;
-reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplicand_to_mul;
+reg  divisor_sign_to_div;
+reg  [(OPERAND_WIDTH_IN_BITS - 1):0] divisor_to_div;
 
-reg  multiplier_valid_to_mul;
-reg  multiplier_sign_to_mul;
-reg  [(OPERAND_WIDTH_IN_BITS - 1):0] multiplier_to_mul;
+wire issue_ack_from_div;
 
-wire issue_ack_from_mul;
+wire valid_from_div;
 
-wire product_valid_from_mul;
-wire product_sign_from_mul;
-wire [(PRODUCT_WIDTH_IN_BITS - 1):0] product_from_mul;
+wire remainder_sign_from_div;
+wire [(OPERAND_WIDTH_IN_BITS - 1):0]remainder_from_div;
+wire quotient_sign_from_div;
+wire [(PRODUCT_WIDTH_IN_BITS - 1):0] quotient_from_div;
 
-reg  issue_ack_to_mul;
+reg  issue_ack_to_div;
+
+wire divide_by_zero_from_div;
 
 integer operand_index;
 
@@ -34,34 +36,54 @@ reg test_judge;
 reg [5:0] operand_data_pointer;
 reg [5:0] product_data_pointer;
 
-reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplier_data_buffer [(NUM_TEST_DIGIT - 1):0];
-reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplicand_data_buffer [(NUM_TEST_DIGIT - 1):0];
-reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_product_data_buffer [(NUM_TEST_DIGIT - 1):0];
-reg [(OPERAND_WIDTH_IN_BITS - 1):0] data_from_mul_buffer [(NUM_TEST_DIGIT - 1):0];
-reg [(NUM_TEST_DIGIT - 1):0] match_array;
+reg [(NUM_TEST_DIGIT - 1):0] test_divisor_sign_array;
+reg [(NUM_TEST_DIGIT - 1):0] test_dividend_sign_array;
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_divisor_data_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] test_dividend_data_buffer [(NUM_TEST_DIGIT - 1):0];
+
+reg [(NUM_TEST_DIGIT - 1):0] passed_exception_array;
+reg [(NUM_TEST_DIGIT - 1):0] passed_remainder_sign_array;
+reg [(NUM_TEST_DIGIT - 1):0] passed_quotient_sign_array;
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] passed_remainder_data_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] passed_quotient_data_buffer [(NUM_TEST_DIGIT - 1):0];
+
+reg [(NUM_TEST_DIGIT - 1):0] exception_from_div_array;
+reg [(NUM_TEST_DIGIT - 1):0] remainder_sign_from_div_array;
+reg [(NUM_TEST_DIGIT - 1):0] quotient_sign_from_div_array;
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] remainder_data_from_div_buffer [(NUM_TEST_DIGIT - 1):0];
+reg [(OPERAND_WIDTH_IN_BITS - 1):0] quotient_data_from_div_buffer [(NUM_TEST_DIGIT - 1):0];
+
+reg [(NUM_TEST_DIGIT - 1):0] exception_match_array;
+reg [(NUM_TEST_DIGIT - 1):0] remainder_sign_match_array;
+reg [(NUM_TEST_DIGIT - 1):0] quotient_sign_match_array;
+reg [(NUM_TEST_DIGIT - 1):0] remainder_data_match_array;
+reg [(NUM_TEST_DIGIT - 1):0] quotient_data_match_array;
 
 wire read_end_flag;
 wire write_and_flag;
 
-wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplicand_data_from_buffer;
-wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_multiplier_data_from_buffer;
+wire test_dividend_sign_from_array;
+wire test_divisor_sign_from_array;
+wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_dividend_data_from_buffer;
+wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_divisor_data_from_buffer;
 
 assign read_end_flag = (product_data_pointer == NUM_TEST_DIGIT);
 assign write_and_flag = (operand_data_pointer == NUM_TEST_DIGIT);
 
-assign test_multiplier_data_from_buffer = test_multiplier_data_buffer[operand_data_pointer];
-assign test_multiplicand_data_from_buffer = test_multiplicand_data_buffer[operand_data_pointer];
+assign test_divisor_sign_from_array = test_divisor_sign_array[operand_data_pointer];
+assign test_dividend_sign_from_array = test_dividend_sign_array[operand_data_pointer];
+assign test_divisor_data_from_buffer = test_divisor_data_buffer[operand_data_pointer];
+assign test_dividend_data_from_buffer = test_dividend_data_buffer[operand_data_pointer];
 
 //write
 always @(posedge clk_in)
 begin
     if (reset_in)
     begin
-        multiplicand_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-        multiplier_to_mul <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        divisor_to_div <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        dividend_to_div <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
 
-        multiplier_valid_to_mul <= 1'b0;
-        multiplicand_valid_to_mul <= 1'b0;
+        valid_to_div <= 1'b0
 
         operand_data_pointer <= 5'b0;
     end
@@ -69,22 +91,24 @@ begin
     begin
         if (~write_and_flag)
         begin
-            multiplier_to_mul <= test_multiplier_data_from_buffer;
-            multiplicand_to_mul <= test_multiplicand_data_from_buffer;
-            multiplier_valid_to_mul <= 1'b1;
-            multiplicand_valid_to_mul <= 1'b1;
+            divisor_sign_to_div <= test_divisor_sign_from_array;
+            dividend_sign_to_div <= test_dividend_sign_from_array;
+            divisor_to_div <= test_divisor_data_from_buffer;
+            dividend_to_div <= test_dividend_data_from_buffer;
+            valid_to_div <= 1'b1;
 
-            if (issue_ack_from_mul)
+            if (issue_ack_from_div)
             begin
                 operand_data_pointer <= operand_data_pointer + 1'b1;
             end
         end
         else
         begin
-            multiplier_to_mul <= 0;
-            multiplicand_to_mul <= 0;
-            multiplier_valid_to_mul <= 1'b0;
-            multiplicand_valid_to_mul <= 1'b0;
+            divisor_to_div <= 0;
+            dividend_to_div <= 0;
+            divisor_sign_to_div <= 1'b0;
+            dividend_sign_to_div <= 1'b0;
+            valid_to_div <= 1'b0;
         end
     end
 end
@@ -95,22 +119,27 @@ begin
     if (reset_in)
     begin
         product_data_pointer <= 0;
-        issue_ack_to_mul <= 0;
+        issue_ack_to_div <= 0;
     end
     else
     begin
         if (~read_end_flag)
         begin
-            if (issue_ack_to_mul)
+            if (issue_ack_to_div)
             begin
-                issue_ack_to_mul <= 1'b0;
+                issue_ack_to_div <= 1'b0;
             end
             else
             begin
-                if (product_valid_from_mul)
+                if (valid_from_div)
                 begin
-                    issue_ack_to_mul <= 1'b1;
-                    data_from_mul_buffer[product_data_pointer] <= product_from_mul;
+                    issue_ack_to_div <= 1'b1;
+
+                    exception_from_div_array[product_data_pointer] <= divide_by_zero_from_div;
+                    remainder_sign_from_div_array[product_data_pointer] <= remainder_sign_from_div;
+                    quotient_sign_from_div_array[product_data_pointer] <= quotient_sign_from_div;
+                    remainder_data_from_div_buffer[product_data_pointer] <= remainder_from_div;
+                    quotient_data_from_div_buffer[product_data_pointer] <= quotient_from_div;
                     product_data_pointer <= product_data_pointer + 1'b1;
                 end
             end
@@ -129,10 +158,14 @@ begin
     begin
         for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1)
         begin
-            match_array[operand_index] <= data_from_mul_buffer[operand_index] == test_product_data_buffer[operand_index];
+            exception_match_array[operand_index] <= (exception_from_div_array[operand_index] == passed_exception_array[operand_index]);
+            remainder_sign_match_array[operand_index] <= (remainder_sign_from_div_array[operand_index] == passed_remainder_sign_array);
+            quotient_sign_match_array[operand_index] <= (quotient_sign_from_div_array[operand_index] == passed_quotient_sign_array);
+            remainder_data_match_array[operand_index] <= (remainder_data_from_div_buffer[operand_index] == passed_remainder_data_buffer[operand_index]);
+            quotient_data_match_array[operand_index] <= (quotient_data_from_div_buffer[operand_index] == passed_quotient_data_buffer[operand_index]);
         end
 
-        if (&match_array)
+        if ((&exception_match_array) & (&remainder_sign_match_array) & (&quotient_sign_match_array) & (&remainder_data_match_array) & (&quotient_data_match_array))
         begin
             test_judge <= 1'b1;
         end
@@ -156,24 +189,53 @@ begin
     clk_in <= 1'b0;
     reset_in <= 1'b1;
 
+    // test case 0
     test_case <= 0;
     for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b1)
     begin
-        test_multiplier_data_buffer[operand_index] <= {{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index);
-        test_multiplicand_data_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index);
-        test_product_data_buffer[operand_index] <= ({{(NUM_TEST_DIGIT / 2){1'b1}}, {(NUM_TEST_DIGIT / 2){1'b0}}} + (1 << operand_index)) * ({(NUM_TEST_DIGIT){1'b1}} - (1 << operand_index));
+        test_divisor_sign_array[operand_index] <= 0;
+        test_dividend_sign_array[operand_index] <= 0;
+        test_divisor_data_buffer[operand_index] <= 0;
+        test_dividend_data_buffer[operand_index] <= 0;
 
-        data_from_mul_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b0}};
+        passed_exception_array[operand_index] <= 0;
+        passed_remainder_data_buffer[operand_index] <= 0;
+        passed_quotient_data_buffer[operand_index] <= 0;
+        passed_quotient_sign_array[operand_index] <= 0;
+        passed_remainder_sign_array[operand_index] <= 0;
 
-        match_array[operand_index] <= 0;
+        exception_from_div_array[operand_index] <= 0;
+        remainder_data_from_div_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}};
+        quotient_data_from_div_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}};
+        remainder_sign_from_div_array[operand_index] <= 0;
+        quotient_sign_from_div_array[operand_index] <= 0;
+
+
+        exception_match_array[operand_index] <= 0;
+        remainder_sign_match_array[operand_index] <= 0;
+        quotient_sign_match_array[operand_index] <= 0;
+        remainder_data_match_array[operand_index] <= 0;
+        quotient_data_match_array[operand_index] <= 0;
    end
 
 
     #(`FULL_CYCLE_DELAY * 5)
     reset_in <= 1'b0;
 
+    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "unsigned divide", test_judge ? "passed" : "failed");
 
-    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "multiplier", test_judge ? "passed" : "failed");
+    // test case 1
+    test_case <= test_case + 1'b1;
+    reset_in <= 1'b1;
+
+
+    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "signed divide", test_judge ? "passed" : "failed");
+
+    // test case 0
+    test_case <= test_case + 1'b1;
+    reset_in <= 1'b1;
+
+    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "exception", test_judge ? "passed" : "failed");
 
 
     #(`FULL_CYCLE_DELAY * 5)  $display("\n[info-testbench] simulation for %m comes to the end\n");
@@ -200,12 +262,16 @@ multicycle_divider
     .divisor_sign_in                                        (divisor_sign_to_div),
     .divisor_in                                             (divisor_to_div),
 
+    .issue_ack_out                                          (issue_ack_from_div),
+
     .valid_out                                              (valid_from_div),
     .remainder_sign_out                                     (remainder_sign_from_div),
     .remainder_out                                          (remainder_from_div),
 
     .quotient_sign_out                                      (quotient_sign_from_div),
-    .quotient_out                                           (quotient_from_div)
+    .quotient_out                                           (quotient_from_div),
+
+    .issue_ack_in                                           (issue_ack_to_div),
 
     .divide_by_zero                                         (divide_by_zero_from_div)
 );
