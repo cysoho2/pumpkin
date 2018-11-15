@@ -171,7 +171,6 @@ begin
     #(
         .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
         .NUM_SET                        (QUEUE_SIZE),
-        .SET_PTR_WIDTH_IN_BITS          ($clog2(QUEUE_SIZE)),
         .CONFIG_MODE                    ("WriteFirst"),
         .WITH_VALID_REG_ARRAY           ("No")
     )

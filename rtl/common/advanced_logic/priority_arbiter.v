@@ -48,8 +48,8 @@ begin : request_queue
         .reset_in                       (reset_in),
         .clk_in                         (clk_in),
 
-        .is_empty_out                   (), // intended left unconnected
-        .is_full_out                    (request_queue_full[request_index]), // intended left unconnected
+        .is_empty_out                   (), // intended to be left unconnected
+        .is_full_out                    (request_queue_full[request_index]),
 
         .request_in                     ({{(BYTE_PADDING_WIDTH){request_critical_flatted_in[request_index]}},
                                           request_packed_in[request_index]}),
@@ -67,7 +67,7 @@ endgenerate
 wire [NUM_REQUEST - 1 : 0] request_critical_final;
 for(request_index = 0; request_index < NUM_REQUEST; request_index = request_index + 1)
 begin
-    assign request_critical_final[request_index] = |request_critical_flatted_from_request_queue[request_index] | request_queue_full;
+    assign request_critical_final[request_index] = (|request_critical_flatted_from_request_queue[request_index]) | request_queue_full[request_index];
 end
 reg [NUM_REQUEST_LOG2 - 1 : 0] last_send_index;
 
@@ -153,22 +153,23 @@ begin
     // move on to the next request
     else if((issue_ack_in & request_valid_out) | ~request_valid_out)
     begin
-        if(request_critical_final[critical_sel] & request_valid_flatted_from_request_queue[critical_sel]
-           & ((critical_sel != last_send_index & request_valid_out) | ~request_valid_out))
+        if(~request_valid_out)
         begin
-            request_out                             <= request_packed_from_request_queue[critical_sel];
-            request_valid_out                       <= 1'b1;
-            last_send_index                         <= critical_sel;
-        end
+            if(request_critical_final[critical_sel] & request_valid_flatted_from_request_queue[critical_sel])
+            begin
+                request_out                             <= request_packed_from_request_queue[critical_sel];
+                request_valid_out                       <= 1'b1;
+                last_send_index                         <= critical_sel;
+            end
 
-        else if(request_valid_flatted_from_request_queue[valid_sel]
-                & ((valid_sel != last_send_index & request_valid_out) | ~request_valid_out))
-        begin
-            request_out                             <= request_packed_from_request_queue[valid_sel];
-            request_valid_out                       <= 1'b1;
-            last_send_index                         <= valid_sel;
+            else if(request_valid_flatted_from_request_queue[valid_sel])
+            begin
+                request_out                             <= request_packed_from_request_queue[valid_sel];
+                request_valid_out                       <= 1'b1;
+                last_send_index                         <= valid_sel;
+            end
         end
-
+        // a empty cycle is needed to wait for the input queue to deliver new data
         else
         begin
             request_out                             <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
