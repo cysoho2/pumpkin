@@ -265,7 +265,7 @@ begin
          #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
          #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
 
-         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "normal write/read", ((test_judge == 1'b1))? "passed" : "failed");
+         #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d %80s : \t%s", test_case, "normal write/read", ((test_judge == 1'b1))? "passed" : "failed");
         // test case 1
                                 test_case                               <= test_case + 1;
  
@@ -300,7 +300,7 @@ begin
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
         
-        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write invalue data", ((test_judge == 1'b1))? "passed" : "failed");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d %80s : \t%s", test_case, "write invalue data", ((test_judge == 1'b1))? "passed" : "failed");
         
         // test case 2
         test_case                                                       <= test_case + 1;
@@ -332,7 +332,7 @@ begin
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
 
-        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d%35s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-rtl] test case %d %80s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
         
 
         #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");

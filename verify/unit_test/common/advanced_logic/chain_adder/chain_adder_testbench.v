@@ -27,7 +27,7 @@ begin
                                          4'h5, 4'h2, 4'h3, 4'h4, 4'ha, 4'hb, 4'ha, 4'h5};
                          condition    = 16'b1110_0111_1110_0111;
     #(`FULL_CYCLE_DELAY) test_judge   = result == 4'hc;
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "simple select & condition", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "simple select & condition", test_judge ? "passed" : "failed");
 
     test_judge         = 1'b0;
     test_case_num      = test_case_num + 1'b1;
@@ -36,7 +36,7 @@ begin
                                          4'h2, 4'h9, 4'h3, 4'h4, 4'h5, 4'h8, 4'h7, 4'ha};
                          condition    = 16'b1011_0111_1111_1111;
     #(`FULL_CYCLE_DELAY) test_judge   = result == 4'hc;
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "simple select & condition", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "simple select & condition", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
     $finish;

@@ -227,7 +227,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "normal request", test_judge? "passed": "failed");
+    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %80s : \t%s", test_case, "normal request", test_judge? "passed": "failed");
 
     /*test case 1 */
     test_case                                   <= test_case + 1'b1;
@@ -274,7 +274,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %35s : \t%s", test_case, "critical request", test_judge? "passed": "failed");
+    #(`FULL_CYCLE_DELAY * 200)  $display("[info-rtl] test case %d %80s : \t%s", test_case, "critical request", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY * 10)   $display("\n[info-rtl] simulation comes to the end\n");
     $finish;
