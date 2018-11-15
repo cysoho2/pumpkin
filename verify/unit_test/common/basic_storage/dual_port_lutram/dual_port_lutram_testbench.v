@@ -1,6 +1,6 @@
 `include "parameters.h"
 
-module dual_port_blockram_testbench();
+module dual_port_lutram_testbench();
 
 parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64;
 parameter NUM_SET                       = 64;
@@ -26,14 +26,14 @@ reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_input;
 reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]    test_result;
 reg                                             test_judge;
 
-dual_port_blockram
+dual_port_lutram
 #(
     .SINGLE_ENTRY_WIDTH_IN_BITS         (SINGLE_ENTRY_WIDTH_IN_BITS),
     .NUM_SET                            (NUM_SET),
     .SET_PTR_WIDTH_IN_BITS              (SET_PTR_WIDTH_IN_BITS),
     .CONFIG_MODE                        (CONFIG_MODE)
 )
-dual_port_blockram
+dual_port_lutram
 (
     .clk_in                             (clk_in),
     .reset_in                           (reset_in),
@@ -54,7 +54,7 @@ begin
 
     `ifdef DUMP
         $dumpfile(`DUMP_FILENAME);
-        $dumpvars(0, dual_port_blockram_testbench);
+        $dumpvars(0, dual_port_lutram_testbench);
     `endif
 
     $display("\n[info-testbench] simulation for %m begins now");
@@ -79,7 +79,7 @@ begin
     test_result                     = 0;
     test_judge                      = 0;
 
-    #(`FULL_CYCLE_DELAY) reset_in   = 0;
+    #(`FULL_CYCLE_DELAY) reset_in = 0;
     $display("[info-testbench] %m testbench reset completed\n");
 
     /**
@@ -109,7 +109,6 @@ begin
     test_judge                          = (test_result === {{(SINGLE_ENTRY_WIDTH_IN_BITS/`BYTE_LEN_IN_BITS/2){16'h00_ff}}} ||
                                            test_result === {{(SINGLE_ENTRY_WIDTH_IN_BITS/`BYTE_LEN_IN_BITS/2){16'hxx_ff}}}) &&
                                           (test_result !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
-
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) test_case_num  = test_case_num + 1;
