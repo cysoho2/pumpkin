@@ -22,7 +22,7 @@ wire valid_from_div;
 wire remainder_sign_from_div;
 wire [(OPERAND_WIDTH_IN_BITS - 1):0]remainder_from_div;
 wire quotient_sign_from_div;
-wire [(PRODUCT_WIDTH_IN_BITS - 1):0] quotient_from_div;
+wire [(OPERAND_WIDTH_IN_BITS - 1):0] quotient_from_div;
 
 reg  issue_ack_to_div;
 
@@ -83,7 +83,7 @@ begin
         divisor_to_div <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
         dividend_to_div <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
 
-        valid_to_div <= 1'b0
+        valid_to_div <= 1'b0;
 
         operand_data_pointer <= 5'b0;
     end
@@ -189,8 +189,6 @@ begin
     clk_in <= 1'b0;
     reset_in <= 1'b1;
 
-    // test case 0
-    test_case <= 0;
     for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b1)
     begin
         test_divisor_sign_array[operand_index] <= 0;
@@ -216,8 +214,36 @@ begin
         quotient_sign_match_array[operand_index] <= 0;
         remainder_data_match_array[operand_index] <= 0;
         quotient_data_match_array[operand_index] <= 0;
-   end
+    end
 
+    // test case 0
+    test_case <= 0;
+    #(`FULL_CYCLE_DELAY * 5)
+    for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1'b1)
+    begin
+        test_divisor_sign_array[operand_index] <= 0;
+        test_dividend_sign_array[operand_index] <= 0;
+        test_divisor_data_buffer[operand_index] <= operand_index * 3 + 1;
+        test_dividend_data_buffer[operand_index] <= {(OPERAND_WIDTH_IN_BITS){1'b1}} - operand_index;
+ 
+         passed_exception_array[operand_index] <= 0;
+         passed_remainder_data_buffer[operand_index] <= ({(OPERAND_WIDTH_IN_BITS){1'b1}} - operand_index) % (operand_index * 3 + 1);
+         passed_quotient_data_buffer[operand_index] <= ({(OPERAND_WIDTH_IN_BITS){1'b1}} - operand_index) / (operand_index * 3 + 1);
+         passed_quotient_sign_array[operand_index] <= 0;
+         passed_remainder_sign_array[operand_index] <= 0;       
+                
+         exception_from_div_array[operand_index] <= 0;
+         remainder_data_from_div_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}};
+         quotient_data_from_div_buffer[operand_index] <= {(NUM_TEST_DIGIT){1'b1}};
+         remainder_sign_from_div_array[operand_index] <= 0;
+         quotient_sign_from_div_array[operand_index] <= 0;
+         
+         exception_match_array[operand_index] <= 0;
+         remainder_sign_match_array[operand_index] <= 0;
+         quotient_sign_match_array[operand_index] <= 0;
+         remainder_data_match_array[operand_index] <= 0;
+         quotient_data_match_array[operand_index] <= 0;               
+    end  
 
     #(`FULL_CYCLE_DELAY * 5)
     reset_in <= 1'b0;
@@ -245,11 +271,11 @@ end
 
 always begin #`HALF_CYCLE_DELAY clk_in                      <= ~clk_in; end
 
-multicycle_divider
+integer_divider
 #(
     .OPERAND_WIDTH_IN_BITS(OPERAND_WIDTH_IN_BITS)
 )
-multicycle_divider
+integer_divider
 (
     .reset_in                                               (reset_in),
     .clk_in                                                 (clk_in),

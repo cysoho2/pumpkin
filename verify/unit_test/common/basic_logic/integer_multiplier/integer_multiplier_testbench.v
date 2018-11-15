@@ -3,7 +3,7 @@
 module integer_multiplier_testbench();
 
 parameter OPERAND_WIDTH_IN_BITS = 64;
-parameter PRODUCT_WIDTH_IN_BITS = 64;
+parameter PRODUCT_WIDTH_IN_BITS = 128;
 parameter NUM_TEST_DIGIT = OPERAND_WIDTH_IN_BITS;
 
 reg  reset_in;
