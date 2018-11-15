@@ -27,7 +27,7 @@ begin
     #(`FULL_CYCLE_DELAY) vector_input = {4'ha, 4'hb, 4'hc, 4'hd, 4'h1, 4'h2, 4'h3, 4'h4};
                          select       = 8'b0010_0000;
     #(`FULL_CYCLE_DELAY) test_judge   = result == 4'hc;
-    $display("[info-testbench] test case %d %40s : \t%s", test_case_num, "simple select", test_judge ? "passed" : "failed");
+    $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "simple select", test_judge ? "passed" : "failed");
 
     #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
     $finish;

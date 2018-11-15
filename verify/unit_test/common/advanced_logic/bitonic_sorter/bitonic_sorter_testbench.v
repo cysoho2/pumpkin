@@ -59,7 +59,7 @@ begin
                                                     4'h4, 4'h5, 4'h6, 4'h7,
                                                     4'h8, 4'h9, 4'ha, 4'hb,
                                                     4'hc, 4'hd, 4'he, 4'hf};
-    #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s",
+    #(`FULL_CYCLE_DELAY * 500)  $display("[info-testbench] test case %d %80s : \t%s",
                                 test_case, "full reverse order",
                                 test_judge? "passed": "failed");
 
@@ -68,7 +68,7 @@ begin
                                                     4'h4, 4'h4, 4'h6, 4'h6,
                                                     4'h8, 4'h8, 4'hb, 4'hb,
                                                     4'hd, 4'hd, 4'hf, 4'hf};
-    #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s",
+    #(`FULL_CYCLE_DELAY * 500)  $display("[info-testbench] test case %d %80s : \t%s",
                                 test_case, "full reverse order with duplicates",
                                 test_judge? "passed": "failed");
 
@@ -77,11 +77,11 @@ begin
                                                     4'ha, 4'hc, 4'hf, 4'ha,
                                                     4'h0, 4'h3, 4'hf, 4'h5,
                                                     4'h4, 4'h8, 4'h9, 4'h2};
-    #(`FULL_CYCLE_DELAY * 500)  $display("[info-rtl] test case %d %35s : \t%s",
+    #(`FULL_CYCLE_DELAY * 500)  $display("[info-testbench] test case %d %80s : \t%s",
                                 test_case, "out of order with duplicates",
                                 test_judge? "passed": "failed");
 
-    #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-rtl] simulation comes to the end\n");
+    #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-testbench] simulation comes to the end\n");
     $finish;
 end
 

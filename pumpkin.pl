@@ -402,7 +402,7 @@ sub task_begin
             die "[error-script] the waveform file $waveform_path does not exist" if !-e $waveform_path;
             say "[info-script] the waveform file is $waveform_path";
 
-            my $gtkwave_opened = `ps` =~ 'gtkwave';
+            my $gtkwave_opened = (`ps` =~ 'gtkwave');
 
             if($pumpkin_parameter_hash{'running_on_mac'} == 0)
             {
@@ -410,7 +410,7 @@ sub task_begin
             }
             else
             {
-                system "gtkwave $waveform_path" if(!$gtkwave_opened);
+                system "gtkwave $waveform_path";# if(!$gtkwave_opened);
             }
         }
     }

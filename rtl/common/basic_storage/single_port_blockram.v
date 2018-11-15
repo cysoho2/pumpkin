@@ -4,7 +4,7 @@ module single_port_blockram
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
     parameter NUM_SET                       = 64,
-    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET),
+    parameter SET_PTR_WIDTH_IN_BITS         = $clog2(NUM_SET) + 1,
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter WITH_VALID_REG_ARRAY          = "Yes"
 )

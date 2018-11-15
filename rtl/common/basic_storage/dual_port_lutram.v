@@ -1,12 +1,12 @@
 `include "parameters.h"
 
-module dual_port_blockram
+module dual_port_lutram
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS  = 64,
     parameter NUM_SET                     = 64,
-    parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET) + 1,
+    parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN              = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter CONFIG_MODE                 = "ReadFirst", /* option: ReadFirst */
+    parameter CONFIG_MODE                 = "WriteFirst", /* option: ReadFirst, WriteFirst */
     parameter WITH_VALID_REG_ARRAY        = "Yes" /* option: Yes, No */
 )
 (
@@ -81,7 +81,16 @@ end
 
 endgenerate
 
-(* ram_style = "block" *) reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
+(* ram_style = "distributed" *) reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
+
+wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1: 0] write_port_full_data_mask;
+generate
+genvar bit_lane;
+for(bit_lane = 0; bit_lane < SINGLE_ENTRY_WIDTH_IN_BITS; bit_lane = bit_lane + 1)
+begin
+    assign write_port_full_data_mask[bit_lane] = write_port_write_en_in[bit_lane / `BYTE_LEN_IN_BITS];
+end
+endgenerate
 
 // write port operation
 always @(posedge clk_in)
@@ -112,17 +121,23 @@ begin
     end
 end
 
-else
+else if(CONFIG_MODE == "WriteFirst")
 begin
+    wire need_write_forward = (read_port_access_en_in & write_port_access_en_in) & (|write_port_write_en_in) &
+                              (read_port_access_set_addr_in == write_port_access_set_addr_in);
     // read port operation
     always @(posedge clk_in)
     begin
-        if(read_port_access_en_in)
+        if(need_write_forward)
+        begin
+            read_port_data_out <= write_port_data_in & write_port_full_data_mask;
+        end
+        
+        else if(read_port_access_en_in)
         begin
             read_port_data_out <= blockram[read_port_access_set_addr_in];
         end
     end
 end
-
 endgenerate
 endmodule
