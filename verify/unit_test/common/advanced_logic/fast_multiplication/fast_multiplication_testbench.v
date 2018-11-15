@@ -53,7 +53,7 @@ begin
         #(`FULL_CYCLE_DELAY)    multiplier_in = 1000;
                                 multicand_in = 10000;
         
-        #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");
                                    $finish;
 end
 

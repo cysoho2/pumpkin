@@ -179,7 +179,7 @@ begin
 
 
     #(`FULL_CYCLE_DELAY * 1500)
-    $display("\n[info-testbench] simulation for %m comes to the end\n");
+    $display("[info-testbench] simulation for %m comes to the end\n");
     $finish;
 end
 

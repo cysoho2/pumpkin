@@ -81,7 +81,7 @@ begin
                                 test_case, "out of order with duplicates",
                                 test_judge? "passed": "failed");
 
-    #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-testbench] simulation comes to the end\n");
+    #(`FULL_CYCLE_DELAY * 1500) $display("[info-testbench] simulation comes to the end\n");
     $finish;
 end
 

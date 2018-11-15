@@ -29,7 +29,7 @@ begin
     #(`FULL_CYCLE_DELAY) test_judge   = result == 4'hc;
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "simple select", test_judge ? "passed" : "failed");
 
-    #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
+    #(`FULL_CYCLE_DELAY) $display("\n[info-testbench] simulation comes to the end\n");
     $finish;
 end
 

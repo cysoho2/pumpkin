@@ -56,7 +56,7 @@ begin
 /*        #(`FULL_CYCLE_DELAY)    multiplier_in = {(OPERAND_WIDTH_IN_BITS){1'b1}};
                                 multicand_in = {(OPERAND_WIDTH_IN_BITS){1'b1}}; */
         
-        #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");
                                    $finish;
 end
 

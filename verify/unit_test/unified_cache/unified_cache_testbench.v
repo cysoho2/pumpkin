@@ -841,7 +841,7 @@ begin
         test_case                                                        <= test_case + 1'b1;
     end
 
-     #(`FULL_CYCLE_DELAY * 3000)  $display("\n[info-testbench] simulation for %m comes to the end\n");
+     #(`FULL_CYCLE_DELAY * 3000)  $display("[info-testbench] simulation for %m comes to the end\n");
                                   $finish;
 
 end

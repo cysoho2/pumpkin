@@ -22,7 +22,7 @@ module autocat_testbench();
 
         $display("\n[info-testbench] simulation for %m begins now");
 
-        #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
+        #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
         $finish;
     end
 

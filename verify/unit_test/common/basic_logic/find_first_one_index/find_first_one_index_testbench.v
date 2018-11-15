@@ -75,7 +75,7 @@ module find_first_one_index_testbench();
         #(`FULL_CYCLE_DELAY) test_judge         = (TEST_INDEX_3 == first_one_index);
         $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "edge num", test_judge ? "passed" : "failed");
 
-        #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
+        #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
         $finish;
     end
 

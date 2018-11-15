@@ -215,7 +215,7 @@ begin
     $display("[info-testbench] test case %d %s : %s",
             test_case, test_case_content, test_judge? "passed" : "failed");
     
-    #(`FULL_CYCLE_DELAY) $display("\n[info-rtl] simulation comes to the end\n");
+    #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
     $finish;
 end
 

@@ -92,7 +92,7 @@ begin
         
         #(`FULL_CYCLE_DELAY * 2)   is_valid_in              <= 1'b0;       
         
-        #(`FULL_CYCLE_DELAY * 300) $display("\n[info-rtl] simulation comes to the end\n");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");
                                    $finish;
 end
 

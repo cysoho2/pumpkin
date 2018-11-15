@@ -133,7 +133,7 @@ begin
     #(`FULL_CYCLE_DELAY) test_judge                                             = (test_result_2 === test_result_1) && (test_result_2 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
 
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "write mask enable verify", test_judge ? "passed" : "failed");
-    #(`FULL_CYCLE_DELAY * 1500) $display("\n[info-testbench] simulation for %m comes to the end\n");
+    #(`FULL_CYCLE_DELAY * 1500) $display("[info-testbench] simulation for %m comes to the end\n");
     $finish;
 end
 
