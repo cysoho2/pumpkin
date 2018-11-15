@@ -2,7 +2,7 @@ module priority_arbiter
 #(
     parameter SINGLE_REQUEST_WIDTH_IN_BITS = 64,
     parameter NUM_REQUEST                  = 3,
-    parameter INPUT_QUEUE_SIZE             = 4, // must be a power of 2
+    parameter INPUT_QUEUE_SIZE             = 2, // must be a power of 2
     parameter BYTE_PADDING_WIDTH           = 8,
     parameter integer NUM_REQUEST_LOG2     = $ceil($clog2(NUM_REQUEST))
 )
