@@ -3,7 +3,7 @@
 module fifo_queue
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
-    parameter QUEUE_SIZE                    = 16,
+    parameter QUEUE_SIZE                    = 16, /* must be a power of 2*/
     parameter QUEUE_PTR_WIDTH_IN_BITS       = $clog2(QUEUE_SIZE),
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
