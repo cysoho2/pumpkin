@@ -7,7 +7,7 @@ module priority_arbiter
     parameter integer NUM_REQUEST_LOG2     = $clog2(NUM_REQUEST) + 1
 )
 (
-    input                          -=======                                     reset_in,
+    input                                                               reset_in,
     input                                                               clk_in,
 
     input      [SINGLE_REQUEST_WIDTH_IN_BITS * NUM_REQUEST - 1 : 0]     request_flatted_in,
