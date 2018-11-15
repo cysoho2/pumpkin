@@ -82,7 +82,7 @@ sub find_topmodule_rtl_file
     my ($topmodule, $file_path) = @_;
     die "[error-script] fail to open $file_path" if !open rtl_handle, "<$file_path";
 
-    my $content;
+    my $content = '';
 
     while(my $line = <rtl_handle>)
     {
@@ -90,7 +90,7 @@ sub find_topmodule_rtl_file
     };
 
     close rtl_handle;
-    return '' if(length($content) == 0);
+    return '' if(length($content) eq '');
     
     $content =~ s/\/\/ .* \n//mgx;       # delete single line comments
     $content =~ s/\n/ /g;                # delete new lines
