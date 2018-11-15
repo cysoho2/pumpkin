@@ -32,7 +32,7 @@ wire                                                return_packet_ack_way1;
 wire done;
 wire error;
 
-reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_to_cache_packet;
+reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_return_packet;
 wire                                                from_cache_ack;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  cache_to_mem_packet;
 reg                                                 to_cache_ack;
@@ -57,7 +57,6 @@ endgenerate
 cache_packet_generator
 #(
     .NUM_WAY(2),
-    .NUM_REQUEST(`NUM_REQUEST),
     .TIMING_OUT_CYCLE(`DEAD_DELAY)
 )
 cache_packet_generator
@@ -75,8 +74,8 @@ cache_packet_generator
 );
 
 // to cache packet
-wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   to_cache_packet_concatenated;
-packet_concat to_cache_packet_concat
+wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] return_packet_concatenated;
+packet_concat return_packet_concat
 (
     .addr_in        (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]),
     .data_in        (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS] ?
@@ -88,7 +87,7 @@ packet_concat to_cache_packet_concat
     .valid_in       (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS]),
     .is_write_in    (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_IS_WRITE_POS]),
     .cacheable_in   (cache_to_mem_packet[`UNIFIED_CACHE_PACKET_CACHEABLE_POS]),
-    .packet_out     (to_cache_packet_concatenated)
+    .packet_out     (return_packet_concatenated)
 );
 
 unified_cache
@@ -110,7 +109,7 @@ unified_cache
     .return_packet_flatted_out      ({return_packet_way1, return_packet_way0}),
     .return_packet_ack_flatted_in   ({return_packet_ack_way1, return_packet_ack_way0}),
 
-    .from_mem_packet_in             (mem_to_cache_packet),
+    .from_mem_packet_in             (mem_return_packet),
     .from_mem_packet_ack_out        (from_cache_ack),
 
     .to_mem_packet_out              (cache_to_mem_packet),
@@ -123,7 +122,7 @@ begin
     begin
         mem_ctrl_state                  <= `STATE_IDLE;
         clk_counter                     <= 0;
-        mem_to_cache_packet             <= 0;
+        mem_return_packet               <= 0;
         to_cache_ack                    <= 0;
     end
 
@@ -139,7 +138,7 @@ begin
                 end
 
                 clk_counter             <= 0;
-                mem_to_cache_packet     <= 0;
+                mem_return_packet       <= 0;
                 to_cache_ack            <= 0;
             end
 
@@ -160,7 +159,7 @@ begin
                         clk_counter     <= 0;
                     end
 
-                    mem_to_cache_packet <= 0;
+                    mem_return_packet   <= 0;
                     to_cache_ack        <= 0;
                 end
             end
@@ -172,7 +171,7 @@ begin
                                                            `UNIFIED_CACHE_PACKET_DATA_POS_LO];
                 mem_ctrl_state          <= `STATE_IDLE;
                 clk_counter             <= 0;
-                mem_to_cache_packet     <= 0;
+                mem_return_packet       <= 0;
                 to_cache_ack            <= 1;
             end
 
@@ -184,7 +183,7 @@ begin
                     mem_ctrl_state      <= mem_ctrl_state;
                 
                 clk_counter             <= 0;
-                mem_to_cache_packet     <= to_cache_packet_concatenated;
+                mem_return_packet       <= return_packet_concatenated;
                 to_cache_ack            <= 0;
             end
         endcase

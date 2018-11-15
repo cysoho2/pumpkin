@@ -35,7 +35,7 @@ wire [UNIFIED_CACHE_PACKET_BYTE_MASK_LEN - 1 : 0]   write_mask;
 assign done                             = &done_way;
 assign error                            = |error_way;
 assign return_packet_ack_flatted_out    = return_packet_ack;
-assign write_mask                       = {{(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){2'b10}}};
+assign write_mask                       = {{(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){2'b11}}};
 
 generate
 genvar WAY_INDEX;

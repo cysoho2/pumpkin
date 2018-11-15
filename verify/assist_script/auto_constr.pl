@@ -90,7 +90,8 @@ sub find_topmodule_rtl_file
     };
 
     close rtl_handle;
-
+    return '' if(length($content) == 0);
+    
     $content =~ s/\/\/ .* \n//mgx;       # delete single line comments
     $content =~ s/\n/ /g;                # delete new lines
     $content =~ s/\/\* .* \*\/ / /gx;    # delete multiple line comments
