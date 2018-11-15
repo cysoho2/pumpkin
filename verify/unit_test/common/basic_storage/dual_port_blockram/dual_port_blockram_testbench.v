@@ -80,7 +80,7 @@ begin
     test_judge                      = 0;
 
     #(`FULL_CYCLE_DELAY) reset_in   = 0;
-    $display("[info-testbench] %m testbench reset completed\n");
+    $display("[info-testbench] %m testbench reset completed");
 
     /**
      *  write "test_input" to write_port then read from read_port

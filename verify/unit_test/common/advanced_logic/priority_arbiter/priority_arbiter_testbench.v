@@ -224,6 +224,8 @@ begin
     reset_in                                    <= 1'b1;
     read_delay                                  <= 1;
 
+    $display("[info-testbench] %m testbench reset completed");
+
     //init
     end_read_boundary                           <= NUM_SINGLE_REQUEST_TEST * NUM_REQUEST;
     passed_request_buffer_pointer               <= {(32){1'b0}};

@@ -72,7 +72,7 @@ begin
     #(`FULL_CYCLE_DELAY * 25 + `HALF_CYCLE_DELAY);
     reset_in                                    = 0;
 
-    $display("[info-testbench] %m testbench reset completed\n");
+    $display("[info-testbench] %m testbench reset completed");
 
     // case 0
     test_input_1                                                                = { {(SINGLE_ENTRY_WIDTH_IN_BITS/2){1'b1}}, {(SINGLE_ENTRY_WIDTH_IN_BITS/2){1'b0}} };

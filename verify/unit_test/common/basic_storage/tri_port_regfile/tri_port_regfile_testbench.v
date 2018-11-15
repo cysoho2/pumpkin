@@ -78,7 +78,7 @@ begin
     test_judge                                                  = 0;
     
     #(`FULL_CYCLE_DELAY) reset_in                               = 0;
-    $display("[info-testbench] %m testbench reset completed\n");
+    $display("[info-testbench] %m testbench reset completed");
 
     /**
         *  test case 0 

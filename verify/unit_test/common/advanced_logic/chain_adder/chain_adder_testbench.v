@@ -19,6 +19,7 @@ begin
     `endif
 
     $display("\n[info-testbench] simulation for %m begins now");
+    $display("[info-testbench] %m testbench reset completed");
 
     test_judge         = 1'b0;
     test_case_num      = 1'b0;

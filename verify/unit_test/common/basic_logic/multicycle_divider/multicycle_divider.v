@@ -49,6 +49,7 @@ begin
         divisor_sign_in                                     <= 1'b0;
         dividend_in                                         <= 0;
         divisor_in                                          <= 0;
+        $display("[info-testbench] %m testbench reset completed");
         
         //case 0 : +7 / +2
         #(`FULL_CYCLE_DELAY * 2)   test_dividend_in         <= 7;

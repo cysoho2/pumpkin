@@ -54,6 +54,8 @@ begin
 
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b1;    
     #(`FULL_CYCLE_DELAY)        reset_in = 1'b0;
+
+    $display("[info-testbench] %m testbench reset completed");
     
     #(`FULL_CYCLE_DELAY)        pre_sort_flatted = {4'h0, 4'h1, 4'h2, 4'h3,
                                                     4'h4, 4'h5, 4'h6, 4'h7,

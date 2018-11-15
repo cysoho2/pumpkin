@@ -33,6 +33,8 @@ begin
 
         clk_in                                                          <= 1'b0;
         reset_in                                                        <= 1'b1;
+
+        $display("[info-testbench] %m testbench reset completed");
         
         #(`FULL_CYCLE_DELAY * 50) 
         

@@ -25,17 +25,17 @@ our @failed_test;
 &pumpkin_init();
 &cmd_parsing();
 # main task begin
-foreach my $test_name (@x64_test_queue)
+foreach my $test_name (sort @x64_test_queue)
 {
     &task_begin($test_name, 'full_test', 'x64');
 }
 
-foreach my $test_name (keys %unit_test_queue_hash)
+foreach my $test_name (sort keys %unit_test_queue_hash)
 {
     &task_begin($test_name, 'unit_test', 'arm64', $unit_test_queue_hash{$test_name});
 }
 
-foreach my $test_name (keys %full_test_queue_hash)
+foreach my $test_name (sort keys %full_test_queue_hash)
 {
     &task_begin($test_name, 'full_test', 'arm64');
 }

@@ -226,6 +226,8 @@ begin
 
         request_in_ctr_boundary                                         <= 0;
         result_ctr_boundary                                             <= 0;
+
+        $display("[info-testbench] %m testbench reset completed");
         
         #(`FULL_CYCLE_DELAY * 50) //init
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)

@@ -50,6 +50,7 @@ module find_first_one_index_testbench();
 
         #(`FULL_CYCLE_DELAY) reset_in           = 1'b1;
         #(`FULL_CYCLE_DELAY) reset_in           = 1'b0;
+        $display("[info-testbench] %m testbench reset completed");
 
                              test_case_num      = 1'b0;
         #(`FULL_CYCLE_DELAY) test_input_1       = { {(VECTOR_LENGTH-(TEST_INDEX_1)-1){1'b0}}, {{1'b0}}, {(TEST_INDEX_1){1'b0}} };

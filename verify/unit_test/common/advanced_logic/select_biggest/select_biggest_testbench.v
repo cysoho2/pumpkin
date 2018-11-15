@@ -22,6 +22,8 @@ begin
 
     test_judge         = 1'b0;
     test_case_num      = 1'b0;
+
+    $display("[info-testbench] %m testbench reset completed");
     
     #(`FULL_CYCLE_DELAY) vector_input = {4'ha, 4'hb, 4'hc, 4'hd, 4'h5, 4'h2, 4'h3, 4'h4,
                                          4'h5, 4'h2, 4'h3, 4'h4, 4'ha, 4'hb, 4'ha, 4'h5};
