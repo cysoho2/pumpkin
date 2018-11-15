@@ -6,7 +6,7 @@ module fifo_queue
     parameter QUEUE_SIZE                    = 16,
     parameter QUEUE_PTR_WIDTH_IN_BITS       = $clog2(QUEUE_SIZE),
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter STORAGE_TYPE                  = "BlockRAM" /* option: FlipFlop, BlockRAM */
+    parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
 )
 (
     input                                                                   clk_in,
@@ -163,12 +163,11 @@ begin
     end
 end
 
-else if(STORAGE_TYPE == "BlockRAM")
+else if(STORAGE_TYPE == "LUTRAM")
 begin
-    wire   [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] port_A_ram_output;
-    wire   [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] port_B_ram_output;
+    wire   [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] ram_output;
 
-    dual_port_blockram
+    dual_port_lutram
     #(
         .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
         .NUM_SET                        (QUEUE_SIZE),
@@ -176,25 +175,21 @@ begin
         .CONFIG_MODE                    ("WriteFirst"),
         .WITH_VALID_REG_ARRAY           ("No")
     )
-    dual_port_blockram
+    dual_port_lutram
     (
         .clk_in                         (clk_in),
         .reset_in                       (reset_in),
 
-        .port_A_access_en_in            (1'b1),
-        .port_A_write_en_in             (write_qualified[write_ptr] ? {(WRITE_MASK_LEN){1'b1}} :
+        .write_port_access_en_in        (1'b1),
+        .write_port_write_en_in         (write_qualified[write_ptr] ? {(WRITE_MASK_LEN){1'b1}} :
                                                                       {(WRITE_MASK_LEN){1'b0}}),
-        .port_A_access_set_addr_in      (write_ptr),
-        .port_A_write_entry_in          (request_in),
-        .port_A_read_entry_out          (port_A_ram_output),
-        .port_A_read_valid_out          (),
+        .write_port_access_set_addr_in  (write_ptr),
+        .write_port_data_in             (request_in),
 
-        .port_B_access_en_in            (1'b1),
-        .port_B_write_en_in             ({(WRITE_MASK_LEN){1'b0}}),
-        .port_B_access_set_addr_in      (|read_complete ? next_read_ptr : read_ptr),
-        .port_B_write_entry_in          ({SINGLE_ENTRY_WIDTH_IN_BITS{1'b0}}),
-        .port_B_read_entry_out          (port_B_ram_output),
-        .port_B_read_valid_out          ()
+        .read_port_access_en_in         (1'b1),
+        .read_port_access_set_addr_in   (|read_complete ? next_read_ptr : read_ptr),
+        .read_port_data_out             (ram_output),
+        .read_port_valid_out            ()
     );
     
     for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
@@ -208,7 +203,7 @@ begin
 
         assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
         
-        assign fifo_entry_packed[gen] = (read_ptr == gen) ? port_B_ram_output : 0;
+        assign fifo_entry_packed[gen] = (read_ptr == gen) ? ram_output : 0;
 
         always @(posedge clk_in)
         begin
