@@ -187,6 +187,7 @@ always @ (posedge clk_in) begin
     end
 end
 
+//read
 always @(posedge clk_in)
 begin
     if (reset_in)
@@ -243,7 +244,7 @@ begin
         begin
             request_critical_to_arb_array[index]    <= 1'b0;
         end
-        
+
         check_request_judge_array[index]        <= 1'b0;
 
     end
@@ -294,7 +295,7 @@ begin
         begin
             request_critical_to_arb_array[index]    <= 1'b0;
         end
-        
+
         check_request_judge_array[index]        <= 1'b0;
     end
 
