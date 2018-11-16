@@ -54,6 +54,13 @@ reg                                                                             
 reg [OPERAND_WIDTH_IN_BITS - 1 : 0]                                                         divisor_reg;
 reg [OPERAND_WIDTH_IN_BITS * 2 : 0]                                                         remainder_reg;
 
+reg state_reset_flag;
+reg state_input_flag;
+reg state_shift_flag;
+reg state_sub_flag;
+reg state_output_flag;
+reg state_exception_flag;
+
 wire [OPERAND_WIDTH_IN_BITS : 0]                                                             subtract_result_to_remainder;
 
 wire div_by_zero_flag;
@@ -67,7 +74,165 @@ assign div_by_zero_flag                                                         
 assign output_enable                                                                        = (remainder_reg_shift_ctr == OPERAND_WIDTH_IN_BITS);
 
 //idle to busy & busy to idle
-always@(posedge clk_in)
+//always@(posedge clk_in)
+//begin
+//    if (reset_in)
+//    begin
+        // valid_out                                                                        <= 1'b0;
+        // // wait_to_busy_flag                                                                        <= 1'b1;
+        //
+        // wait_to_busy_flag                                                                   <= 1'b1;
+        // division_is_finished_flag                                                           <= 1'b0;
+        // output_clear_flag                                                                   <= 1'b0;
+        //
+        // remainder_reg_shift_ctr                                                             <= 32'b0;
+        //
+        // divisor_sign_reg                                                                    <= 1'b0;
+        // dividend_sign_reg                                                                   <= 1'b0;
+        //
+        // divisor_reg                                                                         <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        // remainder_reg                                                                       <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+        //
+        // remainder_sign_out                                                                  <= 1'b0;
+        // remainder_out                                                                       <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        //
+        // quotient_sign_out                                                                   <= 1'b0;
+        // quotient_out                                                                        <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+//    end
+//    else
+//    begin
+
+        //clear output register
+        // if (output_clear_flag)
+        // begin
+        //     wait_to_busy_flag                                                               <= 1'b1;
+        //
+        //     output_clear_flag                                                               <= 1'b0;
+        //
+        //     valid_out                                                                       <= 1'b0;
+        //
+        //     remainder_sign_out                                                              <= 1'b0;
+        //     quotient_sign_out                                                               <= 1'b0;
+        //
+        //     remainder_out                                                                   <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        //     quotient_out                                                                    <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        // end
+
+
+        //idle to busy
+        // if (valid_in)
+        // begin
+        //
+        //     if (wait_to_busy_flag)
+        //     begin
+        //
+        //         wait_to_busy_flag                                                                    <= 1'b0;
+        //         issue_ack_out                                                                   <= 1'b1;
+        //
+        //         divisor_sign_reg                                                                <= divisor_sign_in;
+        //         dividend_sign_reg                                                               <= dividend_sign_in;
+        //
+        //         divisor_reg                                                                     <= divisor_in;
+        //         remainder_reg                                                                   <= {{1'b0}, {(OPERAND_WIDTH_IN_BITS){1'b0}}, dividend_in};
+        //     end
+        // end
+
+        //busy to idle
+        // else if ((remainder_reg_shift_ctr == OPERAND_WIDTH_IN_BITS))
+        // begin
+        //
+        //     if (wait_to_idle_flag)
+        //     begin
+        //         if (issue_ack_in)
+        //         begin
+        //             output_clear_flag                                                               <= 1'b1;
+        //             remainder_reg_shift_ctr                                                         <= 32'b0;
+        //         end
+        //     end
+        //     else
+        //     begin
+        //         valid_out                                                                    <= 1'b1;
+        //
+        //         //write output reg
+        //         quotient_sign_out                                                               <= divisor_sign_reg ^ dividend_sign_reg;
+        //         remainder_sign_out                                                              <= divisor_sign_reg;
+        //
+        //         remainder_out                                                                   <= data_from_remainder_left_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
+        //         quotient_out                                                                    <= remainder_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
+        //
+        //         //clear reg
+        //         divisor_sign_reg                                                                <= 1'b0;
+        //         dividend_sign_reg                                                               <= 1'b0;
+        //
+        //         divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+        //         remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+        //     end
+        //
+        // end
+//     end
+// end
+
+//control
+
+
+// always @ (posedge clk_in)
+// begin
+//     if (reset_in)
+//     begin
+//
+//     end
+//     else
+//     begin
+        // case (state_ctr)
+            // `STATE_SHIFT: begin
+            //     if (~wait_to_idle_flag)
+            //     begin
+            //         remainder_reg                                                               <= remainder_reg << 1;
+            //         remainder_reg_shift_ctr                                                     <= remainder_reg_shift_ctr + 1'b1;
+            //     end
+            // end
+
+            // `STATE_SUB: begin
+            //     if (~wait_to_idle_flag)
+            //     begin
+            //         //write
+            //         if (~ is_negative_to_control)
+            //         begin
+            //             remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
+            //         end
+            //         //update
+            //         remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
+            //     end
+            // end
+
+            // `STATE_EXCEPTION: begin
+            //     valid_out                                                                    <= 1'b1;
+            //
+            //     //write output reg
+            //     quotient_sign_out                                                               <= 0;
+            //     remainder_sign_out                                                              <= 0;
+            //
+            //     remainder_out                                                                   <= 0;
+            //     quotient_out                                                                    <= 0;
+            //
+            //     //clear reg
+            //     divisor_sign_reg                                                                <= 1'b0;
+            //     dividend_sign_reg                                                               <= 1'b0;
+            //
+            //     divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+            //     remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+            //
+            //     divide_by_zero                                                                  <= 1'b1;
+            // end
+
+        //     default: begin
+        //         state_ctr <= `STATE_RESET;
+        //     end
+        // endcase
+//     end
+// end
+
+always @ (posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -94,141 +259,195 @@ begin
     end
     else
     begin
-
-        //clear output register
-        if (output_clear_flag)
-        begin
-            wait_to_busy_flag                                                                    <= 1'b1;
-
-            output_clear_flag                                                               <= 1'b0;
-
-            valid_out                                                                    <= 1'b0;
-
-            remainder_sign_out                                                              <= 1'b0;
-            quotient_sign_out                                                               <= 1'b0;
-
-            remainder_out                                                                   <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-            quotient_out                                                                    <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-        end
-
         if (issue_ack_out)
         begin
             issue_ack_out <= 1'b0;
         end
 
-        //idle to busy
-        if (valid_in)
+        if (state_reset_flag)
         begin
 
-            if (wait_to_busy_flag)
+        end
+
+        if (state_input_flag)
+        begin
+            if (valid_in)
             begin
+                if (wait_to_busy_flag)
+                begin
+                    wait_to_busy_flag                                                               <= 1'b0;
+                    issue_ack_out                                                                   <= 1'b1;
 
-                wait_to_busy_flag                                                                    <= 1'b0;
-                issue_ack_out                                                                   <= 1'b1;
+                    divisor_sign_reg                                                                <= divisor_sign_in;
+                    dividend_sign_reg                                                               <= dividend_sign_in;
 
-                divisor_sign_reg                                                                <= divisor_sign_in;
-                dividend_sign_reg                                                               <= dividend_sign_in;
-
-                divisor_reg                                                                     <= divisor_in;
-                remainder_reg                                                                   <= {{1'b0}, {(OPERAND_WIDTH_IN_BITS){1'b0}}, dividend_in};
+                    divisor_reg                                                                     <= divisor_in;
+                    remainder_reg                                                                   <= {{1'b0}, {(OPERAND_WIDTH_IN_BITS){1'b0}}, dividend_in};
+                end
             end
         end
 
-        //busy to idle
-        else if ((remainder_reg_shift_ctr == OPERAND_WIDTH_IN_BITS))
+        if (state_shift_flag)
         begin
+            remainder_reg                                                                           <= remainder_reg << 1;
+            remainder_reg_shift_ctr                                                                 <= remainder_reg_shift_ctr + 1'b1;
+        end
 
-            if (wait_to_idle_flag)
+        if (state_sub_flag)
+        begin
+            if (~ is_negative_to_control)
             begin
-                if (issue_ack_in)
-                begin
-                    output_clear_flag                                                               <= 1'b1;
-                    remainder_reg_shift_ctr                                                         <= 32'b0;
-                end
+                remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
             end
-            else
+            //update
+            remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
+        end
+
+        if (state_output_flag)
+        begin
+            valid_out                                                                    <= 1'b1;
+
+            //write output reg
+            quotient_sign_out                                                               <= divisor_sign_reg ^ dividend_sign_reg;
+            remainder_sign_out                                                              <= divisor_sign_reg;
+
+            remainder_out                                                                   <= data_from_remainder_left_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
+            quotient_out                                                                    <= remainder_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
+
+            divide_by_zero                                                                  <= 1'b0;
+
+            //clear reg
+            divisor_sign_reg                                                                <= 1'b0;
+            dividend_sign_reg                                                               <= 1'b0;
+
+            divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+            remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+
+            if (issue_ack_in)
             begin
-                valid_out                                                                    <= 1'b1;
+                wait_to_busy_flag                                                               <= 1'b1;
 
-                //write output reg
-                quotient_sign_out                                                               <= divisor_sign_reg ^ dividend_sign_reg;
-                remainder_sign_out                                                              <= divisor_sign_reg;
+                output_clear_flag                                                               <= 1'b0;
 
-                remainder_out                                                                   <= data_from_remainder_left_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
-                quotient_out                                                                    <= remainder_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
+                valid_out                                                                       <= 1'b0;
 
-                //clear reg
-                divisor_sign_reg                                                                <= 1'b0;
-                dividend_sign_reg                                                               <= 1'b0;
+                remainder_sign_out                                                              <= 1'b0;
+                quotient_sign_out                                                               <= 1'b0;
 
-                divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-                remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+                remainder_out                                                                   <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+                quotient_out                                                                    <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+
+                remainder_reg_shift_ctr                                                         <= 32'b0;
             end
+        end
 
+        if (state_exception_flag)
+        begin
+            valid_out                                                                       <= 1'b1;
+
+            //write output reg
+            quotient_sign_out                                                               <= 1'b0;
+            remainder_sign_out                                                              <= 1'b0;
+
+            remainder_out                                                                   <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+            quotient_out                                                                    <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+
+            divide_by_zero                                                                  <= 1'b1;
+
+            //clear reg
+            divisor_sign_reg                                                                <= 1'b0;
+            dividend_sign_reg                                                               <= 1'b0;
+
+            divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+            remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+
+            if (issue_ack_in)
+            begin
+                wait_to_busy_flag                                                               <= 1'b1;
+
+                output_clear_flag                                                               <= 1'b0;
+
+                valid_out                                                                       <= 1'b0;
+
+                remainder_sign_out                                                              <= 1'b0;
+                quotient_sign_out                                                               <= 1'b0;
+
+                remainder_out                                                                   <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+                quotient_out                                                                    <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+
+                remainder_reg_shift_ctr                                                         <= 32'b0;
+            end
         end
     end
 end
 
-//control
-
-
-always @ (posedge clk_in)
+always @ (*)
 begin
-    if (reset_in)
-    begin
+    case (state_ctr)
+        `STATE_RESET: begin
+            state_reset_flag <= 1'b1;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b0;
+        end
 
-    end
-    else
-    begin
-        case (state_ctr)
-            `STATE_SHIFT: begin
-                if (~wait_to_idle_flag)
-                begin
-                    remainder_reg                                                               <= remainder_reg << 1;
-                    remainder_reg_shift_ctr                                                     <= remainder_reg_shift_ctr + 1'b1;
-                end
-            end
+        `STATE_INPUT: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b1;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b0;
+        end
 
-            `STATE_SUB: begin
-                if (~wait_to_idle_flag)
-                begin
-                    //write
-                    if (~ is_negative_to_control)
-                    begin
-                        remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
-                    end
-                    //update
-                    remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
-                end
-            end
+        `STATE_SHIFT: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b1;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b0;
+        end
 
-            `STATE_EXCEPTION: begin
-                valid_out                                                                    <= 1'b1;
+        `STATE_SUB: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b1;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b0;
+        end
 
-                //write output reg
-                quotient_sign_out                                                               <= 0;
-                remainder_sign_out                                                              <= 0;
+        `STATE_OUTPUT: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b1;
+            state_exception_flag <= 1'b0;
+        end
 
-                remainder_out                                                                   <= 0;
-                quotient_out                                                                    <= 0;
+        `STATE_EXCEPTION: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b1;
+        end
 
-                //clear reg
-                divisor_sign_reg                                                                <= 1'b0;
-                dividend_sign_reg                                                               <= 1'b0;
-
-                divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
-                remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
-
-                divide_by_zero                                                                  <= ;
-            end
-
-            default: begin
-                state_ctr <= `STATE_RESET;
-            end
-        endcase
-    end
+        default: begin
+            state_reset_flag <= 1'b0;
+            state_input_flag <= 1'b0;
+            state_shift_flag <= 1'b0;
+            state_sub_flag <= 1'b0;
+            state_output_flag <= 1'b0;
+            state_exception_flag <= 1'b0;
+        end
+    endcase
 end
-
 
 always @(posedge clk_in)
 begin
@@ -251,10 +470,14 @@ begin
                     begin
                         state_ctr <= `STATE_EXCEPTION;
                     end
+                    else
+                    begin
+                        state_ctr <= `STATE_SHIFT;
+                    end
                 end
                 else
                 begin
-                    state_ctr <= `STATE_SHIFT;
+                    state_ctr <= `STATE_INPUT;
                 end
             end
 

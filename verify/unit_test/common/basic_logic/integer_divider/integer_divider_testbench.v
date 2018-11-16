@@ -29,6 +29,7 @@ reg  issue_ack_to_div;
 wire divide_by_zero_from_div;
 
 integer operand_index;
+integer check_index;
 
 reg [31:0] test_case;
 reg test_judge;
@@ -60,7 +61,7 @@ reg [(NUM_TEST_DIGIT - 1):0] remainder_data_match_array;
 reg [(NUM_TEST_DIGIT - 1):0] quotient_data_match_array;
 
 wire read_end_flag;
-wire write_and_flag;
+wire write_end_flag;
 
 wire test_dividend_sign_from_array;
 wire test_divisor_sign_from_array;
@@ -68,12 +69,12 @@ wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_dividend_data_from_buffer;
 wire [(OPERAND_WIDTH_IN_BITS - 1):0] test_divisor_data_from_buffer;
 
 assign read_end_flag = (product_data_pointer == NUM_TEST_DIGIT);
-assign write_and_flag = (operand_data_pointer == NUM_TEST_DIGIT);
+assign write_end_flag = (operand_data_pointer == NUM_TEST_DIGIT);
 
-assign test_divisor_sign_from_array = test_divisor_sign_array[operand_data_pointer];
-assign test_dividend_sign_from_array = test_dividend_sign_array[operand_data_pointer];
-assign test_divisor_data_from_buffer = test_divisor_data_buffer[operand_data_pointer];
-assign test_dividend_data_from_buffer = test_dividend_data_buffer[operand_data_pointer];
+assign test_divisor_sign_from_array = (write_end_flag)? 1'b0 : test_divisor_sign_array[operand_data_pointer];
+assign test_dividend_sign_from_array = (write_end_flag)? 1'b0 : test_dividend_sign_array[operand_data_pointer];
+assign test_divisor_data_from_buffer = (write_end_flag)? {(OPERAND_WIDTH_IN_BITS){1'b0}} : test_divisor_data_buffer[operand_data_pointer];
+assign test_dividend_data_from_buffer = (write_end_flag)? {(OPERAND_WIDTH_IN_BITS){1'b0}} : test_dividend_data_buffer[operand_data_pointer];
 
 //write
 always @(posedge clk_in)
@@ -89,7 +90,7 @@ begin
     end
     else
     begin
-        if (~write_and_flag)
+        if (~write_end_flag)
         begin
             divisor_sign_to_div <= test_divisor_sign_from_array;
             dividend_sign_to_div <= test_dividend_sign_from_array;
@@ -156,13 +157,13 @@ begin
     end
     else
     begin
-        for (operand_index = 0; operand_index < NUM_TEST_DIGIT; operand_index = operand_index + 1)
+        for (check_index = 0; check_index < NUM_TEST_DIGIT; check_index = check_index + 1)
         begin
-            exception_match_array[operand_index] <= (exception_from_div_array[operand_index] == passed_exception_array[operand_index]);
-            remainder_sign_match_array[operand_index] <= (remainder_sign_from_div_array[operand_index] == passed_remainder_sign_array);
-            quotient_sign_match_array[operand_index] <= (quotient_sign_from_div_array[operand_index] == passed_quotient_sign_array);
-            remainder_data_match_array[operand_index] <= (remainder_data_from_div_buffer[operand_index] == passed_remainder_data_buffer[operand_index]);
-            quotient_data_match_array[operand_index] <= (quotient_data_from_div_buffer[operand_index] == passed_quotient_data_buffer[operand_index]);
+            exception_match_array[check_index] <= (exception_from_div_array[check_index] == passed_exception_array[check_index]);
+            remainder_sign_match_array[check_index] <= (remainder_sign_from_div_array[check_index] == passed_remainder_sign_array[check_index]);
+            quotient_sign_match_array[check_index] <= (quotient_sign_from_div_array[check_index] == passed_quotient_sign_array[check_index]);
+            remainder_data_match_array[check_index] <= (remainder_data_from_div_buffer[check_index] == passed_remainder_data_buffer[check_index]);
+            quotient_data_match_array[check_index] <= (quotient_data_from_div_buffer[check_index] == passed_quotient_data_buffer[check_index]);
         end
 
         if ((&exception_match_array) & (&remainder_sign_match_array) & (&quotient_sign_match_array) & (&remainder_data_match_array) & (&quotient_data_match_array))
@@ -249,19 +250,6 @@ begin
     reset_in <= 1'b0;
 
     #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "unsigned divide", test_judge ? "passed" : "failed");
-
-    // test case 1
-    test_case <= test_case + 1'b1;
-    reset_in <= 1'b1;
-
-
-    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "signed divide", test_judge ? "passed" : "failed");
-
-    // test case 0
-    test_case <= test_case + 1'b1;
-    reset_in <= 1'b1;
-
-    #(`FULL_CYCLE_DELAY * 4500) $display("[info-testbench] test case %d %40s : \t%s", test_case, "exception", test_judge ? "passed" : "failed");
 
 
     #(`FULL_CYCLE_DELAY * 5)  $display("\n[info-testbench] simulation for %m comes to the end\n");
