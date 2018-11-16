@@ -30,7 +30,6 @@ dual_port_blockram
 #(
     .SINGLE_ENTRY_WIDTH_IN_BITS         (SINGLE_ENTRY_WIDTH_IN_BITS),
     .NUM_SET                            (NUM_SET),
-    .SET_PTR_WIDTH_IN_BITS              (SET_PTR_WIDTH_IN_BITS),
     .CONFIG_MODE                        (CONFIG_MODE)
 )
 dual_port_blockram

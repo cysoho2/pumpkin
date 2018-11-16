@@ -3,8 +3,8 @@
 module dual_port_blockram
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS  = 64,
-    parameter NUM_SET                     = 64,
-    parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET) + 1,
+    parameter NUM_SET                     = 64, /* must be a power of 2 */
+    parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN              = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter CONFIG_MODE                 = "ReadFirst", /* option: ReadFirst */
     parameter WITH_VALID_REG_ARRAY        = "Yes" /* option: Yes, No */
@@ -25,24 +25,20 @@ module dual_port_blockram
 );
 
 integer write_lane;
-integer set_index;
 
 // For valid array
 generate
+genvar set_index;
 
 if(WITH_VALID_REG_ARRAY == "Yes")
 begin
-    reg [NUM_SET - 1 : 0] valid_array;
+    reg  [NUM_SET - 1 : 0] valid_array;
 
     always@(posedge clk_in)
     begin
         if(reset_in)
         begin
-            for(set_index = 0; set_index < NUM_SET; set_index = set_index + 1)
-            begin
-                valid_array[set_index] <= 0;
-            end
-
+            valid_array <= 0;
             read_port_valid_out <= 0;
         end
 
