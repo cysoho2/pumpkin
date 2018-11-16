@@ -57,12 +57,14 @@ reg [OPERAND_WIDTH_IN_BITS * 2 : 0]                                             
 wire [OPERAND_WIDTH_IN_BITS : 0]                                                             subtract_result_to_remainder;
 
 wire div_by_zero_flag;
+wire output_enable;
 
 assign data_from_remainder_left_reg                                                         = remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS];
 assign subtract_result_to_remainder                                                         = {1'b0, data_from_remainder_left_reg} - {1'b0, divisor_reg};
 assign is_negative_to_control                                                               = subtract_result_to_remainder[OPERAND_WIDTH_IN_BITS];
 
 assign div_by_zero_flag                                                                     = ~(| divisor_in);
+assign output_enable                                                                        = (remainder_reg_shift_ctr == OPERAND_WIDTH_IN_BITS);
 
 //idle to busy & busy to idle
 always@(posedge clk_in)
@@ -117,10 +119,10 @@ begin
         //idle to busy
         if (valid_in)
         begin
-       
+
             if (wait_to_busy_flag)
             begin
-            
+
                 wait_to_busy_flag                                                                    <= 1'b0;
                 issue_ack_out                                                                   <= 1'b1;
 
@@ -141,24 +143,24 @@ begin
                 if (issue_ack_in)
                 begin
                     output_clear_flag                                                               <= 1'b1;
-                    remainder_reg_shift_ctr                                                         <= 32'b0;               
+                    remainder_reg_shift_ctr                                                         <= 32'b0;
                 end
             end
             else
             begin
                 valid_out                                                                    <= 1'b1;
-    
+
                 //write output reg
                 quotient_sign_out                                                               <= divisor_sign_reg ^ dividend_sign_reg;
                 remainder_sign_out                                                              <= divisor_sign_reg;
-    
+
                 remainder_out                                                                   <= data_from_remainder_left_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
                 quotient_out                                                                    <= remainder_reg[OPERAND_WIDTH_IN_BITS - 1 : 0];
-    
+
                 //clear reg
                 divisor_sign_reg                                                                <= 1'b0;
                 dividend_sign_reg                                                               <= 1'b0;
-    
+
                 divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
                 remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
             end
@@ -168,8 +170,9 @@ begin
 end
 
 //control
-/*
-always@(posedge clk_in)
+
+
+always @ (posedge clk_in)
 begin
     if (reset_in)
     begin
@@ -177,58 +180,53 @@ begin
     end
     else
     begin
-        if (~ wait_to_busy_flag)
-        begin
-            case (state_ctr)
-            stage_0:begin
-                //shift
-                remainder_reg                                                               <= remainder_reg << 1;
-            end
-            stage_1:begin
-                subtract_result_to_remainder                                                <= {1'b1, data_from_remainder_left_reg} - {1'b0, divisor_reg};
-            end
-            stage_2:begin
-                //write
-                if (~ is_negative_to_control)
+        case (state_ctr)
+            `STATE_SHIFT: begin
+                if (~wait_to_idle_flag)
                 begin
-                    remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
+                    remainder_reg                                                               <= remainder_reg << 1;
+                    remainder_reg_shift_ctr                                                     <= remainder_reg_shift_ctr + 1'b1;
                 end
-                //update
-                remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
-                remainder_reg_shift_ctr                                                     <= remainder_reg_shift_ctr + 1'b1;
             end
-            endcase
-        end
+
+            `STATE_SUB: begin
+                if (~wait_to_idle_flag)
+                begin
+                    //write
+                    if (~ is_negative_to_control)
+                    begin
+                        remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
+                    end
+                    //update
+                    remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
+                end
+            end
+
+            `STATE_EXCEPTION: begin
+                valid_out                                                                    <= 1'b1;
+
+                //write output reg
+                quotient_sign_out                                                               <= 0;
+                remainder_sign_out                                                              <= 0;
+
+                remainder_out                                                                   <= 0;
+                quotient_out                                                                    <= 0;
+
+                //clear reg
+                divisor_sign_reg                                                                <= 1'b0;
+                dividend_sign_reg                                                               <= 1'b0;
+
+                divisor_reg                                                                     <= {(OPERAND_WIDTH_IN_BITS){1'b0}};
+                remainder_reg                                                                   <= {(OPERAND_WIDTH_IN_BITS * 2 + 1){1'b0}};
+
+                divide_by_zero                                                                  <= ;
+            end
+
+            default: begin
+                state_ctr <= `STATE_RESET;
+            end
+        endcase
     end
-end
-*/
-
-always @ ( * )
-begin
-    case (state_ctr)
-        `STATE_SHIFT: begin
-            if (~wait_to_idle_flag)
-            begin
-                remainder_reg                                                               <= remainder_reg << 1;
-                remainder_reg_shift_ctr                                                     <= remainder_reg_shift_ctr + 1'b1;
-            end
-        end
-
-        `STATE_SUB: begin
-            if (~wait_to_idle_flag)
-            begin
-                //write
-                if (~ is_negative_to_control)
-                begin
-                    remainder_reg[OPERAND_WIDTH_IN_BITS * 2 - 1 : OPERAND_WIDTH_IN_BITS]    <= subtract_result_to_remainder;
-                end
-                //update
-                remainder_reg[0]                                                            <= is_negative_to_control? 1'b0 : 1'b1;
-            end
-        end
-
-        default: ;
-    endcase
 end
 
 
@@ -246,13 +244,13 @@ begin
             end
 
             `STATE_INPUT: begin
-                if (wait_to_busy_flag)
+
+                if (valid_in)
                 begin
-                    state_ctr <= `STATE_INPUT;
-                end
-                else if (div_by_zero_flag)
-                begin
-                    state_ctr <= `STATE_EXCEPTION;                
+                    if (div_by_zero_flag)
+                    begin
+                        state_ctr <= `STATE_EXCEPTION;
+                    end
                 end
                 else
                 begin
@@ -265,15 +263,40 @@ begin
             end
 
             `STATE_SUB: begin
-                state_ctr <= `STATE_SHIFT;
+                if (output_enable)
+                begin
+                    state_ctr <= `STATE_OUTPUT;
+                end
+                else
+                begin
+                    state_ctr <= `STATE_SHIFT;
+                end
             end
-            
+
             `STATE_OUTPUT: begin
-            
+                if (issue_ack_in)
+                begin
+                    state_ctr <= `STATE_INPUT;
+                end
+                else
+                begin
+                    state_ctr <= `STATE_OUTPUT;
+                end
             end
-            
+
             `STATE_EXCEPTION: begin
-                
+                if (issue_ack_in)
+                begin
+                    state_ctr <= `STATE_INPUT;
+                end
+                else
+                begin
+                    state_ctr <= `STATE_EXCEPTION;
+                end
+            end
+
+            default: begin
+                state_ctr <= `STATE_RESET;
             end
         endcase
     end
