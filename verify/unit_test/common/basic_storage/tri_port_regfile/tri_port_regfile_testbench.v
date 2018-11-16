@@ -61,7 +61,7 @@ begin
 
     $display("\n[info-testbench] simulation for %m begins now");
 
-    clk_in                                                      = 0;
+    clk_in                                                      = 1;
     reset_in                                                    = 1;
 
     read_en_in                                                  = 0;
@@ -78,6 +78,7 @@ begin
     test_judge                                                  = 0;
     
     #(`FULL_CYCLE_DELAY) reset_in                               = 0;
+    #(`FULL_CYCLE_DELAY * 200)
     $display("[info-testbench] %m testbench reset completed");
 
     /**
@@ -94,13 +95,11 @@ begin
 
     #(`FULL_CYCLE_DELAY)        write_en_in                     = 1'b1;
     #(`FULL_CYCLE_DELAY)        write_en_in                     = 1'b0;
-    
-    
-    #(`FULL_CYCLE_DELAY)        read_en_in                      = 1'b1;
+                                read_en_in                      = 1'b1;
     #(`FULL_CYCLE_DELAY)        test_result_1                   = read_entry_out;
-    #(`FULL_CYCLE_DELAY)        read_en_in                      = 1'b0;
+                                read_en_in                      = 1'b0;
             
-    test_judge                                          = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
+                                test_judge                      = (test_result_1 === test_input_1) && (test_result_1 !== {(SINGLE_ENTRY_WIDTH_IN_BITS){1'bx}});
     $display("[info-testbench] test case %d %80s : \t%s", test_case_num, "basic write-read access", test_judge ? "passed" : "failed");
 
     /**
