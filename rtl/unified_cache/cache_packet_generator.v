@@ -9,6 +9,7 @@ module cache_packet_generator
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS      = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_PORT_ID_WIDTH      = `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH,
     parameter UNIFIED_CACHE_PACKET_BYTE_MASK_LEN      = `UNIFIED_CACHE_PACKET_BYTE_MASK_LEN,
+    parameter UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS  = `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_TYPE_WIDTH         = `UNIFIED_CACHE_PACKET_TYPE_WIDTH,
     parameter UNIFIED_CACHE_BLOCK_SIZE_IN_BITS        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
     parameter CPU_ADDR_LEN_IN_BITS                    = `CPU_ADDR_LEN_IN_BITS
@@ -54,7 +55,7 @@ begin:way_logic
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_concatenated;
         packet_concat test_packet_concat
         (
-            .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000 + (request_counter << `UNIFIED_CACHE_PACKET_BYTE_MASK_LEN)}}),
+            .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000}} + (request_counter << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)),
             .data_in        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){request_counter}}),
             .type_in        ({(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}}),
             .write_mask_in  (write_mask),
@@ -119,11 +120,12 @@ begin:way_logic
 
         reg [31                                      : 0]    request_counter;
         reg [63                                      : 0]    timeout_counter;
+        reg [31                                      : 0]    expected_data;
 
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]    packet_concatenated;
         packet_concat test_packet_concat
         (
-            .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000 + (request_counter << `UNIFIED_CACHE_PACKET_BYTE_MASK_LEN)}}),
+            .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000 + (request_counter << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}}),
             .data_in        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b0}}),
             .type_in        ({(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}}),
             .write_mask_in  ({(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN){1'b0}}),
@@ -143,9 +145,9 @@ begin:way_logic
                 done_way[WAY_INDEX]             <= 0;
             end
 
-            else if(~error_way[WAY_INDEX])
+            else if(done_way[WAY_INDEX-1] & ~error_way[WAY_INDEX])
             begin
-                if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX] & done_way[WAY_INDEX-1])
+                if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX])
                 begin
                     test_packet                     <= packet_concatenated;
                     request_counter                 <= request_counter;
@@ -178,6 +180,7 @@ begin:way_logic
             begin
                 return_packet_ack[WAY_INDEX]    <= 0;
                 timeout_counter                 <= 0;
+                expected_data                   <= 32'h0000_0000;
                 error_way[WAY_INDEX]            <= 0;
             end
 
@@ -187,9 +190,10 @@ begin:way_logic
                 begin
                     return_packet_ack[WAY_INDEX]    <= 1;
                     timeout_counter                 <= 0;
-                    error_way[WAY_INDEX]            <= return_data !=
-                                                    ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){request_counter}} & write_mask)
+                    error_way[WAY_INDEX]            <= (return_data !=
+                                                    ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){expected_data}} & write_mask))
                                                     | timeout_counter >= TIMING_OUT_CYCLE;
+                    expected_data                   <= expected_data + 1'b1;
                 end
 
                 else if(~return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
@@ -197,6 +201,7 @@ begin:way_logic
                     return_packet_ack[WAY_INDEX]    <= 0;
                     timeout_counter                 <= timeout_counter + 1'b1;
                     error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE;
+                    expected_data                   <= expected_data;
                 end
             end
         end

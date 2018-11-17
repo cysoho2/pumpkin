@@ -6,7 +6,7 @@ reg clk_in;
 reg reset_in;
 
 `define MEM_SIZE  65536
-`define NUM_REQUEST 8
+`define NUM_REQUEST 16
 
 `define MEM_DELAY 10
 `define DEAD_DELAY (`MEM_DELAY * 100)
@@ -18,6 +18,8 @@ reg [31:0] clk_counter;
 `define STATE_DELAY         1
 `define STATE_WRITE         2
 `define STATE_READ_RETURN   3
+`define STATE_FINAL         4
+
 reg [2:0] mem_ctrl_state;
 
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  test_packet_way0;
@@ -37,14 +39,13 @@ wire                                                from_cache_ack;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  cache_to_mem_packet;
 reg                                                 to_cache_ack;
 
-wire access_full_addr = cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS] ? 
-                        cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI :
-                                            `UNIFIED_CACHE_PACKET_ADDR_POS_LO]
-                        : 0;
+wire [`CPU_ADDR_LEN_IN_BITS               - 1 : 0]  access_full_addr = 
+    cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS] ? 
+    cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO] : 0;
 
 wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0]  write_mask_extend;
 wire [`UNIFIED_CACHE_PACKET_BYTE_MASK_LEN - 1 : 0]  write_mask = 
-        cache_to_mem_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
+    cache_to_mem_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
 
 generate
 genvar mask_index;
@@ -169,7 +170,9 @@ begin
                 sim_memory[access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS]
                 <= write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                            `UNIFIED_CACHE_PACKET_DATA_POS_LO];
-                mem_ctrl_state          <= `STATE_IDLE;
+                $display("write data %h to sim memory addr %h ", write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
+                mem_ctrl_state          <= `STATE_FINAL;
                 clk_counter             <= 0;
                 mem_return_packet       <= 0;
                 to_cache_ack            <= 1;
@@ -178,12 +181,24 @@ begin
             `STATE_READ_RETURN:
             begin
                 if(from_cache_ack)
-                    mem_ctrl_state      <= `STATE_IDLE;
+                begin
+                    mem_ctrl_state      <= `STATE_FINAL;
+                    $display("read return data %h to cache on addr %h ", mem_return_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
+                end
                 else
                     mem_ctrl_state      <= mem_ctrl_state;
                 
                 clk_counter             <= 0;
                 mem_return_packet       <= return_packet_concatenated;
+                to_cache_ack            <= 0;
+            end
+
+            `STATE_FINAL:
+            begin
+                mem_ctrl_state          <= `STATE_IDLE;
+                clk_counter             <= 0;
+                mem_return_packet       <= 0;
                 to_cache_ack            <= 0;
             end
         endcase
@@ -219,5 +234,11 @@ begin
 end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
+
+always@*
+begin
+    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
+        $finish;
+end
 
 endmodule
