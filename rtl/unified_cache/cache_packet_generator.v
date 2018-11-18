@@ -92,9 +92,22 @@ reg ckeck_mode_reg; // 0 - default check method (scoreboard), 1 - user-defined
 reg preprocess_mode_reg // 0 - no pretreatment, 1 - user-defined
 reg preprocess_end_flag;
 
+
 // error & done
 reg [NUM_TEST_CASE - 1 : 0] done_vector [NUM_WAY - 1 : 0];
 reg [NUM_TEST_CASE - 1 : 0] error_vector [NUM_WAY - 1 : 0];
+
+// way control
+wire [NUM_WAY - 1 : 0] packet_in_enable_way;
+wire [NUM_WAY - 1 : 0] packet_out_enable_way;
+wire [NUM_WAY - 1 : 0] packet_out_end_way_flag;
+wire [NUM_WAY - 1 : 0] packet_in_end_way_flag;
+wire packet_out_end_flag;
+wire packet_in_end_flag;
+
+// way control
+
+
 
 // test case state abstract
 wire test_case_config;
@@ -121,6 +134,8 @@ begin:way_logic
     begin
         reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   test_packet;
         assign test_packet_flatted_out[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS] = test_packet;
+
+        assign packet_out_end_way_flag[WAY_INDEX] = ~error_way[WAY_INDEX] & packet_in_enable_way[WAY_INDEX];
 
         reg  [31                                     : 0]   request_counter;
         reg  [63                                     : 0]   timeout_counter;
@@ -151,7 +166,7 @@ begin:way_logic
                 error_way[WAY_INDEX]            <= 0;
             end
 
-            else if(~error_way[WAY_INDEX])
+            else if(packet_out_end_way_flag[WAY_INDEX])
             begin
                 if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX])
                 begin
@@ -184,6 +199,20 @@ begin:way_logic
                 end
             end
         end
+
+        // check
+        always@(posedge clk_in)
+        begin
+            if (reset_in)
+            begin
+
+            end
+            else
+            begin
+
+            end
+        end
+
     end
 
     if(WAY_INDEX == 1)
@@ -391,53 +420,55 @@ begin
     begin
         case (test_case_ctrl_state)
 
-            TEST_CASE_STATE_IDLE:
+            `TEST_CASE_STATE_IDLE:
             begin
 
             end
 
-            TEST_CASE_STATE_CONFIG:
+            `TEST_CASE_STATE_CONFIG:
             begin
-                test_case_ctrl_state <= TEST_CASE_STATE_DELAY;
+                test_case_ctrl_state <= `TEST_CASE_STATE_DELAY;
             end
 
-            TEST_CASE_STATE_DELAY:
+            `TEST_CASE_STATE_DELAY:
             begin
                 if (preprocess_mode_reg)
                 begin
-                    test_case_ctrl_state <= TEST_CASE_STATE_PREPROCESS;
+                    test_case_ctrl_state <= `TEST_CASE_STATE_PREPROCESS;
                 end
                 else
                 begin
-                    test_case_ctrl_state <= TEST_CASE_STATE_RUNNING;
+                    test_case_ctrl_state <= `TEST_CASE_STATE_RUNNING;
                 end
             end
 
-            TEST_CASE_STATE_PREPROCESS:
+            `TEST_CASE_STATE_PREPROCESS:
             begin
                 if (preprocess_end_flag)
                 begin
-                    test_case_ctrl_state <= TEST_CASE_STATE_RUNNING;
+                    test_case_ctrl_state <= `TEST_CASE_STATE_RUNNING;
                 end
-                else
+            end
+
+            `TEST_CASE_STATE_RUNNING:
+            begin
+                if (packet_in_end_flag & packet_out_end_flag)
                 begin
-                    test_case_ctrl_state <= TEST_CASE_STATE_PREPROCESS;
+                    test_case_ctrl_state <= `TEST_CASE_STATE_CHECK;
                 end
             end
 
-            TEST_CASE_STATE_RUNNING:
+            `TEST_CASE_STATE_CHECK:
             begin
-
+                if (check_end_flag)
+                begin
+                    test_case_ctrl_state <= `TEST_CASE_STATE_FINAL;
+                end
             end
 
-            TEST_CASE_STATE_CHECK:
+            `TEST_CASE_STATE_FINAL:
             begin
-
-            end
-
-            TEST_CASE_STATE_FINAL:
-            begin
-                test_case_ctrl_state <= TEST_CASE_STATE_IDLE;
+                test_case_ctrl_state <= `TEST_CASE_STATE_IDLE;
             end
         end
     endcase
