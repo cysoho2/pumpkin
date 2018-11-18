@@ -6,6 +6,11 @@ module cache_packet_generator
     parameter NUM_REQUEST                             = 16,
     parameter TIMING_OUT_CYCLE                        = 100000,
 
+    parameter MEM_SIZE                                = 65536,
+    parameter NUM_TEST_CASE                           = 2,
+    parameter MAX_NUM_TASK                            = 2,
+    parameter NUM_TASK_TYPE                           = 2,
+
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS      = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_PORT_ID_WIDTH      = `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH,
     parameter UNIFIED_CACHE_PACKET_BYTE_MASK_LEN      = `UNIFIED_CACHE_PACKET_BYTE_MASK_LEN,
@@ -28,6 +33,21 @@ module cache_packet_generator
     output                                                          error
 );
 
+// generate ctrl state
+`define STATE_INIT      0
+`define STATE_CLEAR     1
+`define STATE_FINAL     2
+`define STATE_CASE_0    3
+
+// test case ctrl state
+`define TEST_CASE_STATE_IDLE        0
+`define TEST_CASE_STATE_CONFIG      1
+`define TEST_CASE_STATE_DELAY       2
+`define TEST_CASE_STATE_PREPROCESS  3
+`define TEST_CASE_STATE_RUNNING     4
+`define TEST_CASE_STATE_CHECK       5
+`define TEST_CASE_STATE_FINAL       6
+
 reg  [NUM_WAY - 1 : 0]                              return_packet_ack;
 reg  [NUM_WAY - 1 : 0]                              done_way;
 reg  [NUM_WAY - 1 : 0]                              error_way;
@@ -38,6 +58,59 @@ assign error                            = |error_way;
 assign return_packet_ack_flatted_out    = return_packet_ack;
 assign write_mask                       = {{(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){2'b11}}};
 
+reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] sim_memory [`MEM_SIZE - 1 : 0];
+
+// test case state
+reg [31:0] test_case;
+reg [31:0] generator_ctrl_state;
+reg [31:0] test_case_ctrl_state;
+
+// request buffer
+reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] packed_way_packet_out_buffer [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0];
+reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] packed_way_packet_in_buffer [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0];
+reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_boundry [31:0];
+reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_boundry [31:0];
+
+// couter
+reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_ctr [31:0];
+reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_ctr [31:0];
+
+// test case config reg - task list
+reg [MAX_NUM_TASK - 1 : 0] task_type_list_reg;
+reg [MAX_NUM_TASK - 1 : 0] task_num_request_reg [NUM_REQUEST - 1 : 0];
+reg [$clog2(MAX_NUM_TASK) - 1 : 0] num_task;
+reg [$clog2(MAX_NUM_TASK) - 1 : 0] task_list_ctr;
+
+// test case config reg - request in & out
+reg [NUM_WAY - 1 : 0] way_in_enable_reg;
+reg [NUM_WAY - 1 : 0] way_out_enable_reg;
+
+// test case config reg - check
+reg ckeck_mode_reg; // 0 - default check method (scoreboard), 1 - user-defined
+
+// test case config reg - preprocess
+reg preprocess_mode_reg // 0 - no pretreatment, 1 - user-defined
+reg preprocess_end_flag;
+
+// error & done
+reg [NUM_TEST_CASE - 1 : 0] done_vector [NUM_WAY - 1 : 0];
+reg [NUM_TEST_CASE - 1 : 0] error_vector [NUM_WAY - 1 : 0];
+
+// test case state abstract
+wire test_case_config;
+wire test_case_preprocess;
+wire test_case_runnig;
+wire test_case_check;
+wire test_case_final;
+
+// test case state abstract
+assign test_case_config = test_case_ctrl_state == TEST_CASE_STATE_CONFIG;
+assign test_case_preprocess = test_case_ctrl_state == TEST_CASE_STATE_PREPROCESS;
+assign test_case_running = test_case_ctrl_state == TEST_CASE_STATE_RUNNING;
+assign test_case_check = test_case_ctrl_state == TEST_CASE_STATE_CHECK;
+assign test_case_final = test_case_ctrl_state == TEST_CASE_STATE_FINAL;
+
+// send & recieve
 generate
 genvar WAY_INDEX;
 
@@ -209,4 +282,164 @@ begin:way_logic
 end
 endgenerate
 
+
+// generator ctrl state
+always @ (posedge clk_in)
+begin
+    if (reset_in)
+    begin
+        generator_ctrl_state <= `STATE_INIT;
+    end
+    else
+    begin
+        case (generator_ctrl_state)
+
+
+            `STATE_INIT:
+            begin
+
+            end
+
+
+            `STATE_CLEAR:
+            begin
+
+            end
+
+
+            `STATE_FINAL:
+            begin
+                generator_ctrl_state <= generator_ctrl_state;
+            end
+
+
+            `STATE_CASE_0:
+            begin
+                if (test_case_config)
+                begin
+
+                end
+
+                if (test_case_preprocess)
+                begin
+
+                end
+
+                if (test_case_check)
+                begin
+
+                end
+
+                if (test_case_final)
+                begin
+                    //state transition
+                    if (generator_ctrl_state == `STATE_CASE_0 + NUM_TEST_CASE - 1)
+                    begin
+                        generator_ctrl_state <= `STATE_FINAL;
+                    end
+                    else
+                    begin
+                        generator_ctrl_state <= generator_ctrl_state + 1;
+                    end
+                end
+            end
+
+/**
+            `STATE_CASE_X:
+            begin
+                if (test_case_config)
+                begin
+                    // insert your code
+                end
+                if (test_case_preprocess)
+                begin
+                    // insert your code
+                end
+                if (test_case_check)
+                begin
+                    // insert your code
+                end
+                if (test_case_final)
+                begin
+                    //state transition
+                    if (generator_ctrl_state == `STATE_CASE_0 + NUM_TEST_CASE - 1)
+                    begin
+                        generator_ctrl_state <= `STATE_FINAL;
+                    end
+                    else
+                    begin
+                        generator_ctrl_state <= generator_ctrl_state + 1;
+                    end
+                end
+            end
+ **/
+
+            default: ;
+        endcase
+
+    end
+end
+
+// test case ctrl state
+always @(posedge clk_in)
+begin
+    if (reset_in)
+    begin
+        test_case_ctrl_state <= 1'b0;
+    end
+    else
+    begin
+        case (test_case_ctrl_state)
+
+            TEST_CASE_STATE_IDLE:
+            begin
+
+            end
+
+            TEST_CASE_STATE_CONFIG:
+            begin
+                test_case_ctrl_state <= TEST_CASE_STATE_DELAY;
+            end
+
+            TEST_CASE_STATE_DELAY:
+            begin
+                if (preprocess_mode_reg)
+                begin
+                    test_case_ctrl_state <= TEST_CASE_STATE_PREPROCESS;
+                end
+                else
+                begin
+                    test_case_ctrl_state <= TEST_CASE_STATE_RUNNING;
+                end
+            end
+
+            TEST_CASE_STATE_PREPROCESS:
+            begin
+                if (preprocess_end_flag)
+                begin
+                    test_case_ctrl_state <= TEST_CASE_STATE_RUNNING;
+                end
+                else
+                begin
+                    test_case_ctrl_state <= TEST_CASE_STATE_PREPROCESS;
+                end
+            end
+
+            TEST_CASE_STATE_RUNNING:
+            begin
+
+            end
+
+            TEST_CASE_STATE_CHECK:
+            begin
+
+            end
+
+            TEST_CASE_STATE_FINAL:
+            begin
+                test_case_ctrl_state <= TEST_CASE_STATE_IDLE;
+            end
+        end
+    endcase
+end
 endmodule
