@@ -11,6 +11,8 @@ module cache_packet_generator
     parameter MAX_NUM_TASK                            = 2,
     parameter NUM_TASK_TYPE                           = 2,
 
+    parameter DEFAULT_WAY_TIME_DELAY                  = 4,
+
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS      = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_PORT_ID_WIDTH      = `UNIFIED_CACHE_PACKET_PORT_ID_WIDTH,
     parameter UNIFIED_CACHE_PACKET_BYTE_MASK_LEN      = `UNIFIED_CACHE_PACKET_BYTE_MASK_LEN,
@@ -48,6 +50,8 @@ module cache_packet_generator
 `define TEST_CASE_STATE_CHECK       5
 `define TEST_CASE_STATE_FINAL       6
 
+integer     reg_index;
+
 reg  [NUM_WAY - 1 : 0]                              return_packet_ack;
 reg  [NUM_WAY - 1 : 0]                              done_way;
 reg  [NUM_WAY - 1 : 0]                              error_way;
@@ -68,14 +72,16 @@ reg [31:0] test_case_ctrl_state;
 // request buffer
 reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] packed_way_packet_out_buffer [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0];
 reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] packed_way_packet_in_buffer [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0];
+reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] packed_way_packet_expected_buffer [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0];
 reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_boundry [31:0];
 reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_boundry [31:0];
+reg [NUM_WAY - 1 : 0] packed_way_packet_expected_buffer_boundry [31:0];
 
 // couter
 // reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_ctr [31:0];
 // reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_ctr [31:0];
 reg [$clog2(MAX_NUM_TASK) - 1 : 0] task_list_ctr;
-// reg [NUM_WAY * 32 - 1 : 0] way_out_time_delay_ctr;
+//reg [NUM_WAY * 32 - 1 : 0] way_out_time_delay_ctr;
 // reg [NUM_WAY * 32 - 1 : 0] way_in_time_delay_ctr;
 
 // test case config reg - task list
@@ -84,13 +90,13 @@ reg [MAX_NUM_TASK - 1 : 0] task_num_request_reg [NUM_REQUEST - 1 : 0];
 reg [$clog2(MAX_NUM_TASK) - 1 : 0] num_task;
 
 // test case config reg - request in & out
-reg [NUM_WAY - 1 : 0] way_in_enable_reg;
-reg [NUM_WAY - 1 : 0] way_out_enable_reg;
-reg [NUM_WAY * 32 - 1 : 0] way_in_time_delay;
-reg [NUM_WAY * 32 - 1 : 0] way_out_time_delay;
+reg [NUM_WAY - 1 : 0] way_enable_reg;
+//reg [NUM_WAY - 1 : 0] way_out_enable_reg;
+reg [NUM_WAY - 1 : 0] way_time_delay_reg [31:0];
+//reg [NUM_WAY * 32 - 1 : 0] way_out_time_delay;
 
 // test case config reg - check
-reg ckeck_mode_reg; // 0 - default check method (scoreboard), 1 - user-defined
+reg check_mode_reg; // 0 - default check method (scoreboard), 1 - user-defined
 
 // test case config reg - preprocess
 reg preprocess_mode_reg // 0 - no pretreatment, 1 - user-defined
@@ -121,18 +127,12 @@ wire next_task_clear_flag;
 
 
 // test case state abstract
-wire test_case_config;
-wire test_case_preprocess;
-wire test_case_runnig;
-wire test_case_check;
-wire test_case_final;
-
-// test case state abstract
-assign test_case_config = test_case_ctrl_state == TEST_CASE_STATE_CONFIG;
-assign test_case_preprocess = test_case_ctrl_state == TEST_CASE_STATE_PREPROCESS;
-assign test_case_running = test_case_ctrl_state == TEST_CASE_STATE_RUNNING;
-assign test_case_check = test_case_ctrl_state == TEST_CASE_STATE_CHECK;
-assign test_case_final = test_case_ctrl_state == TEST_CASE_STATE_FINAL;
+wire test_case_idle = test_case_ctrl_state == TEST_CASE_STATE_IDLE;
+wire test_case_config = test_case_ctrl_state == TEST_CASE_STATE_CONFIG;
+wire test_case_preprocess = test_case_ctrl_state == TEST_CASE_STATE_PREPROCESS;
+wire test_case_running = test_case_ctrl_state == TEST_CASE_STATE_RUNNING;
+wire test_case_check = test_case_ctrl_state == TEST_CASE_STATE_CHECK;
+wire test_case_final = test_case_ctrl_state == TEST_CASE_STATE_FINAL;
 
 // send & recieve
 generate
@@ -156,10 +156,13 @@ begin:way_logic
         reg  [31                                     : 0]   request_counter;
         reg  [63                                     : 0]   timeout_counter;
         reg  [31                                     : 0]   delay_counter;
+        reg  [31                                     : 0]   buffer_virtual_counter;
+        wire [31                                     : 0]   buffer_physical_counter;
 
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_concatenated;
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_from_buffer;
 
+        assign buffer_physical_counter = buffer_virtual_counter;
         assign packet_from_buffer = (packed_way_packet_in_buffer
                                     [WAY_INDEX * NUM_REQUEST + request_counter - 1 : 0]);
 
@@ -209,10 +212,8 @@ begin:way_logic
                 begin
                     test_packet                     <= 0;
                     request_counter                 <= 0;
-                    timeout_counter                 <= 0;
                     return_packet_ack[WAY_INDEX]    <= 0;
                     done_way[WAY_INDEX]             <= 0;
-                    error_way[WAY_INDEX]            <= 0;
                 end
 
                 else if (~error_way[WAY_INDEX])
@@ -221,27 +222,21 @@ begin:way_logic
                     begin
                         test_packet                     <= packet_concatenated;
                         request_counter                 <= request_counter;
-                        timeout_counter                 <= 0;
                         done_way[WAY_INDEX]             <= 0;
-                        error_way[WAY_INDEX]            <= 0;
                     end
 
                     else if(test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & test_packet_ack_flatted_in[WAY_INDEX])
                     begin
                         test_packet                     <= 0;
                         request_counter                 <= request_counter + 1'b1;
-                        timeout_counter                 <= 0;
                         done_way[WAY_INDEX]             <= request_counter == NUM_REQUEST - 1;
-                        error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE ? 1'b1 : 1'b0;
                     end
 
                     else
                     begin
                         test_packet                     <= test_packet;
                         request_counter                 <= request_counter;
-                        timeout_counter                 <= timeout_counter + 1'b1;
                         done_way[WAY_INDEX]             <= done_way[WAY_INDEX];
-                        error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE & ~done_way[WAY_INDEX]? 1'b1 : 1'b0;
                     end
                 end
             end
@@ -258,32 +253,47 @@ begin:way_logic
                 error_way[WAY_INDEX]            <= 0;
             end
 
-            else if(~error_way[WAY_INDEX])
+            else if (packet_in_enable_way[WAY_INDEX])
             begin
-
-                //
-                if(return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
+                if (way_clear_flag)
                 begin
-                    return_packet_ack[WAY_INDEX]    <= 1;
-                    timeout_counter                 <= 0;
-                    error_way[WAY_INDEX]            <= (return_data !=
-                                                    ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){expected_data}} & write_mask))
-                                                    | timeout_counter >= TIMING_OUT_CYCLE;
-                    expected_data                   <= expected_data + 1'b1;
+                    return_packet_ack[WAY_INDEX]        <= 0;
+                    timeout_counter                     <= 0;
+                    error_way[WAY_INDEX]                <= 0;
+                    buffer_virtual_counter              <= 0;
                 end
 
-                // wait
-                else if(~return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
+                else if(~error_way[WAY_INDEX])
                 begin
-                    return_packet_ack[WAY_INDEX]    <= 0;
-                    timeout_counter                 <= timeout_counter + 1'b1;
-                    error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE;
-                    expected_data                   <= expected_data;
+
+                    if(return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
+                    begin
+                        return_packet_ack[WAY_INDEX]    <= 1;
+                        timeout_counter                 <= 0;
+                        error_way[WAY_INDEX]            <= (return_data !=
+                                                        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){expected_data}} & write_mask))
+                                                        | timeout_counter >= TIMING_OUT_CYCLE;
+                        packed_way_packet_in_buffer
+                            [buffer_physical_counter]   <= return_packet_flatted_in[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
+                        buffer_virtual_counter <= buffer_virtual_counter + 1'b1;
+                    end
+
+                    // wait
+                    else if(~return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
+                    begin
+                        return_packet_ack[WAY_INDEX]    <= 0;
+                        timeout_counter                 <= timeout_counter + 1'b1;
+                        error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE;
+
+                        packed_way_packet_in_buffer
+                            [buffer_physical_counter]   <= packed_way_packet_in_buffer[buffer_physical_counter];
+                        buffer_virtual_counter          <= buffer_virtual_counter;
+                    end
                 end
             end
         end
 
-        // check
+        // request check
         always@(posedge clk_in)
         begin
             if (reset_in)
@@ -440,12 +450,34 @@ begin
     end
     else
     begin
+
+        if (test_case_idle)
+        begin
+            // config reg
+            way_enable_reg <= 0;
+
+            for (reg_index = 0; reg_index < NUM_WAY; reg_index = reg_index + 1)
+            begin
+                way_time_delay_reg[reg_index] = DEFAULT_WAY_TIME_DELAY;
+            end
+
+            check_mode_reg <= 0;
+            preprocess_mode_reg <= 0;
+
+            // buffer
+            for (reg_index = 0; reg_index < NUM_REQUEST * NUM_WAY; reg_index = reg_index + 1'b1)
+            begin
+                packed_way_packet_out_buffer[reg_index] <= 0;
+                packed_way_packet_expected_buffer[reg_index] <= 0;
+            end
+        end
+
         case (generator_ctrl_state)
 
 
             `STATE_INIT:
             begin
-
+                generator_ctrl_state <= `STATE_CASE_0;
             end
 
 
@@ -465,17 +497,19 @@ begin
             begin
                 if (test_case_config)
                 begin
-
+                    way_enable_reg <= 1;
+                    way_time_delay_reg[0] = DEFAULT_WAY_TIME_DELAY;
+                    check_mode_reg <= 0;
+                    preprocess_mode_reg <= 0;
                 end
 
                 if (test_case_preprocess)
                 begin
-
-                end
-
-                if (test_case_check)
-                begin
-
+                    for (reg_index = 0; reg_index < NUM_REQUEST * NUM_WAY; reg_index = reg_index + 1'b1)
+                    begin
+                        packed_way_packet_out_buffer[reg_index] <= 0;
+                        packed_way_packet_expected_buffer[reg_index] <= 0;
+                    end
                 end
 
                 if (test_case_final)
@@ -541,7 +575,10 @@ begin
 
             `TEST_CASE_STATE_IDLE:
             begin
-
+                if (generator_ctrl_state >= STATE_CASE_0)
+                begin
+                    test_case_ctrl_state <= `TEST_CASE_STATE_CONFIG;
+                end
             end
 
             `TEST_CASE_STATE_CONFIG:
@@ -571,7 +608,7 @@ begin
 
             `TEST_CASE_STATE_RUNNING:
             begin
-                if (packet_in_end_flag & packet_out_end_flag)
+                if (running_end_flag)
                 begin
                     test_case_ctrl_state <= `TEST_CASE_STATE_CHECK;
                 end
