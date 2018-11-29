@@ -19,7 +19,21 @@ module cache_packet_generator
     parameter UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS  = `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_TYPE_WIDTH         = `UNIFIED_CACHE_PACKET_TYPE_WIDTH,
     parameter UNIFIED_CACHE_BLOCK_SIZE_IN_BITS        = `UNIFIED_CACHE_BLOCK_SIZE_IN_BITS,
-    parameter CPU_ADDR_LEN_IN_BITS                    = `CPU_ADDR_LEN_IN_BITS
+    parameter CPU_ADDR_LEN_IN_BITS                    = `CPU_ADDR_LEN_IN_BITS,
+    
+    parameter UNIFIED_CACHE_PACKET_ADDR_POS_LO                = 0,
+    parameter UNIFIED_CACHE_PACKET_ADDR_POS_HI                = (UNIFIED_CACHE_PACKET_ADDR_POS_LO  + CPU_ADDR_LEN_IN_BITS - 1),
+    parameter UNIFIED_CACHE_PACKET_DATA_POS_LO                = (UNIFIED_CACHE_PACKET_ADDR_POS_HI  + 1),
+    parameter UNIFIED_CACHE_PACKET_DATA_POS_HI                = (UNIFIED_CACHE_PACKET_DATA_POS_LO  + UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1),
+    parameter UNIFIED_CACHE_PACKET_TYPE_POS_LO                = (UNIFIED_CACHE_PACKET_DATA_POS_HI  + 1),
+    parameter UNIFIED_CACHE_PACKET_TYPE_POS_HI                = (UNIFIED_CACHE_PACKET_TYPE_POS_LO  + UNIFIED_CACHE_PACKET_TYPE_WIDTH - 1),
+    parameter UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO           = (UNIFIED_CACHE_PACKET_TYPE_POS_HI  + 1),
+    parameter UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI           = (UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO + UNIFIED_CACHE_PACKET_BYTE_MASK_LEN - 1),
+    parameter UNIFIED_CACHE_PACKET_PORT_NUM_LO                = (UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI + 1),
+    parameter UNIFIED_CACHE_PACKET_PORT_NUM_HI                = (UNIFIED_CACHE_PACKET_PORT_NUM_LO  + UNIFIED_CACHE_PACKET_PORT_ID_WIDTH - 1),
+    parameter UNIFIED_CACHE_PACKET_VALID_POS                  = (UNIFIED_CACHE_PACKET_PORT_NUM_HI  + 1),
+    parameter UNIFIED_CACHE_PACKET_IS_WRITE_POS               = (UNIFIED_CACHE_PACKET_VALID_POS    + 1),
+    parameter UNIFIED_CACHE_PACKET_CACHEABLE_POS              = (UNIFIED_CACHE_PACKET_IS_WRITE_POS + 1)
 )
 (
     input                                                           reset_in,
@@ -62,7 +76,7 @@ assign error                            = |error_way;
 assign return_packet_ack_flatted_out    = return_packet_ack;
 assign write_mask                       = {{(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN/2){2'b11}}};
 
-reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] sim_memory [`MEM_SIZE - 1 : 0];
+reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] sim_memory [MEM_SIZE - 1 : 0];
 
 // test case state
 reg [31:0] test_case;
@@ -77,12 +91,15 @@ reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_boundry [31:0];
 reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_boundry [31:0];
 reg [NUM_WAY - 1 : 0] packed_way_packet_expected_buffer_boundry [31:0];
 
+reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] way_expected_valid_array;
+
 // couter
 // reg [NUM_WAY - 1 : 0] packed_way_packet_out_buffer_ctr [31:0];
 // reg [NUM_WAY - 1 : 0] packed_way_packet_in_buffer_ctr [31:0];
 reg [$clog2(MAX_NUM_TASK) - 1 : 0] task_list_ctr;
 //reg [NUM_WAY * 32 - 1 : 0] way_out_time_delay_ctr;
 // reg [NUM_WAY * 32 - 1 : 0] way_in_time_delay_ctr;
+//reg [NUM_WAY - 1 : 0] check_request_in_counter_array [31:0];
 
 // test case config reg - task list
 reg [MAX_NUM_TASK - 1 : 0] task_type_list_reg;
@@ -99,7 +116,7 @@ reg [NUM_WAY - 1 : 0] way_time_delay_reg [31:0];
 reg check_mode_reg; // 0 - default check method (scoreboard), 1 - user-defined
 
 // test case config reg - preprocess
-reg preprocess_mode_reg // 0 - no pretreatment, 1 - user-defined
+reg preprocess_mode_reg; // 0 - no pretreatment, 1 - user-defined
 reg preprocess_end_flag;
 
 
@@ -127,12 +144,12 @@ wire next_task_clear_flag;
 
 
 // test case state abstract
-wire test_case_idle = test_case_ctrl_state == TEST_CASE_STATE_IDLE;
-wire test_case_config = test_case_ctrl_state == TEST_CASE_STATE_CONFIG;
-wire test_case_preprocess = test_case_ctrl_state == TEST_CASE_STATE_PREPROCESS;
-wire test_case_running = test_case_ctrl_state == TEST_CASE_STATE_RUNNING;
-wire test_case_check = test_case_ctrl_state == TEST_CASE_STATE_CHECK;
-wire test_case_final = test_case_ctrl_state == TEST_CASE_STATE_FINAL;
+wire test_case_idle = test_case_ctrl_state == `TEST_CASE_STATE_IDLE;
+wire test_case_config = test_case_ctrl_state == `TEST_CASE_STATE_CONFIG;
+wire test_case_preprocess = test_case_ctrl_state == `TEST_CASE_STATE_PREPROCESS;
+wire test_case_running = test_case_ctrl_state == `TEST_CASE_STATE_RUNNING;
+wire test_case_check = test_case_ctrl_state == `TEST_CASE_STATE_CHECK;
+wire test_case_final = test_case_ctrl_state == `TEST_CASE_STATE_FINAL;
 
 // send & recieve
 generate
@@ -146,6 +163,7 @@ begin:way_logic
 
         integer request_in_index;
         integer scoreboard_index;
+        integer valid_index;
 
         reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   test_packet;
         assign test_packet_flatted_out[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS] = test_packet;
@@ -156,15 +174,19 @@ begin:way_logic
         reg  [31                                     : 0]   request_counter;
         reg  [63                                     : 0]   timeout_counter;
         reg  [31                                     : 0]   delay_counter;
+        reg  [31                                     : 0]   check_request_in_counter;
         reg  [31                                     : 0]   buffer_virtual_counter;
         wire [31                                     : 0]   buffer_physical_counter;
+        
 
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_concatenated;
         wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_from_buffer;
+        
+        wire check_enable;
 
         assign buffer_physical_counter = buffer_virtual_counter;
         assign packet_from_buffer = (packed_way_packet_in_buffer
-                                    [WAY_INDEX * NUM_REQUEST + request_counter - 1 : 0]);
+                                    [WAY_INDEX * NUM_REQUEST + request_counter - 1]);
 
         // from buffer
         packet_concat test_packet_concat
@@ -249,7 +271,7 @@ begin:way_logic
             begin
                 return_packet_ack[WAY_INDEX]    <= 0;
                 timeout_counter                 <= 0;
-                expected_data                   <= 32'h0000_0000;
+                //expected_data                   <= 32'h0000_0000;
                 error_way[WAY_INDEX]            <= 0;
             end
 
@@ -270,9 +292,7 @@ begin:way_logic
                     begin
                         return_packet_ack[WAY_INDEX]    <= 1;
                         timeout_counter                 <= 0;
-                        error_way[WAY_INDEX]            <= (return_data !=
-                                                        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){expected_data}} & write_mask))
-                                                        | timeout_counter >= TIMING_OUT_CYCLE;
+                        error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE;
                         packed_way_packet_in_buffer
                             [buffer_physical_counter]   <= return_packet_flatted_in[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
                         buffer_virtual_counter <= buffer_virtual_counter + 1'b1;
@@ -298,18 +318,13 @@ begin:way_logic
         begin
             if (reset_in)
             begin
-                request_in_counter
-                request_out_counter
-
-                request_in_buffer
-                request_out_buffer
-
-                scoreboard_valid_array
-
-                request_in_from_buffer
-                request_out_from_buffer
-
-                request_out_valid
+                // init
+            
+                check_request_in_counter <= 0;
+                for (valid_index = 0; valid_index < NUM_REQUEST; valid_index = valid_index + 1'b1)
+                begin
+                    way_expected_valid_array[valid_index] <= 1'b1;
+                end
             end
             else
             begin
@@ -319,19 +334,25 @@ begin:way_logic
                     begin
                         // scoreboard
 
-                        request_in_counter <= request_in_counter + 1'b1;
+                        check_request_in_counter <= check_request_in_counter + 1'b1;
 
-                        for (scoreboard_index = 0; scoreboard_index < NUM_REQUEST; scoreboard_index = scoreboard_index + 1'b1;)
+                        for (scoreboard_index = 0; scoreboard_index < NUM_REQUEST; scoreboard_index = scoreboard_index + 1'b1)
                         begin: next_score
 
-                            if ((request_out_buffer[request_out_index]
+                            if ((packed_way_packet_out_buffer[check_request_in_counter]
                                     [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]
-                                == request_in_buffer[request_in_index]
+                                == packed_way_packet_expected_buffer[scoreboard_index]
                                     [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO])
-                                & scoreboard_valid_array[request_in_index])
+                                & way_expected_valid_array[scoreboard_index])
                             begin
-                                scoreboard_valid_array[request_in_index] <= 1'b0;
-                                disable next_score;
+                                if (packed_way_packet_out_buffer[check_request_in_counter]
+                                       [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO]
+                                    == packed_way_packet_expected_buffer[scoreboard_index]
+                                    [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO])
+                                begin
+                                    way_expected_valid_array[scoreboard_index] <= 1'b0;
+                                    disable next_score;
+                                end
                             end
                         end
                     end
@@ -556,7 +577,7 @@ begin
             end
  **/
 
-            default: ;
+            //default: begin end
         endcase
 
     end
@@ -575,7 +596,7 @@ begin
 
             `TEST_CASE_STATE_IDLE:
             begin
-                if (generator_ctrl_state >= STATE_CASE_0)
+                if (generator_ctrl_state >= `STATE_CASE_0)
                 begin
                     test_case_ctrl_state <= `TEST_CASE_STATE_CONFIG;
                 end
@@ -626,7 +647,7 @@ begin
             begin
                 test_case_ctrl_state <= `TEST_CASE_STATE_IDLE;
             end
-        end
-    endcase
+        endcase
+    end
 end
 endmodule
