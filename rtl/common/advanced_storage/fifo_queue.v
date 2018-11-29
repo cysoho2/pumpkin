@@ -225,7 +225,7 @@ begin
     #(
         .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
         .NUM_SET                        (QUEUE_SIZE),
-        .CONFIG_MODE                    ("WriteFirst"),
+        .CONFIG_MODE                    ("ReadFirst"),
         .WITH_VALID_REG_ARRAY           ("No")
     )
     dual_port_lutram
