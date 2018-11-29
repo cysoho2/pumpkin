@@ -6,7 +6,7 @@ module fifo_queue
     parameter QUEUE_SIZE                    = 16, /* must be a power of 2*/
     parameter QUEUE_PTR_WIDTH_IN_BITS       = $clog2(QUEUE_SIZE),
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter STORAGE_TYPE                  = "FlipFlop" /* option: FlipFlop, LUTRAM */
+    parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
 )
 (
     input                                                                   clk_in,
