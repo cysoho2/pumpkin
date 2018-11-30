@@ -26,7 +26,7 @@ module fifo_queue
 
 wire [QUEUE_SIZE - 1 : 0] write_qualified;
 wire [QUEUE_SIZE - 1 : 0] read_complete;
-wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] storage_output;
+wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] storage_output;
 
 wire [QUEUE_SIZE - 1 : 0]                  fifo_entry_valid_packed;
 wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] fifo_entry_packed [QUEUE_SIZE - 1 : 0];
@@ -44,29 +44,6 @@ wire [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] next_read_ptr  = (read_ptr  == {(QUEU
 assign is_full_out  = &fifo_entry_valid_packed;
 assign is_empty_out = &(~fifo_entry_valid_packed);
 
-always@*
-begin
-    if(|read_complete | reset_in)
-    begin
-        request_out <= 0;
-    end
-
-    else if(fifo_entry_valid_packed[read_ptr])
-    begin
-        request_out <= storage_output;
-    end
-    
-    else if(~fifo_entry_valid_packed[read_ptr] & write_qualified[read_ptr])
-    begin
-        request_out <= request_in;
-    end
-    
-    else
-    begin
-        request_out <= request_out;
-    end
-end
-
 // read/write ptr management
 always@(posedge clk_in)
 begin
@@ -75,7 +52,7 @@ begin
         write_ptr           <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
         issue_ack_out       <= 1'b0;
         read_ptr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
-        //request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+        request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
         request_valid_out   <= 1'b0;
     end
 
@@ -99,7 +76,7 @@ begin
         if(|read_complete)
         begin
             read_ptr                <= next_read_ptr;
-            //request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             request_valid_out       <= 1'b0;
         end
 
@@ -107,7 +84,7 @@ begin
         else if(fifo_entry_valid_packed[read_ptr])
         begin
             read_ptr                <= read_ptr;
-            //request_out             <= storage_output;
+            request_out             <= storage_output;
             request_valid_out       <= 1'b1;
         end
 
@@ -115,14 +92,14 @@ begin
         // use the incoming write for fast output
         else if(~fifo_entry_valid_packed[read_ptr] & write_qualified[read_ptr])
         begin
-            //request_out             <= request_in;
+            request_out             <= request_in;
             request_valid_out       <= 1'b1;
         end
         
         else
         begin
             read_ptr                <= read_ptr;
-            //request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+            request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             request_valid_out       <= 1'b0;
         end
     end
@@ -225,7 +202,7 @@ begin
     #(
         .SINGLE_ENTRY_WIDTH_IN_BITS     (SINGLE_ENTRY_WIDTH_IN_BITS),
         .NUM_SET                        (QUEUE_SIZE),
-        .CONFIG_MODE                    ("ReadFirst"),
+        .CONFIG_MODE                    ("WriteFirst"),
         .WITH_VALID_REG_ARRAY           ("No")
     )
     dual_port_lutram

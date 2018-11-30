@@ -118,6 +118,11 @@ begin
         begin
             read_port_data_out <= blockram[read_port_access_set_addr_in];
         end
+
+        else
+        begin
+            read_port_data_out <= 0;
+        end
     end
 end
 
