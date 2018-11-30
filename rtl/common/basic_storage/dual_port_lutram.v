@@ -3,7 +3,7 @@
 module dual_port_lutram
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS  = 64,
-    parameter NUM_SET                     = 64,
+    parameter NUM_SET                     = 64, /* must be a power of 2 */
     parameter SET_PTR_WIDTH_IN_BITS       = $clog2(NUM_SET),
     parameter WRITE_MASK_LEN              = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter CONFIG_MODE                 = "ReadFirst", /* option: ReadFirst, WriteFirst */
@@ -81,16 +81,7 @@ end
 
 endgenerate
 
-(* ram_style = "distributed" *) reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] blockram [NUM_SET - 1 : 0];
-
-wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1: 0] write_port_full_data_mask;
-generate
-genvar bit_lane;
-for(bit_lane = 0; bit_lane < SINGLE_ENTRY_WIDTH_IN_BITS; bit_lane = bit_lane + 1)
-begin
-    assign write_port_full_data_mask[bit_lane] = write_port_write_en_in[bit_lane / `BYTE_LEN_IN_BITS];
-end
-endgenerate
+(* ram_style = "distributed" *) reg [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] lutram [NUM_SET - 1 : 0];
 
 // write port operation
 always @(posedge clk_in)
@@ -101,7 +92,7 @@ begin
         begin
             if(write_port_write_en_in[write_lane])
             begin
-                blockram[write_port_access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
+                lutram[write_port_access_set_addr_in][write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS]
                 <= write_port_data_in[write_lane * `BYTE_LEN_IN_BITS +: `BYTE_LEN_IN_BITS];
             end
         end
@@ -116,7 +107,7 @@ begin
     begin
         if(read_port_access_en_in)
         begin
-            read_port_data_out <= blockram[read_port_access_set_addr_in];
+            read_port_data_out <= lutram[read_port_access_set_addr_in];
         end
 
         else
@@ -126,10 +117,19 @@ begin
     end
 end
 
+// this branch will incorrectly make vivado infer LUTRAM rather than BlockRAM
 else if(CONFIG_MODE == "WriteFirst")
 begin
     wire need_write_forward = (read_port_access_en_in & write_port_access_en_in) & (|write_port_write_en_in) &
                               (read_port_access_set_addr_in == write_port_access_set_addr_in);
+    
+    wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1: 0] write_port_full_data_mask;
+    genvar bit_lane;
+    for(bit_lane = 0; bit_lane < SINGLE_ENTRY_WIDTH_IN_BITS; bit_lane = bit_lane + 1)
+    begin
+        assign write_port_full_data_mask[bit_lane] = write_port_write_en_in[bit_lane / `BYTE_LEN_IN_BITS];
+    end
+    
     // read port operation
     always @(posedge clk_in)
     begin
@@ -140,9 +140,10 @@ begin
         
         else if(read_port_access_en_in)
         begin
-            read_port_data_out <= blockram[read_port_access_set_addr_in];
+            read_port_data_out <= lutram[read_port_access_set_addr_in];
         end
     end
 end
+
 endgenerate
 endmodule
