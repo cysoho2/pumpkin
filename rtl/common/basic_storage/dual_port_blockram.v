@@ -25,10 +25,10 @@ module dual_port_blockram
 );
 
 integer write_lane;
+integer set_index;
 
 // For valid array
 generate
-genvar set_index;
 
 if(WITH_VALID_REG_ARRAY == "Yes")
 begin
