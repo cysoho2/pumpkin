@@ -140,6 +140,9 @@ wire packet_in_end_flag;
 wire check_end_flag;
 wire way_clear_flag;
 
+assign packet_in_enable_way = way_enable_reg;
+assign check_enable_way = (check_mode_reg == 0) & way_enable_reg;
+
 // task way control flag
 wire [MAX_NUM_TASK - 1 : 0] running_end_task_flag;
 wire running_end_flag;
@@ -259,6 +262,9 @@ begin:way_logic
 
                 else if (~error_way[WAY_INDEX])
                 begin
+
+                    // request out delay
+
                     if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX])
                     begin
                         test_packet                     <= packet_concatenated;
