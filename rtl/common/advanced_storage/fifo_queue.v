@@ -3,7 +3,7 @@
 module fifo_queue
 #(
     parameter SINGLE_ENTRY_WIDTH_IN_BITS    = 64,
-    parameter QUEUE_SIZE                    = 16, /* must be a power of 2*/
+    parameter QUEUE_SIZE                    = 4, /* must be a power of 2*/
     parameter QUEUE_PTR_WIDTH_IN_BITS       = $clog2(QUEUE_SIZE),
     parameter WRITE_MASK_LEN                = SINGLE_ENTRY_WIDTH_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter STORAGE_TYPE                  = "LUTRAM" /* option: FlipFlop, LUTRAM */
@@ -17,7 +17,7 @@ module fifo_queue
 
     input           [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]                    request_in,
     input                                                                   request_valid_in,
-    output  reg                                                             issue_ack_out,
+    output                                                                  issue_ack_out,
 
     output  reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0]                    request_out,
     output  reg                                                             request_valid_out,
@@ -41,8 +41,9 @@ wire [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] next_read_ptr  = (read_ptr  == {(QUEU
                                                                           {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}} :
                                                                           read_ptr + 1'b1);
 
-assign is_full_out  = &fifo_entry_valid_packed;
-assign is_empty_out = &(~fifo_entry_valid_packed);
+assign is_full_out   = &fifo_entry_valid_packed;
+assign is_empty_out  = &(~fifo_entry_valid_packed);
+assign issue_ack_out = ~is_full_out;
 
 // read/write ptr management
 always@(posedge clk_in)
@@ -50,7 +51,7 @@ begin
     if(reset_in)
     begin
         write_ptr           <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
-        issue_ack_out       <= 1'b0;
+        //issue_ack_out       <= 1'b0;
         read_ptr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
         request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
         request_valid_out   <= 1'b0;
@@ -63,13 +64,13 @@ begin
         if(|write_qualified)
         begin
             write_ptr               <= next_write_ptr;
-            issue_ack_out           <= 1'b1;
+            //issue_ack_out           <= 1'b1;
         end
 
         else
         begin
             write_ptr               <= write_ptr;
-            issue_ack_out           <= 1'b0;
+            //issue_ack_out           <= 1'b0;
         end
 
         // read complete, move to next read
