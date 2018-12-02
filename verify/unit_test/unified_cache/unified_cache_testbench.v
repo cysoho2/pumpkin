@@ -219,7 +219,8 @@ begin
             begin
                 if(way1_packet_ack_from_cache)
                 begin
-                    if(test_way1_valid & ~test_way1_record_flag)
+//                    if(test_way1_valid & ~test_way1_record_flag)
+                    if(test_way1_valid)
                     begin
                         way1_last_packet_to_cache                                   <= way1_packet_to_cache;
                         test_way1_accept_flag                                       <= 1;
@@ -308,7 +309,8 @@ begin
             begin
                 if(way2_packet_ack_from_cache)
                 begin
-                    if(test_way2_valid & ~test_way2_record_flag)
+//                    if(test_way2_valid & ~test_way2_record_flag)
+                    if(test_way2_valid)
                     begin
                         way2_last_packet_to_cache   <= way2_packet_to_cache;
                         test_way2_accept_flag       <= 1;
