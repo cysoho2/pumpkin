@@ -392,7 +392,7 @@ begin
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
 
-        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue with early ack", ((test_judge == 1'b1))? "passed" : "failed");
         
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");
                                    $finish;

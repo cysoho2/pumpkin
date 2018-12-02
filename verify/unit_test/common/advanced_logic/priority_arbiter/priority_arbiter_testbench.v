@@ -373,7 +373,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
+    #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (with early ack)", test_case, "basic request", test_judge? "passed": "failed");
 
     #(`FULL_CYCLE_DELAY * 10)   $display("[info-testbench] simulation comes to the end\n");
     $finish;
