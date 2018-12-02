@@ -158,11 +158,14 @@ begin
             
             else
             begin
-                issue_ack_to_fifo                           <= 1;
-            
-                request_out_buffer[request_out_ctr]         <= request_out;
-                request_out_ctr                             <= request_out_ctr + 1;   
+                if (request_valid_out)
+                begin
+                    request_out_buffer[request_out_ctr]         <= request_out;
+                    request_out_ctr                             <= request_out_ctr + 1;
+                end   
             end
+            
+            issue_ack_to_fifo                                   <= 1;
         end
     end
     
