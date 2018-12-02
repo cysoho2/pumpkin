@@ -85,7 +85,8 @@ begin
             // stop writing
             if (request_in_ctr == request_in_ctr_boundary)
             begin
-                request_in_enable                       <= 0;       
+                request_in_enable                       <= 0; 
+                is_from_request_in_buffer               <= 0;      
             end
 
         end
