@@ -21,6 +21,7 @@ wire    [(SINGLE_REQUEST_WIDTH_IN_BITS - 1):0]          request_from_arb;
 wire                                                    request_valid_from_arb;
 reg                                                     issue_ack_to_arb;
 
+reg                                                     ack_to_arb_mode;
 integer                                                 test_case;
 integer                                                 index;
 integer                                                 check_index;
@@ -126,7 +127,7 @@ begin
     else
     begin
         //delay 1 cycle
-        if (issue_ack_to_arb)
+        if (issue_ack_to_arb && (ack_to_arb_mode == 0))
         begin
             issue_ack_to_arb                                <= 1'b0;
         end
@@ -216,6 +217,7 @@ begin
 
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      <= 1'b0;
+    ack_to_arb_mode                             <= 1'b0;
 
     /*test case 1 */
     test_case                                   <= 0;
@@ -268,7 +270,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 2)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
+    #(`FULL_CYCLE_DELAY * 1000)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
 
     /*test case 2 */
     test_case                                   <= test_case + 1'b1;
@@ -320,6 +322,58 @@ begin
 
     #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
 
+
+    /*test case 3 */
+    test_case                                   <= test_case + 1'b1;
+    ack_to_arb_mode                             <= 1;
+    
+    reset_in                                    <= 1'b1;
+    read_delay                                  <= 20;
+
+    //init
+    end_read_boundary                           <= NUM_SINGLE_REQUEST_TEST * NUM_REQUEST;
+    passed_request_buffer_pointer               <= {(32){1'b0}};
+    for (index = 0; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
+    begin
+        request_to_arb_buffer[index]            <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b1}} - index;
+        request_from_arb_buffer[index]          <= {(SINGLE_REQUEST_WIDTH_IN_BITS){1'b0}};
+        request_valid_to_arb_array[index]       <= 1'b1;
+
+        if (index < NUM_SINGLE_REQUEST_TEST)
+        begin
+            request_critical_to_arb_array[index]    <= 1'b1;
+        end
+        else
+        begin
+            request_critical_to_arb_array[index]    <= 1'b0;
+        end
+        
+        check_request_judge_array[index]        <= 1'b0;
+    end
+
+    for (index = 0; index < NUM_SINGLE_REQUEST_TEST; index = index + 1)
+    begin
+        sim_write_pointer_array[index]          <= index * NUM_SINGLE_REQUEST_TEST;
+    end
+
+    //Conditions of passage
+    #(`FULL_CYCLE_DELAY * 2)
+
+    //Critical request
+    for (index = 0; index < NUM_SINGLE_REQUEST_TEST; index = index + 1)
+    begin
+         passed_request_buffer[index]                                               <= request_to_arb_buffer[index];
+    end
+
+    for (index = NUM_SINGLE_REQUEST_TEST; index < NUM_SINGLE_REQUEST_TEST * NUM_REQUEST; index = index + 1)
+    begin
+        #(`FULL_CYCLE_DELAY) passed_request_buffer[index]                           <= request_to_arb_buffer[sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)]];
+        sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)]    <= sim_write_pointer_array[1 + (FIRST_WAY - 1 + index) % (NUM_REQUEST - 1)] + 1'b1;
+    end
+
+    #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
+
+    #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
 
     #(`FULL_CYCLE_DELAY * 10)   $display("[info-testbench] simulation comes to the end\n");
     $finish;
