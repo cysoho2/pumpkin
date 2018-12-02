@@ -117,7 +117,7 @@ begin
     assign fifo_entry_valid_packed[gen] = entry_valid;
 
     assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
-                                    & ~issue_ack_out & request_valid_in & gen == write_ptr;
+                                    & request_valid_in & gen == write_ptr;
 
     assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
 
