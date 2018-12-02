@@ -14,6 +14,7 @@ reg                                                     clk_in;
 reg                                                     reset_in;
 reg     [31:0]                                          clk_ctr;
 
+reg                                                     ack_to_fifo_mode;
 integer                                    	            test_case;
 reg     [31:0]                                          test_ctr;
 integer                                                 test_gen;
@@ -122,28 +123,47 @@ begin
     end
     else if (request_out_enable)
     begin
-        if (issue_ack_to_fifo)
+        
+        if (ack_to_fifo_mode == 0)
         begin
-            issue_ack_to_fifo                           <= 0;
-        end
-        else
-        begin
-            if (request_valid_out)
+            if (issue_ack_to_fifo)
             begin
-                issue_ack_to_fifo                       <= 1;
-                
-                request_out_buffer[request_out_ctr]     <= request_out;
-                request_out_ctr                         <= request_out_ctr + 1;
+                issue_ack_to_fifo                           <= 0;
+            end
+            else
+            begin
+                if (request_valid_out)
+                begin
+                    issue_ack_to_fifo                       <= 1;
+                    
+                    request_out_buffer[request_out_ctr]     <= request_out;
+                    request_out_ctr                         <= request_out_ctr + 1;
+                end
+            end
+            
+            // stop reading
+            if (request_out_ctr == result_ctr_boundary)
+            begin
+                request_out_enable                          <= 0;        
             end
         end
-        
-        // stop reading
-        if (request_out_ctr == result_ctr_boundary)
-        begin
-            request_out_enable                          <= 0;        
-        end
 
-    
+        else if (ack_to_fifo_mode == 1)
+        begin
+            // stop reading
+            if (request_out_ctr == result_ctr_boundary)
+            begin
+                request_out_enable                          <= 0;        
+            end
+            
+            else
+            begin
+                issue_ack_to_fifo                           <= 1;
+            
+                request_out_buffer[request_out_ctr]         <= request_out;
+                request_out_ctr                             <= request_out_ctr + 1;   
+            end
+        end
     end
     
     // jump to check data
@@ -220,7 +240,7 @@ begin
 
         clk_in                                                          <= 1'b0;
         reset_in                                                        <= 1'b0;
-
+        ack_to_fifo_mode                                              <= 1'b0;
 
         test_case                                                       <= 0;
 
@@ -336,7 +356,41 @@ begin
 
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
         
+        
+        
+        // test case 3
+        test_case                                                       <= test_case + 1;
+        ack_to_fifo_mode                                              <= 1;
+        
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
+        end
+           
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2; test_gen = test_gen + 1)
+        begin
+            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+                                  request_valid_in_buffer[test_gen]     <= 1;
+            
+            if (test_gen < QUEUE_SIZE)
+            begin
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+            end
+                                 
+        end
+                                request_in_ctr_boundary                 <= test_gen;
+                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
+        #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
+        
+                                is_ready_to_write                       <= 1;
+        
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
+
+        #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
+        
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");
                                    $finish;
 end
