@@ -102,8 +102,6 @@ begin
         request_in_enable                               <= 1;
         is_from_request_in_buffer                       <= 1;
         
-        if (jump_mode == 1)
-            request_out_enable                          <= 1;
     end
     
     // jump to read data
@@ -420,6 +418,7 @@ begin
         // test case 4
         test_case                                                                   <= test_case + 1;
         jump_mode                                                <=1;
+        
 
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
         begin
@@ -440,6 +439,8 @@ begin
          #(`FULL_CYCLE_DELAY )  reset_in                                <= 0;
          
                                 is_ready_to_write                       <= 1;
+                                request_out_enable                      <= 1;
+                                 
 
          #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
          #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
