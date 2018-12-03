@@ -177,8 +177,9 @@ begin
                     sim_memory[access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS]
                     <= write_mask_extend & mem_return_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                                `UNIFIED_CACHE_PACKET_DATA_POS_LO];
-                    $display("write data %h to sim memory addr %h ", write_mask_extend & mem_return_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
-                                                               `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
+                    $display("write data %h to sim memory addr %h by way %d", write_mask_extend & mem_return_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                               `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
+                                                                mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
                 end
                 else
                 begin
@@ -207,8 +208,9 @@ begin
                     to_cache_ack            <= 1;
                     mem_return_packet       <= 0;
                     mem_ctrl_state      <= `STATE_FINAL;
-                    $display("read return data %h to cache on addr %h ", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
-                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
+                    $display("read return data %h to cache on addr %h by way %d", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
+                                                            mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
                                                           
                 end
                 else
@@ -267,17 +269,18 @@ begin
     #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
     $display("[info-testbench] test case %d %s : %s",
             test_case, test_case_content, test_judge? "passed" : "failed");
-    
+    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+   
     #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
     $finish;
 end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
-always@*
-begin
-    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
-        $finish;
-end
+//always@*
+//begin
+//    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
+//        $finish;
+//end
 
 endmodule
