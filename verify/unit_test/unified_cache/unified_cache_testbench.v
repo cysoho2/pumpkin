@@ -673,7 +673,7 @@ begin
     begin
 
         #(`FULL_CYCLE_DELAY * 2)    reset_in                             = 1'b1;
-        #(`FULL_CYCLE_DELAY)        reset_in                             = 1'b0;
+        #(`FULL_CYCLE_DELAY * 1.5)  reset_in                             = 1'b0;
 
         //case 0
                                     test_phase                           <= 0;
