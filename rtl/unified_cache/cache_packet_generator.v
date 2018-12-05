@@ -96,6 +96,7 @@ reg [31 : 0] packed_way_packet_buffer_start [NUM_WAY - 1 : 0];
 //reg [31 : 0] packed_way_packet_in_buffer_start [NUM_WAY - 1 : 0];
 reg [31 : 0] packed_way_packet_expected_buffer_start [NUM_WAY - 1 : 0];
 
+reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] way_in_valid_array;
 reg [(NUM_REQUEST * NUM_WAY) - 1 : 0] way_expected_valid_array;
 
 // couter
@@ -317,6 +318,11 @@ begin:way_logic
                 //expected_data                   <= 32'h0000_0000;
                 error_way[WAY_INDEX]            <= 0;
                 buffer_virtual_counter          <= 0;
+                
+                for (valid_index = 0; valid_index < NUM_REQUEST * NUM_WAY; valid_index = valid_index + 1'b1)
+                begin
+                    way_in_valid_array[valid_index] <= 1'b0;
+                end
 
             end
 
@@ -346,6 +352,9 @@ begin:way_logic
                         packed_way_packet_in_buffer
                             [buffer_physical_counter]   <= return_packet_flatted_in[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
                         buffer_virtual_counter <= buffer_virtual_counter + 1'b1;
+                        
+                        way_in_valid_array
+                            [buffer_physical_counter]   <= 1'b1; 
                     end
                 end
             end
@@ -355,6 +364,11 @@ begin:way_logic
                 timeout_counter                     <= 0;
                 error_way[WAY_INDEX]                <= 0;
                 buffer_virtual_counter              <= 0;
+                
+                for (valid_index = 0; valid_index < NUM_REQUEST * NUM_WAY; valid_index = valid_index + 1'b1)
+                begin
+                    way_in_valid_array[valid_index] <= 1'b0;
+                end
             end
         end
 
@@ -368,7 +382,7 @@ begin:way_logic
                 check_request_in_counter <= 0;
                 for (valid_index = 0; valid_index < NUM_REQUEST * NUM_WAY; valid_index = valid_index + 1'b1)
                 begin
-                    way_expected_valid_array[valid_index] <= 1'b1;
+                    way_expected_valid_array[valid_index] <= 1'b0;
                 end
             end
             else
@@ -390,14 +404,14 @@ begin:way_logic
 
                         check_request_in_counter <= check_request_in_counter + 1'b1;
 
-                        for (scoreboard_index = 0; scoreboard_index < NUM_REQUEST; scoreboard_index = scoreboard_index + 1'b1)
+                        for (scoreboard_index = 0; scoreboard_index < NUM_REQUEST * NUM_WAY; scoreboard_index = scoreboard_index + 1'b1)
                         begin: next_score
 
                             if ((packed_way_packet_out_buffer[check_request_in_counter]
                                     [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]
                                 == packed_way_packet_expected_buffer[scoreboard_index]
                                     [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO])
-                                & way_expected_valid_array[scoreboard_index])
+                                & way_expected_valid_array[scoreboard_index] & way_in_valid_array[scoreboard_index])
                             begin
                                 if ((packed_way_packet_out_buffer[check_request_in_counter]
                                        [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO] & packed_way_packet_out_buffer[check_request_in_counter][UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO])
