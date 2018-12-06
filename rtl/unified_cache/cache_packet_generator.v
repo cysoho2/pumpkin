@@ -46,7 +46,10 @@ module cache_packet_generator
     output  [NUM_WAY                                       - 1 : 0] return_packet_ack_flatted_out,
 
     output                                                          done,
-    output                                                          error
+    output                                                          error,
+    
+    input                                                           test_case_ack_in,
+    output reg                                                      test_case_ack_out
 );
 
 // generate ctrl state
@@ -831,6 +834,7 @@ begin
     if (reset_in)
     begin
         test_case_ctrl_state <= 1'b0;
+        test_case_ack_out    <= 1'b0;
         
         way_clear_flag      <= 1;
         for (reg_index = 0; reg_index < NUM_REQUEST; reg_index = reg_index + 1)
@@ -900,12 +904,21 @@ begin
                 
                 done_vector[generator_ctrl_state - `STATE_CASE_0] <= done_way & way_enable_reg;
                 error_vector[generator_ctrl_state - `STATE_CASE_0] <= error_way & way_enable_reg | |(way_expected_valid_array & check_valid_mask);
+                test_case_ack_out   <= 1'b1;
             end
 
             `TEST_CASE_STATE_FINAL:
             begin
-                test_case_ctrl_state <= `TEST_CASE_STATE_IDLE;
-                way_clear_flag       <= 1;
+                if (test_case_ack_in)
+                begin
+                    test_case_ctrl_state <= `TEST_CASE_STATE_IDLE;
+                    way_clear_flag       <= 1;
+                    test_case_ack_out   <= 1'b0;
+                end
+                else
+                begin
+                    test_case_ctrl_state <= test_case_ctrl_state;
+                end
             end
         endcase
     end

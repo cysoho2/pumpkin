@@ -7,6 +7,7 @@ reg reset_in;
 
 `define MEM_SIZE  65536
 `define NUM_REQUEST 16
+`define NUM_TEST_CASE 2
 
 `define MEM_DELAY 10
 `define DEAD_DELAY (`MEM_DELAY * 100)
@@ -22,6 +23,9 @@ reg [31:0] clk_counter;
 
 reg [2:0] mem_ctrl_state;
 
+integer                                             case_index;
+integer                                             wait_ctr;
+
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  test_packet_way0;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  test_packet_way1;
 wire                                                test_packet_ack_way0;
@@ -30,6 +34,9 @@ wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] return_packet_way0;
 wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] return_packet_way1;
 wire                                                return_packet_ack_way0;
 wire                                                return_packet_ack_way1;
+
+reg                                                 test_case_ack_to_generator;
+wire                                                test_case_ack_from_generator;
 
 wire done;
 wire error;
@@ -59,7 +66,8 @@ endgenerate
 cache_packet_generator
 #(
     .NUM_WAY(2),
-    .TIMING_OUT_CYCLE(`DEAD_DELAY)
+    .TIMING_OUT_CYCLE(`DEAD_DELAY),
+    .NUM_TEST_CASE(`NUM_TEST_CASE)
 )
 cache_packet_generator
 (
@@ -72,7 +80,10 @@ cache_packet_generator
     .return_packet_ack_flatted_out  ({return_packet_ack_way1, return_packet_ack_way0}),
     
     .done                           (done),
-    .error                          (error)
+    .error                          (error),
+    
+    .test_case_ack_in               (test_case_ack_to_generator),
+    .test_case_ack_out              (test_case_ack_from_generator)
 );
 
 // to cache packet
@@ -265,13 +276,35 @@ begin
 
     test_case = 0;
     test_case_content = "cache packet generator";
+    test_case_ack_to_generator = 0;
     
-    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
-    $display("[info-testbench] test case %d %s : %s",
-            test_case, test_case_content, test_judge? "passed" : "failed");
-    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+//    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+//    $display("[info-testbench] test case %d %s : %s",
+//            test_case, test_case_content, test_judge? "passed" : "failed");
+//    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
    
-    #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
+    for (case_index = 0; case_index < `NUM_TEST_CASE; case_index = case_index + 1)
+    begin
+        for (wait_ctr = 0; wait_ctr >= 0; wait_ctr = wait_ctr + 1)
+        begin:LOOP
+            test_judge = (done & ~error) === 1;
+            #(`FULL_CYCLE_DELAY)
+            if (test_case_ack_from_generator)
+            begin
+                test_case_ack_to_generator <= 1;
+                $display("[info-testbench] test case %d %s : %s",
+                        test_case, test_case_content, test_judge? "passed" : "failed");   
+                disable LOOP;
+            end
+        end
+        
+        if (test_case_ack_to_generator)
+            test_case_ack_to_generator <= 0; 
+            
+        test_case <= test_case + 1;
+    end
+   
+    #(`FULL_CYCLE_DELAY) $display("\n[info-testbench] simulation comes to the end\n\n");
     $finish;
 end
 
