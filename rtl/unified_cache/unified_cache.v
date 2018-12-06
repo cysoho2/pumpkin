@@ -183,7 +183,7 @@ generate
                    cache_to_input_queue_ack_flatted[bank_index * NUM_INPUT_PORT + port_index];
         end
 
-        assign cache_to_input_queue_ack_merged[port_index] = |(cache_to_input_queue_ack_packed[port_index]);
+        assign cache_to_input_queue_ack_merged[port_index] = &(cache_to_input_queue_ack_packed[port_index]);
     end
 endgenerate
 

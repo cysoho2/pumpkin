@@ -75,7 +75,7 @@ begin
 
         // read complete, move to next read
         if(|read_complete)
-        begin
+        begin     
             read_ptr                <= next_read_ptr;
             request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             request_valid_out       <= 1'b0;
@@ -116,10 +116,14 @@ begin
     reg                                   entry_valid;
     assign fifo_entry_valid_packed[gen] = entry_valid;
 
-    assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+    //assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+    //                                  & request_valid_in & gen == write_ptr;
+
+    assign write_qualified[gen]   = (~is_full_out)
                                     & request_valid_in & gen == write_ptr;
 
-    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+    //assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
 
     always @(posedge clk_in)
     begin

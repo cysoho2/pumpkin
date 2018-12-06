@@ -85,7 +85,7 @@ begin
             request_in_ctr                              <= request_in_ctr + 1;
 
             // stop writing
-            if (request_in_ctr == request_in_ctr_boundary)
+            if (request_in_ctr == request_in_ctr_boundary - 1)
             begin
                 request_in_enable                       <= 0; 
                 is_from_request_in_buffer               <= 0;      
@@ -162,7 +162,7 @@ begin
             
             else
             begin
-                if (request_valid_out)
+                if (request_valid_out & issue_ack_to_fifo)
                 begin
                     request_out_buffer[request_out_ctr]         <= request_out;
                     request_out_ctr                             <= request_out_ctr + 1;
@@ -425,7 +425,7 @@ begin
             request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
         end
         
-        for (test_gen = 0; test_gen < QUEUE_SIZE / 2; test_gen = test_gen + 1)
+        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
         begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
 
