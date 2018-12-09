@@ -188,8 +188,8 @@ begin
                                                                `UNIFIED_CACHE_PACKET_DATA_POS_LO];
                     $display("write data %h to sim memory addr %h by way %d", write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                                `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
-                                                                mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);     
-                    mem_return_packet   <= 0;
+                                                                cache_to_mem_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);     
+                    mem_return_packet       <= 0;
 
                 
                     clk_counter             <= 0;
@@ -202,7 +202,7 @@ begin
                 begin
                     to_cache_ack            <= 1;
                     mem_return_packet       <= 0;
-                    mem_ctrl_state      <= `STATE_FINAL;
+                    mem_ctrl_state          <= `STATE_FINAL;
                     $display("read return data %h to cache on addr %h by way %d", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                            `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
                                                             mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
@@ -210,10 +210,10 @@ begin
                 end
                 else
                 begin
-                    mem_ctrl_state      <= mem_ctrl_state;
+                    mem_ctrl_state          <= mem_ctrl_state;
                     mem_return_packet       <= return_packet_concatenated;
                 end
-                clk_counter             <= 0;             
+                clk_counter                 <= 0;             
                
             end
 
@@ -248,12 +248,13 @@ begin
         else if (test_case_ack_from_generator)
         begin
             test_case_ack_to_generator <= 1;
-            test_case                <= test_case + 1;
-            $display("[info-testbench] test case %d %s : %s",test_case, test_case_content, test_judge? "passed" : "failed");  
+            test_case                  <= test_case + 1;
+            $display("[info-testbench] test case %d %s : %s",test_case, test_case_content, (done & ~error)? "passed" : "failed");  
         end
         else
         begin
             test_case_ack_to_generator  <= test_case_ack_to_generator; 
+            test_judge <= (done & ~error) === 1;
         end
     end
 end
@@ -278,7 +279,7 @@ begin
     #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
 //    $display("[info-testbench] test case %d %s : %s",
 //            test_case, test_case_content, test_judge? "passed" : "failed");
-    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+//    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
    
     #(`FULL_CYCLE_DELAY) $display("\n[info-testbench] simulation comes to the end\n\n");
     $finish;

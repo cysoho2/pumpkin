@@ -58,6 +58,12 @@ module cache_packet_generator
 `define STATE_FINAL     2
 `define STATE_CASE_0    3
 `define STATE_CASE_1    (`STATE_CASE_0 + 1)
+`define STATE_CASE_2    (`STATE_CASE_1 + 1)
+`define STATE_CASE_3    (`STATE_CASE_2 + 1)
+`define STATE_CASE_4    (`STATE_CASE_3 + 1)
+`define STATE_CASE_5    (`STATE_CASE_4 + 1)
+`define STATE_CASE_6    (`STATE_CASE_5 + 1)
+`define STATE_CASE_7    (`STATE_CASE_6 + 1)
 
 // test case ctrl state
 `define TEST_CASE_STATE_IDLE        0
@@ -200,7 +206,6 @@ begin:way_logic
     if(WAY_INDEX >= 0)
     begin
 
-//        integer request_in_index;
         integer scoreboard_index;
         integer valid_index;
 
@@ -236,7 +241,7 @@ begin:way_logic
         
         
 
-        assign buffer_physical_counter = buffer_virtual_counter;
+        assign buffer_physical_counter = buffer_virtual_counter + packed_way_packet_buffer_start[WAY_INDEX];
         assign packet_from_buffer = (packed_way_packet_out_buffer[WAY_INDEX * NUM_REQUEST + request_counter]);
 
         // enable signal
@@ -261,18 +266,8 @@ begin:way_logic
             .packet_out     (packet_concatenated)
         );
 
-        // packet_concat test_packet_concat
-        // (
-        //     .addr_in        ({(CPU_ADDR_LEN_IN_BITS/32){32'h0000_1000}} + (request_counter << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)),
-        //     .data_in        ({(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS/32){request_counter}}),
-        //     .type_in        ({(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}}),
-        //     .write_mask_in  (write_mask),
-        //     .port_num_in    ({(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}}),
-        //     .valid_in       (1'b1),
-        //     .is_write_in    (1'b1),
-        //     .cacheable_in   (1'b1),
-        //     .packet_out     (packet_concatenated)
-        // );
+
+        reg [31:0] request_out_time_delay_counter;
 
         // request out
         always@(posedge clk_in)
@@ -283,6 +278,8 @@ begin:way_logic
                 request_counter                 <= 0;
                 return_packet_ack[WAY_INDEX]    <= 0;
                 done_way[WAY_INDEX]             <= 0;
+                
+                request_out_time_delay_counter  <= 0;
             end
 
             else if(request_out_enable)
@@ -292,21 +289,26 @@ begin:way_logic
                 begin
 
                     // request out delay
-
-                    if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX])
+                    if (request_out_time_delay_counter < way_time_delay_reg[WAY_INDEX])
+                    begin
+                        request_out_time_delay_counter <= request_out_time_delay_counter + 1;
+                    end
+                                       
+                    else if(~test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & ~done_way[WAY_INDEX])
                     begin
                         test_packet                     <= packet_concatenated;
                         request_counter                 <= request_counter;
                         done_way[WAY_INDEX]             <= 0;
                     end
-
+    
                     else if(test_packet[`UNIFIED_CACHE_PACKET_VALID_POS] & test_packet_ack_flatted_in[WAY_INDEX])
                     begin
+                        request_out_time_delay_counter  <= 0;
                         test_packet                     <= 0;
                         request_counter                 <= request_counter + 1'b1;
                         done_way[WAY_INDEX]             <= request_counter == packet_out_buffer_boundry - 1;
                     end
-
+    
                     else
                     begin
                         test_packet                     <= test_packet;
@@ -314,6 +316,7 @@ begin:way_logic
                         done_way[WAY_INDEX]             <= done_way[WAY_INDEX];
                     end
                 end
+               
             end
             else if (way_clear_flag)
             begin
@@ -479,7 +482,7 @@ begin
 
             for (reg_index = 0; reg_index < NUM_WAY; reg_index = reg_index + 1)
             begin
-                way_time_delay_reg[reg_index] = DEFAULT_WAY_TIME_DELAY;
+                way_time_delay_reg[reg_index] = DEFAULT_WAY_TIME_DELAY + reg_index;
             end
 
             check_mode_reg <= 0;
@@ -534,21 +537,21 @@ begin
             begin
                 if (test_case_config)
                 begin
-                    test_case <= 0;
+                    test_case               <= 0;
                     
-                    way_enable_reg <= 1;
-                    way_time_delay_reg[0] = DEFAULT_WAY_TIME_DELAY;
-                    check_mode_reg <= 0;
-                    preprocess_mode_reg <= 1;
+                    way_enable_reg          <= 1;
+                    way_time_delay_reg[0]   <= DEFAULT_WAY_TIME_DELAY;
+                    check_mode_reg          <= 0;
+                    preprocess_mode_reg     <= 1;
                     
                     for (reg_index = 0; reg_index < NUM_REQUEST * NUM_WAY; reg_index = reg_index + 1'b1)
                     begin
-                        packed_way_packet_out_buffer[reg_index] <= 0;
-                        packed_way_packet_expected_buffer[reg_index] <= 0;
+                        packed_way_packet_out_buffer[reg_index]         <= 0;
+                        packed_way_packet_expected_buffer[reg_index]    <= 0;
                         
                     end
                     
-                    check_valid_mask <= {{(NUM_REQUEST){1'b0}}, {(NUM_REQUEST){1'b1}}};
+                    check_valid_mask        <= {{(NUM_REQUEST){1'b0}}, {(NUM_REQUEST){1'b1}}};
                 end
 
                 if (test_case_preprocess)
@@ -556,23 +559,24 @@ begin
 
 
                     /* packet in buffer */
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (preprocess_read_after_write_index << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_TYPE_POS_HI : UNIFIED_CACHE_PACKET_TYPE_POS_LO]           <= {(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}};
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO] <= {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN){2'b11}};
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_PORT_NUM_HI : UNIFIED_CACHE_PACKET_PORT_NUM_LO]           <= {(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}};
+                    
+                    /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (preprocess_read_after_write_index << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                    /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
+                    /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_TYPE_POS_HI : UNIFIED_CACHE_PACKET_TYPE_POS_LO]           <= {(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}};
+                    /* byte mask */ packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO] <= {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN){2'b11}};
+                    /* port num */  packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_PORT_NUM_HI : UNIFIED_CACHE_PACKET_PORT_NUM_LO]           <= {(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}};
 
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_VALID_POS]                                                <= {1'b1};
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_IS_WRITE_POS]                                             <= preprocess_counter_even;
-                    packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                        [UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
+                    /* valid */     packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_VALID_POS]                                                <= {1'b1};
+                    /* is write */  packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_IS_WRITE_POS]                                             <= preprocess_counter_even;
+                    /*cacheable*/   packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                        [UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
 
 
@@ -580,23 +584,23 @@ begin
                     /* packet expected buffer */
                     if (preprocess_counter_odd)
                     begin
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (preprocess_read_after_write_index << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_TYPE_POS_HI : UNIFIED_CACHE_PACKET_TYPE_POS_LO]           <= {(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}};
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO] <= {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN){2'b11}};
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_PORT_NUM_HI : UNIFIED_CACHE_PACKET_PORT_NUM_LO]           <= {(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}};
+                        /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_ADDR_POS_HI : UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (preprocess_read_after_write_index << UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                        /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_DATA_POS_HI : UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
+                        /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_TYPE_POS_HI : UNIFIED_CACHE_PACKET_TYPE_POS_LO]           <= {(UNIFIED_CACHE_PACKET_TYPE_WIDTH){1'b0}};
+                        /* byte mask */ packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO] <= {(UNIFIED_CACHE_PACKET_BYTE_MASK_LEN){2'b11}};
+                        /* port num */  packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_PORT_NUM_HI : UNIFIED_CACHE_PACKET_PORT_NUM_LO]           <= {(UNIFIED_CACHE_PACKET_PORT_ID_WIDTH){1'b0}};
     
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_VALID_POS]                                                <= {1'b1};
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_IS_WRITE_POS]                                             <= 0;
-                        packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                            [UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
+                        /* valid */     packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_VALID_POS]                                                <= {1'b1};
+                        /* is write */  packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_IS_WRITE_POS]                                             <= 0;
+                        /*cacheable*/   packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
+                                            [UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
                             
                         packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) / 2;
                         packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) / 2;
@@ -610,7 +614,7 @@ begin
                     end
                     else
                     begin
-                        preprocess_counter <= preprocess_counter + 1'b1;
+                        preprocess_counter  <= preprocess_counter + 1'b1;
                     end
                 end
 
@@ -633,7 +637,6 @@ begin
             begin
                 if (test_case_config)
                 begin
-                    // insert your code
                     test_case <= test_case + 1;
                     
                     way_enable_reg <= {(NUM_WAY){1'b1}};
@@ -647,15 +650,12 @@ begin
                         packed_way_packet_expected_buffer[reg_index] <= 0;
                     end
                     
-                    check_valid_mask <= {{(NUM_REQUEST){1'b0}}, {(NUM_REQUEST){1'b1}}};
+                    check_valid_mask <= {{(NUM_REQUEST){1'b1}}, {(NUM_REQUEST){1'b1}}};
                                 
                 end
                 
                 if (test_case_preprocess)
                 begin
-                    // insert your code
-
-    
                     for (preprocess_way_index = 0; preprocess_way_index < NUM_WAY; preprocess_way_index = preprocess_way_index + 1)
                     begin
                         /* packet in buffer */
@@ -716,10 +716,6 @@ begin
                         end
                 end
                 
-                if (test_case_check)
-                begin
-                    // insert your code
-                end
                 if (test_case_final)
                 begin
                     //state transition
