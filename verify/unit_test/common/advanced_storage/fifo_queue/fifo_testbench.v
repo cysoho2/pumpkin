@@ -379,9 +379,39 @@ begin
 
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue", ((test_judge == 1'b1))? "passed" : "failed");
         
-        
-        
         // test case 3
+        test_case                                                       <= test_case + 1;
+        jump_mode                                                       <=1;
+        
+
+        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
+        begin
+            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
+        end
+        
+        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
+        begin
+            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+
+                                  request_valid_in_buffer[test_gen]     <= 1;
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
+                      
+        end
+                                request_in_ctr_boundary                 <= test_gen;
+                                result_ctr_boundary                     <= test_gen;
+         #(`FULL_CYCLE_DELAY )  reset_in                                <= 1;
+         #(`FULL_CYCLE_DELAY )  reset_in                                <= 0;
+         
+                                is_ready_to_write                       <= 1;
+                                request_out_enable                      <= 1;
+                                 
+
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
+         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
+
+         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "normal write/read with early ack", ((test_judge == 1'b1))? "passed" : "failed");
+        
+        // test case 4
         test_case                                                       <= test_case + 1;
         ack_to_fifo_mode                                                <= 1;
         
@@ -413,39 +443,6 @@ begin
 
 
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "write data to full queue with early ack", ((test_judge == 1'b1))? "passed" : "failed");
-        
-      
-        // test case 4
-        test_case                                                                   <= test_case + 1;
-        jump_mode                                                <=1;
-        
-
-        for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
-        begin
-            request_out_buffer[test_gen]                                <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}} ;        
-        end
-        
-        for (test_gen = 0; test_gen < QUEUE_SIZE; test_gen = test_gen + 1)
-        begin
-            #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
-
-                                  request_valid_in_buffer[test_gen]     <= 1;
-                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
-                      
-        end
-                                request_in_ctr_boundary                 <= test_gen;
-                                result_ctr_boundary                     <= test_gen;
-         #(`FULL_CYCLE_DELAY )  reset_in                                <= 1;
-         #(`FULL_CYCLE_DELAY )  reset_in                                <= 0;
-         
-                                is_ready_to_write                       <= 1;
-                                request_out_enable                      <= 1;
-                                 
-
-         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data         <= 1;
-         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data        <= 1;
-
-         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] test case %d %80s : \t%s", test_case, "normal write/read with early ack", ((test_judge == 1'b1))? "passed" : "failed");
         
         
         #(`FULL_CYCLE_DELAY * 300) $display("[info-testbench] simulation comes to the end\n");

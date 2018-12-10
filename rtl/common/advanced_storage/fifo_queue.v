@@ -116,14 +116,13 @@ begin
     reg                                   entry_valid;
     assign fifo_entry_valid_packed[gen] = entry_valid;
 
-    //assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
-    //                                  & request_valid_in & gen == write_ptr;
+    assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+                                      & request_valid_in & gen == write_ptr;
 
-    assign write_qualified[gen]   = (~is_full_out)
-                                    & request_valid_in & gen == write_ptr;
+    assign write_qualified[gen]   = (~is_full_out) & request_valid_in & gen == write_ptr;
 
-    //assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
-    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
+    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+    //assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
 
     always @(posedge clk_in)
     begin
@@ -230,7 +229,7 @@ end
 
 else
 begin
-    //assign storage_output = 0;
+    assign storage_output = 0;
 end
 
 endgenerate
