@@ -15,7 +15,7 @@ module priority_arbiter
     input      [NUM_REQUEST                                - 1 : 0]     request_critical_flatted_in,
     output     [NUM_REQUEST                                - 1 : 0]     issue_ack_out,
 
-    output reg [SINGLE_REQUEST_WIDTH_IN_BITS               - 1 : 0]     request_out,
+    output reg [SINGLE_REQUEST_WIDTH_IN_BITS                - 1 : 0]    request_out,
     output reg                                                          request_valid_out,
     input                                                               issue_ack_in
 );

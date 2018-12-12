@@ -105,6 +105,52 @@ begin
 
     associative_single_port_array
     #(
+        .SINGLE_ENTRY_SIZE_IN_BITS  (1),
+        .NUM_SET                    (NUM_SET),
+        .NUM_WAY                    (NUM_WAY),
+        .STORAGE_TYPE               ("LUTRAM")
+    )
+    valid_array
+    (
+        .reset_in                   (reset_in),
+        .clk_in                     (clk_in),
+
+        .access_en_in               (),
+        .write_en_in                (),
+        
+        .access_set_addr_in         (),
+        .way_select_in              (),
+        
+        .read_set_out               (),
+        .read_single_entry_out      (),
+        .write_single_entry_in      ()
+    );
+
+    associative_single_port_array
+    #(
+        .SINGLE_ENTRY_SIZE_IN_BITS  (1),
+        .NUM_SET                    (NUM_SET),
+        .NUM_WAY                    (NUM_WAY),
+        .STORAGE_TYPE               ("BlockRAM")
+    )
+    history_array
+    (
+        .reset_in                   (reset_in),
+        .clk_in                     (clk_in),
+
+        .access_en_in               (),
+        .write_en_in                (),
+        
+        .access_set_addr_in         (),
+        .way_select_in              (),
+        
+        .read_set_out               (),
+        .read_single_entry_out      (),
+        .write_single_entry_in      ()
+    );
+
+    associative_single_port_array
+    #(
         .SINGLE_ENTRY_SIZE_IN_BITS  (`UNIFIED_CACHE_TAG_LEN_IN_BITS),
         .NUM_SET                    (NUM_SET),
         .NUM_WAY                    (NUM_WAY),

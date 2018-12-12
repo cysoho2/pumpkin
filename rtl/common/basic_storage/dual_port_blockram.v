@@ -25,10 +25,10 @@ module dual_port_blockram
 );
 
 integer write_lane;
-integer set_index;
 
 // For valid array
 generate
+genvar set_index;
 
 if(WITH_VALID_REG_ARRAY == "Yes")
 begin
@@ -102,35 +102,6 @@ begin
     always @(posedge clk_in)
     begin
         if(read_port_access_en_in)
-        begin
-            read_port_data_out <= blockram[read_port_access_set_addr_in];
-        end
-    end
-end
-
-// this branch will incorrectly make vivado infer LUTRAM rather than BlockRAM
-// it seems that write first mode can not be used together with byte-enable BlockRAM
-else if(CONFIG_MODE == "WriteFirst")
-begin
-    wire need_write_forward = (read_port_access_en_in & write_port_access_en_in) & (|write_port_write_en_in) &
-                              (read_port_access_set_addr_in == write_port_access_set_addr_in);
-
-    wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1: 0] write_port_full_data_mask;
-    genvar bit_lane;
-    for(bit_lane = 0; bit_lane < SINGLE_ENTRY_WIDTH_IN_BITS; bit_lane = bit_lane + 1)
-    begin
-        assign write_port_full_data_mask[bit_lane] = write_port_write_en_in[bit_lane / `BYTE_LEN_IN_BITS];
-    end
-
-    // read port operation
-    always @(posedge clk_in)
-    begin
-        if(need_write_forward)
-        begin
-            read_port_data_out <= write_port_data_in & write_port_full_data_mask;
-        end
-        
-        else if(read_port_access_en_in)
         begin
             read_port_data_out <= blockram[read_port_access_set_addr_in];
         end

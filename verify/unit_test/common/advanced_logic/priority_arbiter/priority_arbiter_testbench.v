@@ -216,6 +216,8 @@ begin
 
     $display("\n[info-testbench] simulation for %m begins now");
     clk_in                                      <= 1'b0;
+    reset_in                                    <= 1'b1;
+
 
     /*test case 1 */
     test_case                                   <= 0;
@@ -268,7 +270,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 1000)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
+    #(`FULL_CYCLE_DELAY * 200)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "critical request", test_judge? "passed": "failed", read_delay);
 
     /*test case 2 */
     test_case                                   <= test_case + 1'b1;
@@ -318,7 +320,7 @@ begin
 
     #(`FULL_CYCLE_DELAY * 10)   reset_in        <= 1'b0;
 
-    #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "basic request", test_judge? "passed": "failed", read_delay);
+    #(`FULL_CYCLE_DELAY * 1500)  $display("[info-testbench] test case %2d %80s : \t%s (delay %2d cycle)", test_case, "critical request", test_judge? "passed": "failed", read_delay);
 
 
     #(`FULL_CYCLE_DELAY * 10)   $display("[info-testbench] simulation comes to the end\n");

@@ -16,10 +16,10 @@ module cache_bank_basic_ctrl
     parameter NUM_WAY                            = 4,
     parameter BLOCK_SIZE_IN_BYTES                = 4,
 
-    parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET),
-    parameter WRITE_MASK_LEN                     = BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
-    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
     parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+    parameter BLOCK_SIZE_IN_BITS                 = BLOCK_SIZE_IN_BYTES * `BYTE_LEN_IN_BITS,
+    parameter SET_PTR_WIDTH_IN_BITS              = $clog2(NUM_SET) + 1,
+    parameter WRITE_MASK_LEN                     = BLOCK_SIZE_IN_BITS / `BYTE_LEN_IN_BITS,
     parameter UNIFIED_CACHE_TAG_LEN_IN_BITS      = `CPU_ADDR_LEN_IN_BITS - `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS - `UNIFIED_CACHE_INDEX_LEN_IN_BITS
 )
 (
@@ -54,10 +54,10 @@ module cache_bank_basic_ctrl
     input   [BLOCK_SIZE_IN_BITS                              - 1 : 0]       data_in,
 
     // to valid, tag array
-    output  reg                                                             access_en_to_tag_array_out,
-    output  reg                                                             write_en_to_tag_array_out,
-    output  reg [NUM_WAY                                     - 1 : 0]       way_select_to_tag_array_out,
-    output  reg [SET_PTR_WIDTH_IN_BITS                       - 1 : 0]       access_set_addr_to_tag_array_out,
+    output  reg                                                             access_en_to_main_array_out,
+    output  reg                                                             write_en_to_main_array_out,
+    output  reg [NUM_WAY                                     - 1 : 0]       way_select_to_main_array_out,
+    output  reg [SET_PTR_WIDTH_IN_BITS                       - 1 : 0]       access_set_addr_to_main_array_out,
 
     // to history array
     output  reg                                                             access_en_to_history_array_out,
@@ -148,10 +148,10 @@ begin
         stage                                           <= `IDLE;
         bank_lock_release                               <= 0;
         // to valid, tag array
-        access_en_to_tag_array_out                     <= 0;
-        write_en_to_tag_array_out                      <= 0;
-        way_select_to_tag_array_out                    <= {(NUM_WAY){1'b0}};
-        access_set_addr_to_tag_array_out               <= 0;
+        access_en_to_main_array_out                     <= 0;
+        write_en_to_main_array_out                      <= 0;
+        way_select_to_main_array_out                    <= {(NUM_WAY){1'b0}};
+        access_set_addr_to_main_array_out               <= 0;
         write_valid_out                                 <= {(NUM_WAY){1'b0}};
         write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
         // to history array
@@ -186,10 +186,10 @@ begin
             stage                                           <= `CHECK;
             bank_lock_release                               <= 1'b0;
             // to valid, tag array
-            access_en_to_tag_array_out                     <= 1'b1;
-            write_en_to_tag_array_out                      <= 1'b0;
-            way_select_to_tag_array_out                    <= {(NUM_WAY){1'b1}};
-            access_set_addr_to_tag_array_out               <= access_set_addr;
+            access_en_to_main_array_out                     <= 1'b1;
+            write_en_to_main_array_out                      <= 1'b0;
+            way_select_to_main_array_out                    <= {(NUM_WAY){1'b1}};
+            access_set_addr_to_main_array_out               <= access_set_addr;
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
             write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
             // to history array
@@ -222,10 +222,10 @@ begin
             stage                                           <= `IDLE;
             bank_lock_release                               <= 0;
             // to valid, tag array
-            access_en_to_tag_array_out                     <= 0;
-            write_en_to_tag_array_out                      <= 0;
-            way_select_to_tag_array_out                    <= {(NUM_WAY){1'b0}};
-            access_set_addr_to_tag_array_out               <= 0;
+            access_en_to_main_array_out                     <= 0;
+            write_en_to_main_array_out                      <= 0;
+            way_select_to_main_array_out                    <= {(NUM_WAY){1'b0}};
+            access_set_addr_to_main_array_out               <= 0;
             write_valid_out                                 <= {(NUM_WAY){1'b0}};
             write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
             // to history array
@@ -261,10 +261,10 @@ begin
                 bank_lock_release                               <= 1'b0;
 
                 // to valid, tag array
-                access_en_to_tag_array_out                     <= 1'b0;
-                write_en_to_tag_array_out                      <= 1'b0;
-                way_select_to_tag_array_out                    <= {(NUM_WAY){1'b0}};
-                access_set_addr_to_tag_array_out               <= 0;
+                access_en_to_main_array_out                     <= 1'b0;
+                write_en_to_main_array_out                      <= 1'b0;
+                way_select_to_main_array_out                    <= {(NUM_WAY){1'b0}};
+                access_set_addr_to_main_array_out               <= 0;
                 write_valid_out                                 <= {(NUM_WAY){1'b0}};
                 write_tag_out                                   <= {(UNIFIED_CACHE_TAG_LEN_IN_BITS){1'b0}};
                 // to history array
@@ -298,10 +298,10 @@ begin
                 bank_lock_release                               <= 1'b0;
 
                 // to valid, tag array
-                access_en_to_tag_array_out                     <= 1'b0;
-                write_en_to_tag_array_out                      <= 1'b0;
-                way_select_to_tag_array_out                    <= {(NUM_WAY){1'b0}};
-                access_set_addr_to_tag_array_out               <= 0;
+                access_en_to_main_array_out                     <= 1'b0;
+                write_en_to_main_array_out                      <= 1'b0;
+                way_select_to_main_array_out                    <= {(NUM_WAY){1'b0}};
+                access_set_addr_to_main_array_out               <= 0;
                 // to history array
                 access_en_to_history_array_out                  <= 1'b0;
                 write_en_to_history_array_out                   <= 1'b0;
@@ -358,10 +358,10 @@ begin
             end
             
             // to valid, tag array
-            access_en_to_tag_array_out                     <= 1'b1;
-            write_en_to_tag_array_out                      <= 1'b0;
-            way_select_to_tag_array_out                    <= {(NUM_WAY){1'b1}};
-            access_set_addr_to_tag_array_out               <= access_set_addr;
+            access_en_to_main_array_out                     <= 1'b1;
+            write_en_to_main_array_out                      <= 1'b0;
+            way_select_to_main_array_out                    <= {(NUM_WAY){1'b1}};
+            access_set_addr_to_main_array_out               <= access_set_addr;
             // to history array
             access_en_to_history_array_out                  <= 1'b1;
             write_en_to_history_array_out                   <= 1'b0;
@@ -402,10 +402,10 @@ begin
             end
 
             // to valid, tag array
-            access_en_to_tag_array_out                     <= 1'b0;
-            write_en_to_tag_array_out                      <= 1'b0;
-            way_select_to_tag_array_out                    <= {(NUM_WAY){1'b0}};
-            access_set_addr_to_tag_array_out               <= 0;
+            access_en_to_main_array_out                     <= 1'b0;
+            write_en_to_main_array_out                      <= 1'b0;
+            way_select_to_main_array_out                    <= {(NUM_WAY){1'b0}};
+            access_set_addr_to_main_array_out               <= 0;
             // to history array
             access_en_to_history_array_out                  <= 1'b0;
             write_en_to_history_array_out                   <= 1'b0;

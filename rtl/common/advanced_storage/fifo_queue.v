@@ -26,7 +26,6 @@ module fifo_queue
 
 wire [QUEUE_SIZE - 1 : 0] write_qualified;
 wire [QUEUE_SIZE - 1 : 0] read_complete;
-wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] storage_output;
 
 wire [QUEUE_SIZE - 1 : 0]                  fifo_entry_valid_packed;
 wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] fifo_entry_packed [QUEUE_SIZE - 1 : 0];
@@ -44,7 +43,6 @@ wire [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] next_read_ptr  = (read_ptr  == {(QUEU
 assign is_full_out  = &fifo_entry_valid_packed;
 assign is_empty_out = &(~fifo_entry_valid_packed);
 
-// read/write ptr management
 always@(posedge clk_in)
 begin
     if(reset_in)
@@ -76,6 +74,7 @@ begin
         if(|read_complete)
         begin
             read_ptr                <= next_read_ptr;
+            
             request_out             <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
             request_valid_out       <= 1'b0;
         end
@@ -84,7 +83,7 @@ begin
         else if(fifo_entry_valid_packed[read_ptr])
         begin
             read_ptr                <= read_ptr;
-            request_out             <= storage_output;
+            request_out             <= fifo_entry_packed[read_ptr];
             request_valid_out       <= 1'b1;
         end
 
@@ -105,90 +104,59 @@ begin
     end
 end
 
-// entry valid
 generate
 genvar gen;
 
-for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
+if(STORAGE_TYPE == "FlipFlop")
 begin
-    
-    reg                                   entry_valid;
-    assign fifo_entry_valid_packed[gen] = entry_valid;
-
-    assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
-                                    & ~issue_ack_out & request_valid_in & gen == write_ptr;
-
-    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
-
-    always @(posedge clk_in)
+    for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
     begin
-        if (reset_in)
-        begin
-            entry_valid <= 1'b0;
-        end
+        reg [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] entry;
+        reg                                       entry_valid;
 
-        else
+        assign fifo_entry_packed[gen]        =    entry;
+        assign fifo_entry_valid_packed[gen]  =    entry_valid;
+
+        assign write_qualified[gen] = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+                                        & ~issue_ack_out & request_valid_in & gen == write_ptr;
+
+        assign read_complete[gen]  = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+
+        always @(posedge clk_in)
         begin
-            if(write_qualified[gen] & read_complete[gen])
+            if (reset_in)
             begin
-                entry_valid <= 1'b1;
+                entry       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+                entry_valid <= 1'b0;
             end
 
             else
             begin
-                if(read_complete[gen])
+                if(write_qualified[gen] & read_complete[gen])
                 begin
-                    entry_valid <= 1'b0;
-                end
-
-                else if(write_qualified[gen])
-                begin
+                    entry       <= request_in;
                     entry_valid <= 1'b1;
                 end
 
                 else
                 begin
-                    entry_valid <= entry_valid;
-                end
-            end
-        end
-    end
-end
+                    if(read_complete[gen])
+                    begin
+                        entry       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
+                        entry_valid <= 1'b0;
+                    end
 
-// entry storage
-if(STORAGE_TYPE == "FlipFlop")
-begin
-    integer queue_index;
-    reg    [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] regfile [QUEUE_SIZE - 1 : 0];
-    assign storage_output = regfile[|read_complete ? next_read_ptr : read_ptr];
-    
-    always@(posedge clk_in)
-    begin
-        if(reset_in)
-        begin
-            for(queue_index = 0; queue_index < QUEUE_SIZE; queue_index = queue_index + 1)
-            begin
-                regfile[queue_index] <= 0;
-            end
-        end
+                    else if(write_qualified[gen])
+                    begin
+                        entry       <= request_in;
+                        entry_valid <= 1'b1;
+                    end
 
-        else
-        begin
-            if(|write_qualified && |read_complete && write_ptr == read_ptr)
-            begin
-                regfile[write_ptr] <= request_in;
-            end
-
-            else
-            begin
-                if(|read_complete)
-                begin
-                    regfile[read_ptr] <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
-                end
-
-                if(|write_qualified)
-                begin
-                    regfile[write_ptr] <= request_in;
+                    else
+                    begin
+                        entry       <= entry;
+                        entry_valid <= entry_valid;
+                    end
                 end
             end
         end
@@ -197,6 +165,7 @@ end
 
 else if(STORAGE_TYPE == "LUTRAM")
 begin
+    wire   [SINGLE_ENTRY_WIDTH_IN_BITS - 1 : 0] ram_output;
 
     dual_port_lutram
     #(
@@ -218,14 +187,57 @@ begin
 
         .read_port_access_en_in         (1'b1),
         .read_port_access_set_addr_in   (|read_complete ? next_read_ptr : read_ptr),
-        .read_port_data_out             (storage_output),
+        .read_port_data_out             (ram_output),
         .read_port_valid_out            ()
     );
-end
+    
+    for(gen = 0; gen < QUEUE_SIZE; gen = gen + 1)
+    begin
+        
+        reg                                   entry_valid;
+        assign fifo_entry_valid_packed[gen] = entry_valid;
 
-else
-begin
-    //assign storage_output = 0;
+        assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & is_full_out & gen == read_ptr))
+                                        & ~issue_ack_out & request_valid_in & gen == write_ptr;
+
+        assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
+        
+        assign fifo_entry_packed[gen] = (read_ptr == gen) ? ram_output : 0;
+
+        always @(posedge clk_in)
+        begin
+            if (reset_in)
+            begin
+                entry_valid <= 1'b0;
+            end
+
+            else
+            begin
+                if(write_qualified[gen] & read_complete[gen])
+                begin
+                    entry_valid <= 1'b1;
+                end
+
+                else
+                begin
+                    if(read_complete[gen])
+                    begin
+                        entry_valid <= 1'b0;
+                    end
+
+                    else if(write_qualified[gen])
+                    begin
+                        entry_valid <= 1'b1;
+                    end
+
+                    else
+                    begin
+                        entry_valid <= entry_valid;
+                    end
+                end
+            end
+        end
+    end
 end
 
 endgenerate
