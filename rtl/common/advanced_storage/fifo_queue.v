@@ -121,8 +121,7 @@ begin
 
     assign write_qualified[gen]   = (~is_full_out) & request_valid_in & gen == write_ptr;
 
-    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & gen == read_ptr;
-    //assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
+    assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
 
     always @(posedge clk_in)
     begin
