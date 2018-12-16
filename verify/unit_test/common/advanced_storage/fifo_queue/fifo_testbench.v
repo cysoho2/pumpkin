@@ -381,7 +381,8 @@ begin
         
         // test case 3
         test_case                                                       <= test_case + 1;
-        jump_mode                                                       <=1;
+        ack_to_fifo_mode                                                <= 1;
+        jump_mode                                                       <= 1;
         
 
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
@@ -413,7 +414,7 @@ begin
         
         // test case 4
         test_case                                                       <= test_case + 1;
-        ack_to_fifo_mode                                                <= 1;
+        jump_mode                                                       <= 0;
         
         for (test_gen = 0; test_gen < QUEUE_SIZE * 2 + 1; test_gen = test_gen + 1)
         begin
