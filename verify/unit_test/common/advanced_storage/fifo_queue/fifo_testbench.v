@@ -23,11 +23,11 @@ integer                                                 test_gen;
 
 reg                                                     test_judge;
 
-reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_in_buffer[QUEUE_SIZE * 2 :0];
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_in_buffer[QUEUE_SIZE * 2 - 1 :0];
 reg     [QUEUE_SIZE * 2 : 0]                            request_valid_in_buffer;
 
-reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_out_buffer[QUEUE_SIZE - 1 : 0];
-reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              correct_result_buffer[QUEUE_SIZE - 1 : 0];
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              request_out_buffer[QUEUE_SIZE * 2 - 1 : 0];
+reg     [SINGLE_ENTRY_WIDTH_IN_BITS - 1:0]              correct_result_buffer[QUEUE_SIZE * 2 - 1 : 0];
 
 reg     [31:0]                                          request_in_ctr;
 reg     [31:0]                                          request_in_ctr_boundary;
@@ -360,20 +360,18 @@ begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
                                   request_valid_in_buffer[test_gen]     <= 1;
             
-            if (test_gen < QUEUE_SIZE)
-            begin
-                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
-            end
-                                 
+                                  correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);                                 
         end
                                 request_in_ctr_boundary                 <= test_gen;
-                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE;
+                                result_ctr_boundary                     <= test_gen;
         #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
         #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
         
                                 is_ready_to_write                       <= 1;
         
-        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+        #(`FULL_CYCLE_DELAY * (QUEUE_SIZE + 1))    jump_mode            <= 1;
+                                             request_out_enable         <= 1;
+        #(`FULL_CYCLE_DELAY)                 jump_to_read_data          <= 1;
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
 
@@ -426,20 +424,21 @@ begin
             #(`FULL_CYCLE_DELAY ) request_in_buffer[test_gen]           <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
                                   request_valid_in_buffer[test_gen]     <= 1;
             
-            if (test_gen < QUEUE_SIZE)
-            begin
                                   correct_result_buffer[test_gen]       <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b1}} - test_gen * (test_case + 1);
-            end
                                  
         end
                                 request_in_ctr_boundary                 <= test_gen;
-                                result_ctr_boundary                     <= test_gen - QUEUE_SIZE;
+                                result_ctr_boundary                     <= test_gen;
         #(`FULL_CYCLE_DELAY )   reset_in                                <= 1;
         #(`FULL_CYCLE_DELAY )   reset_in                                <= 0;
         
                                 is_ready_to_write                       <= 1;
         
-        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_read_data          <= 1;
+//        #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_mode                  <= 1;
+        #(`FULL_CYCLE_DELAY * (QUEUE_SIZE + 1))    jump_mode            <= 1;
+
+                                             request_out_enable         <= 1;
+        #(`FULL_CYCLE_DELAY)                 jump_to_read_data          <= 1;
         #(`FULL_CYCLE_DELAY * test_gen * 6)  jump_to_check_data         <= 1;
 
 
