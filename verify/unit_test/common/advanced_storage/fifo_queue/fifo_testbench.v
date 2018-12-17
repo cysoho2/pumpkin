@@ -4,7 +4,7 @@ module fifo_queue_testbench();
 
 parameter SINGLE_ENTRY_WIDTH_IN_BITS = 64;
 parameter QUEUE_SIZE = 4;
-parameter QUEUE_PTR_WIDTH_IN_BITS = 4;
+parameter QUEUE_PTR_WIDTH_IN_BITS = 2;
 parameter STORAGE_TYPE = "LUTRAM";
 
 integer i;

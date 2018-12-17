@@ -24,8 +24,8 @@ module fifo_queue
     input                                                                   issue_ack_in
 );
 
-wire [QUEUE_SIZE - 1 : 0] write_qualified;
-wire [QUEUE_SIZE - 1 : 0] read_complete;
+wire [QUEUE_SIZE - 1 : 0]                  write_qualified;
+wire [QUEUE_SIZE - 1 : 0]                  read_complete;
 wire [SINGLE_ENTRY_WIDTH_IN_BITS  - 1 : 0] storage_output;
 
 wire [QUEUE_SIZE - 1 : 0]                  fifo_entry_valid_packed;
@@ -43,7 +43,8 @@ wire [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] next_read_ptr  = (read_ptr  == {(QUEU
 
 assign is_full_out   = &fifo_entry_valid_packed;
 assign is_empty_out  = &(~fifo_entry_valid_packed);
-assign issue_ack_out = ~is_full_out;
+//assign issue_ack_out = ~is_full_out;
+assign issue_ack_out = ~is_full_out | (issue_ack_in & request_valid_out & request_valid_in);
 
 // read/write ptr management
 always@(posedge clk_in)
@@ -51,7 +52,6 @@ begin
     if(reset_in)
     begin
         write_ptr           <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
-        //issue_ack_out       <= 1'b0;
         read_ptr            <= {(QUEUE_PTR_WIDTH_IN_BITS){1'b0}};
         request_out         <= {(SINGLE_ENTRY_WIDTH_IN_BITS){1'b0}};
         request_valid_out   <= 1'b0;
@@ -64,13 +64,11 @@ begin
         if(|write_qualified)
         begin
             write_ptr               <= next_write_ptr;
-            //issue_ack_out           <= 1'b1;
         end
 
         else
         begin
             write_ptr               <= write_ptr;
-            //issue_ack_out           <= 1'b0;
         end
 
         // read complete, move to next read
@@ -118,8 +116,6 @@ begin
 
     assign write_qualified[gen]   = (~is_full_out | (issue_ack_in & request_valid_out & gen == read_ptr))
                                       & request_valid_in & gen == write_ptr;
-
-    //assign write_qualified[gen]   = (~is_full_out) & request_valid_in & gen == write_ptr;
 
     assign read_complete[gen]    = ~is_empty_out & issue_ack_in & entry_valid & request_valid_out & gen == read_ptr;
 
