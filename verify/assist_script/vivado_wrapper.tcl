@@ -57,7 +57,7 @@ set_msg_config -id {[Synth 8-3886]} -limit 1000000
 
 #setting up the synthesis and implementation run
 if {[string equal -nocase -length 5 $sim_mode "post-"]} {
-    create_run -part $device -constrset constrs_1 -flow "Vivado Synthesis 2018" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
+    create_run -part $device -flow "Vivado Synthesis 2018" -strategy "Vivado Synthesis Defaults" -verbose -name "synth_run"
 
     #synthesis
     launch_runs -jobs $parallel_thread -verbose "synth_run"
