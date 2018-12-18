@@ -1,6 +1,6 @@
 #!/usr/local/bin/perl -w
 
-use v5.10;
+use v5.26;
 use strict;
 use Data::Dumper;
 use POSIX;
@@ -340,7 +340,7 @@ sub output_xdc_generate
     my $xdc_output_buffer = '';
 
     my $total_width = 0;
-    foreach my $port_name (keys %port_width_hash)
+    foreach my $port_name (sort keys %port_width_hash)
     {
         #say "[info-script] the port $port_name requires ".$port_width_hash{$port_name}." pins";
         $total_width += $port_width_hash{$port_name};
@@ -414,7 +414,7 @@ sub pin_allocate
 
             # non pre_allocated_port
             my %pre_allocated_pin_port_hash = reverse %{$device_info_hash{$device}};
-            foreach my $pin_to_check (keys %pin_hash)
+            foreach my $pin_to_check (sort keys %pin_hash)
             {
                 if(!exists $pre_allocated_pin_port_hash{$pin_to_check})
                 {
