@@ -73,7 +73,6 @@ begin
                 
         is_ready_to_write                               <= 0;
         jump_to_read_data                               <= 0;
-        jump_to_check_data                              <= 0;
     end
     else if (request_in_enable)
     begin
@@ -108,7 +107,7 @@ begin
     if (jump_to_read_data & (jump_mode == 0))
     begin
         request_in_enable                               <= 0;
-        request_out_enable                              <= 1;
+        jump_to_read_data                               <= 0;
         
         is_from_request_in_buffer                       <= 0;
     end
@@ -124,7 +123,14 @@ begin
         issue_ack_to_fifo                               <= 0;
         
         request_out_clk_ctr                             <= 0;
+        jump_to_check_data                              <= 0;
     end
+    
+    else if (jump_to_read_data & (jump_mode == 0))
+    begin
+        request_out_enable                              <= 1;    
+    end
+    
     else if (request_out_enable)
     begin
         
@@ -176,25 +182,14 @@ begin
     // jump to check data
     if (jump_to_check_data)
     begin
-        jump_to_check_data                                  <= 0;
-    
         if (jump_mode == 0)
         begin
             request_out_enable                              <= 0;
-            test_judge                                      <= 1;
-            check_enable                                    <= 1;
         end
         
         else if (jump_mode == 1)
         begin
             request_out_enable                              <= 0;
-        
-            if (jump_to_read_data)
-            begin
-                test_judge                                  <= 1;
-                check_enable                                <= 1;            
-            
-            end
         end
     end
 end
@@ -208,6 +203,27 @@ begin
         test_judge                                      <= 0;
         check_enable                                    <= 0;
     end
+    
+    else if (jump_to_check_data)
+    begin
+        if (jump_mode == 0)
+        begin
+            test_judge                                  <= 1;
+            check_enable                                <= 1; 
+            jump_to_check_data                          <= 0;            
+        end
+        
+        else if (jump_mode == 1)
+        begin
+            if (jump_to_read_data)
+            begin
+                test_judge                              <= 1;
+                check_enable                            <= 1; 
+                jump_to_check_data                      <= 0;
+            end          
+        end 
+    end
+    
     else if (check_enable)
     begin
         if (result_ctr < result_ctr_boundary)
