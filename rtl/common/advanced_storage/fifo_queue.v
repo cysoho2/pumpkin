@@ -43,8 +43,8 @@ wire [QUEUE_PTR_WIDTH_IN_BITS     - 1 : 0] next_read_ptr  = (read_ptr  == {(QUEU
 
 assign is_full_out   = &fifo_entry_valid_packed;
 assign is_empty_out  = &(~fifo_entry_valid_packed);
-//assign issue_ack_out = ~is_full_out;
-assign issue_ack_out = ~is_full_out | (issue_ack_in & request_valid_out & request_valid_in);
+assign issue_ack_out = ~is_full_out;
+//assign issue_ack_out = ~is_full_out | (issue_ack_in & request_valid_out & request_valid_in);
 
 // read/write ptr management
 always@(posedge clk_in)

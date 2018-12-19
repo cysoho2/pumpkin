@@ -176,6 +176,8 @@ begin
     // jump to check data
     if (jump_to_check_data)
     begin
+        jump_to_check_data                                  <= 0;
+    
         if (jump_mode == 0)
         begin
             request_out_enable                              <= 0;
