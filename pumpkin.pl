@@ -156,42 +156,40 @@ sub cmd_parsing
                 {
                     if($test_mode eq 'behavioral' and ($test_type eq 'none' or $test_type eq 'timing'))
                     {
-                        die "[error-script] either test_mode($test_mode) or test_type($test_type) option is not correct !";
+                        say "[warning-script] -behavioral option is only compatible with -sim_func";
+                        $test_type = 'functional';
+                    }
+                    my $target_queue_ref = $test_scale =~ 'full' ?
+                                                \%full_test_queue_hash:
+                                                \%unit_test_queue_hash;
+                    my @test_name_list;
+
+                    if($test_name ne 'all')
+                    {
+                        push @test_name_list, $test_name;
                     }
                     else
                     {
-                        my $target_queue_ref = $test_scale =~ 'full' ?
-                                                \%full_test_queue_hash:
-                                                \%unit_test_queue_hash;
-                        my @test_name_list;
+                        next if scalar @test_name_list != 0;
+                        say "[info-script] will include all the test case ... \n";
 
-                        if($test_name ne 'all')
+                        my @full_test_name_list = $test_scale =~ 'full' ? keys %full_test_info_hash : keys %unit_test_info_hash;
+                        foreach my $test_name_in_list (@full_test_name_list)
                         {
-                            push @test_name_list, $test_name;
+                            push @test_name_list, $test_name_in_list;
                         }
-                        else
-                        {
-                            next if scalar @test_name_list != 0;
-                            say "[info-script] will include all the test case ... \n";
+                    }
 
-                            my @full_test_name_list = $test_scale =~ 'full' ? keys %full_test_info_hash : keys %unit_test_info_hash;
-                            foreach my $test_name_in_list (@full_test_name_list)
-                            {
-                                push @test_name_list, $test_name_in_list;
-                            }
-                        }
-
-                        foreach my $test_name_in_list (@test_name_list)
+                    foreach my $test_name_in_list (@test_name_list)
+                    {
+                        ${$target_queue_ref}{$test_name_in_list}=
                         {
-                            ${$target_queue_ref}{$test_name_in_list}=
-                            {
-                                'mode'           => $test_mode,
-                                'type'           => $test_type,
-                                'dump'           => $test_dump,
-                                'test_src_dir'   => $unit_test_info_hash{$test_name_in_list}{'test_src_dir'},
-                                'topmodule_test' => $unit_test_info_hash{$test_name_in_list}{'topmodule_test'},
-                                'topmodule_src'  => $unit_test_info_hash{$test_name_in_list}{'topmodule_src'}
-                            }
+                            'mode'           => $test_mode,
+                            'type'           => $test_type,
+                            'dump'           => $test_dump,
+                            'test_src_dir'   => $unit_test_info_hash{$test_name_in_list}{'test_src_dir'},
+                            'topmodule_test' => $unit_test_info_hash{$test_name_in_list}{'topmodule_test'},
+                            'topmodule_src'  => $unit_test_info_hash{$test_name_in_list}{'topmodule_src'}
                         }
                     }
                 }
