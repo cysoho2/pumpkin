@@ -22,7 +22,9 @@ if(@ARGV < 6)
 }
 
 &script_init();
-our($project_name, $topmodule, $cycle_time, $vivado_log_file_path, $device_constr_path, $autogen_constr_file_path, $rtl_filelist_string) = @ARGV;
+our($autogen_constr_on, $project_name, $topmodule, $cycle_time,
+    $vivado_log_file_path, $device_constr_path, $autogen_constr_file_path,
+    $rtl_filelist_string) = @ARGV;
 our @rtl_filelist = split /\s+/, $rtl_filelist_string;
 &vivado_log_parse($vivado_log_file_path);
 
@@ -336,44 +338,45 @@ sub output_xdc_generate
 
     my $xdc_output_buffer = '';
 
-# release this part of code will genertate auto-constraints for the specified FPGA device
-=pod
-    my $total_width = 0;
-    foreach my $port_name (sort keys %port_width_hash)
+    # release this part of code will genertate auto-constraints for the specified FPGA device
+    if($autogen_constr_on eq 'on')
     {
-        #say "[info-script] the port $port_name requires ".$port_width_hash{$port_name}." pins";
-        $total_width += $port_width_hash{$port_name};
-    }
-    say "[info-script] the selected design requires $total_width pins in total";
-    say "[info-script] the selected fpga device has $num_pins_device general purpose I/O pins in total";
-    die "[error-script] no enough num of pins for this device !" if $total_width > $num_pins_device;
-
-    # example
-    # set_property package_pin h20 [get_ports {vga_g[4]}];
-
-    foreach my $port_name (sort keys %port_width_hash)
-    {
-        my $width = $port_width_hash{$port_name};
-
-        if($width == 1)
+        my $total_width = 0;
+        foreach my $port_name (sort keys %port_width_hash)
         {
-            $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports %s]\n",
-                                            &pin_allocate($port_name, $device_constr_path), $port_name;
-
-            #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports %s]\n\n", $port_name;
+            #say "[info-script] the port $port_name requires ".$port_width_hash{$port_name}." pins";
+            $total_width += $port_width_hash{$port_name};
         }
-        else
+        say "[info-script] the selected design requires $total_width pins in total";
+        say "[info-script] the selected fpga device has $num_pins_device general purpose I/O pins in total";
+        die "[error-script] no enough num of pins for this device !" if $total_width > $num_pins_device;
+
+        # example
+        # set_property package_pin h20 [get_ports {vga_g[4]}];
+
+        foreach my $port_name (sort keys %port_width_hash)
         {
-            while($width--)
+            my $width = $port_width_hash{$port_name};
+
+            if($width == 1)
             {
-                $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports {%s[%d]}]\n",
-                                                &pin_allocate($port_name, $device_constr_path), $port_name, $width;
-                #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports {%s[%d]}]\n\n",
-                                                #$port_name, $width;
+                $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports %s]\n",
+                                                &pin_allocate($port_name, $device_constr_path), $port_name;
+
+                #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports %s]\n\n", $port_name;
+            }
+            else
+            {
+                while($width--)
+                {
+                    $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports {%s[%d]}]\n",
+                                                    &pin_allocate($port_name, $device_constr_path), $port_name, $width;
+                    #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports {%s[%d]}]\n\n",
+                                                    #$port_name, $width;
+                }
             }
         }
     }
-=cut
     
     die "[error-script] fail to open the output constraints file for $autogen_constr_file_path, $!"
     if !open xdc_handle, ">$autogen_constr_file_path";
