@@ -22,7 +22,9 @@ if(@ARGV < 6)
 }
 
 &script_init();
-our($project_name, $topmodule, $cycle_time, $vivado_log_file_path, $device_constr_path, $autogen_constr_file_path, $rtl_filelist_string) = @ARGV;
+our($autogen_constr_on, $project_name, $topmodule, $cycle_time,
+    $vivado_log_file_path, $device_constr_path, $autogen_constr_file_path,
+    $rtl_filelist_string) = @ARGV;
 our @rtl_filelist = split /\s+/, $rtl_filelist_string;
 &vivado_log_parse($vivado_log_file_path);
 
@@ -310,21 +312,18 @@ sub device_constr_parse
 
         my $pin = $+{pin} if($line =~ /(?<pin>\w+)\s+/);
 
-=pod
-        if($line =~ /(?<pin>\w+)                \s+
-                        (?<pin_name>\w+)           \s+
-                        (?<memory_byte_group>\w+)  \s+
-                        (?<bank>\w+)               \s+
-                        (?<vccaux_group>\w+)       \s+
-                        (?<super_logic_region>\w+) \s+
-                        (?<io_type>\w+)            \s+
-                        (?<no_connect>.+)          \s+
-                        /ix)
-=cut
         # filter out the pins which does not have general purpose I/O support
         if($line =~ /\s+(?<io_type>HP|HR)\s+/)
         {
-            $pin_hash{$pin} = 1;
+            if($line =~ /(?<pin>\w+)                \s+
+                        (?<pin_name>\w+)           \s+
+                        (?<memory_byte_group>\w+)  \s+
+                        (?<bank>\w+)               \s+
+                        /ix)
+            {
+                $pin_hash{$pin} = $+{bank};
+                #say "[info-script] $pin is in bank $+{bank}";
+            }
         }
     };
 
@@ -339,42 +338,46 @@ sub output_xdc_generate
 
     my $xdc_output_buffer = '';
 
-    my $total_width = 0;
-    foreach my $port_name (sort keys %port_width_hash)
+    # release this part of code will genertate auto-constraints for the specified FPGA device
+    if($autogen_constr_on eq 'on')
     {
-        #say "[info-script] the port $port_name requires ".$port_width_hash{$port_name}." pins";
-        $total_width += $port_width_hash{$port_name};
-    }
-    say "[info-script] the selected design requires $total_width pins in total";
-    say "[info-script] the selected fpga device has $num_pins_device general purpose I/O pins in total";
-    die "[error-script] no enough num of pins for this device !" if $total_width > $num_pins_device;
-
-    # example
-    # set_property package_pin h20 [get_ports {vga_g[4]}];
-
-    foreach my $port_name (sort keys %port_width_hash)
-    {
-        my $width = $port_width_hash{$port_name};
-
-        if($width == 1)
+        my $total_width = 0;
+        foreach my $port_name (sort keys %port_width_hash)
         {
-            $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports %s]\n",
-                                            &pin_allocate($port_name, $device_constr_path), $port_name;
-
-            #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports %s]\n\n", $port_name;
+            #say "[info-script] the port $port_name requires ".$port_width_hash{$port_name}." pins";
+            $total_width += $port_width_hash{$port_name};
         }
-        else
+        say "[info-script] the selected design requires $total_width pins in total";
+        say "[info-script] the selected fpga device has $num_pins_device general purpose I/O pins in total";
+        die "[error-script] no enough num of pins for this device !" if $total_width > $num_pins_device;
+
+        # example
+        # set_property package_pin h20 [get_ports {vga_g[4]}];
+
+        foreach my $port_name (sort keys %port_width_hash)
         {
-            while($width--)
+            my $width = $port_width_hash{$port_name};
+
+            if($width == 1)
             {
-                $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports {%s[%d]}]\n",
-                                                &pin_allocate($port_name, $device_constr_path), $port_name, $width;
-                #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports {%s[%d]}]\n\n",
-                                                #$port_name, $width;
+                $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports %s]\n",
+                                                &pin_allocate($port_name, $device_constr_path), $port_name;
+
+                #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports %s]\n\n", $port_name;
+            }
+            else
+            {
+                while($width--)
+                {
+                    $xdc_output_buffer .= sprintf "set_property package_pin %s [get_ports {%s[%d]}]\n",
+                                                    &pin_allocate($port_name, $device_constr_path), $port_name, $width;
+                    #$xdc_output_buffer .= sprintf "set_property iostandard $iostandard [get_ports {%s[%d]}]\n\n",
+                                                    #$port_name, $width;
+                }
             }
         }
     }
-
+    
     die "[error-script] fail to open the output constraints file for $autogen_constr_file_path, $!"
     if !open xdc_handle, ">$autogen_constr_file_path";
 
@@ -383,7 +386,7 @@ sub output_xdc_generate
         if($device_constr_path =~ $device)
         {
             $xdc_output_buffer .= sprintf("create_clock -period %d -name clk_in -waveform {0 %f} [get_ports clk_in]\n\n",
-                            $cycle_time, $cycle_time/2) if !exists $pin_hash{%{$device_info_hash{$device}}{'clk_in'}};
+                            $cycle_time, $cycle_time/2) if exists $port_width_hash{'clk_in'};
             #$xdc_output_buffer .= sprintf("set_property clock_dedicated_route false [get_nets clk_ibuf]\n\n");
         }
     }
@@ -414,7 +417,7 @@ sub pin_allocate
 
             # non pre_allocated_port
             my %pre_allocated_pin_port_hash = reverse %{$device_info_hash{$device}};
-            foreach my $pin_to_check (sort keys %pin_hash)
+            foreach my $pin_to_check (sort by_bank keys %pin_hash)
             {
                 if(!exists $pre_allocated_pin_port_hash{$pin_to_check})
                 {
@@ -434,4 +437,6 @@ sub pin_allocate
     die "[error-script] the pin $pin does not detected or was already assigned";
     &Dumper(\%pin_hash);
 }
+
+sub by_bank { $pin_hash{$b} <=> $pin_hash{$a} };
 

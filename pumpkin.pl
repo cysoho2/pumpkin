@@ -47,13 +47,14 @@ foreach my $test_name (sort keys %full_test_queue_hash)
 sub pumpkin_init
 {
     say "\n";
-    say " ******* Pumpkin auto worker script v1.63";
+    say " ******* Pumpkin auto worker script v1.7";
     say "\n";
 
     %pumpkin_parameter_hash =
     (
         #'device'                        => 'xc7z020clg400-1',
         'device'                        => 'xc7v2000tfhg1761-1',
+        'autogen_constr'                => 'off',
         'default_test_scale'            => 'unit_test',
         'default_test_arch'             => 'arm64',
         'default_test_mode'             => 'post-implementation',
@@ -61,30 +62,29 @@ sub pumpkin_init
         'default_test_dump'             => 'off',
         'default_cycle_time'            => 8, # counting in nano second
 
-        'waveform_filename'             => 'sim_waves.vcd',
-        'autogen_constr_filename'       => 'auto_constraints.xdc',
-        'sim_log_filename'              => 'sim.log',
-        'synth_log_filename'            => 'synth.log',
-        'impl_log_filename'             => 'impl.log',
-        'timing_rpt_filename'           => 'timing.log',
-        'util_rpt_filename'             => 'util.log',
-        'report_dir'                    => 'report',
-
-        'sim_config_filename' 		    => 'sim_config.h',
-
         'c_x64_compiler'                => 'gcc',
         'cpp_x64_compiler'              => 'g++',
         'c_arm_compiler'                => 'aarch64-linux-gnu-gcc',
         'cpp_arm_compiler'              => 'aarch64-linux-gnu-g++',
         'arm_objdump'                   => 'aarch64-linux-gnu-objdump',
-        'compilation_output_filename'   => 'sim',
 
         'src_rtl_ext_format'            => qr/(\.v)$|(\.vh)$/,
         'src_verify_ext_format'         => qr/(\.cpp)$|(\.h)$|(\.c)$/,
 
-        'running_on_mac'                => '0'
+        'running_on_mac'                => '0' # this script will auto-detect the environment
     );
 
+    $pumpkin_path_hash{'waveform_filename'}            = 'sim_waves.vcd';
+    $pumpkin_path_hash{'autogen_constr_filename'}      = 'auto_constraints.xdc';
+    $pumpkin_path_hash{'sim_log_filename'}             = 'sim.log';
+    $pumpkin_path_hash{'synth_log_filename'}           = 'synth.log';
+    $pumpkin_path_hash{'impl_log_filename'}            = 'impl.log';
+    $pumpkin_path_hash{'timing_rpt_filename'}          = 'timing.log';
+    $pumpkin_path_hash{'util_rpt_filename'}            = 'util.log';
+    $pumpkin_path_hash{'sim_config_filename'}          = 'sim_config.h';
+    $pumpkin_path_hash{'compilation_output_filename'}  = 'sim';
+    $pumpkin_path_hash{'report_dirname'}               = "report";
+    
     $pumpkin_path_hash{'pumpkin_root_dir'}             = getcwd;
     $pumpkin_path_hash{'src_rtl_dir'}                  = "$pumpkin_path_hash{'pumpkin_root_dir'}/rtl";
     $pumpkin_path_hash{'src_verify_dir'}               = "$pumpkin_path_hash{'pumpkin_root_dir'}/verify";
@@ -109,7 +109,8 @@ sub pumpkin_init
         {
             mkdir $pumpkin_path_hash{$key};
         }
-        else
+        # the postfix with 'filename' or 'dirname' will bypass this check
+        elsif(!($key =~ 'filename' || $key =~ 'dirname'))
         {
             die "path invalid - $pumpkin_path_hash{$key}"
             if !-e $pumpkin_path_hash{$key};
@@ -297,20 +298,21 @@ sub task_begin
         my $topmodule_test              = ${$test_options_ref}{'topmodule_test'};
         my $topmodule_src               = ${$test_options_ref}{'topmodule_src'};
 
+        my $autogen_constr              = $pumpkin_parameter_hash{'autogen_constr'};
         my $constr_generator_path       = $pumpkin_path_hash{'constr_generator_path'};
         my $device_constr_path          = "$pumpkin_path_hash{'device_constr_dir'}/$pumpkin_parameter_hash{'device'}.txt";
-        my $final_constr_path           = "$build_dir/$pumpkin_parameter_hash{'autogen_constr_filename'}";
+        my $final_constr_path           = "$build_dir/$pumpkin_path_hash{'autogen_constr_filename'}";
 
         my $cycle_time                  = $pumpkin_parameter_hash{'default_cycle_time'};
 
         die "[error-script] the device file for $pumpkin_parameter_hash{'device'} doesn't exist" if !-e $device_constr_path;
 
-        my $report_dir = "$build_dir/$pumpkin_parameter_hash{'report_dir'}";
+        my $report_dir = "$build_dir/$pumpkin_path_hash{'report_dirname'}";
         &create_dir($report_dir);
 
-        my $timing_rpt_path = "$report_dir/$pumpkin_parameter_hash{'timing_rpt_filename'}";
-        my $util_rpt_path   = "$report_dir/$pumpkin_parameter_hash{'util_rpt_filename'}";
-        my $waveform_path   = "$report_dir/$pumpkin_parameter_hash{'waveform_filename'}";
+        my $timing_rpt_path = "$report_dir/$pumpkin_path_hash{'timing_rpt_filename'}";
+        my $util_rpt_path   = "$report_dir/$pumpkin_path_hash{'util_rpt_filename'}";
+        my $waveform_path   = "$report_dir/$pumpkin_path_hash{'waveform_filename'}";
 
         # invoke vivado for linux
         if($pumpkin_parameter_hash{'running_on_mac'} == 0)
@@ -322,15 +324,15 @@ sub task_begin
             &vivado_wrapper(
                     $test_name,
                     $waveform_path, $timing_rpt_path, $util_rpt_path,
-                    $constr_generator_path, $device_constr_path, $final_constr_path,
+                    $constr_generator_path, $autogen_constr, $device_constr_path, $final_constr_path,
                     "$pumpkin_parameter_hash{'device'}", $cycle_time,
                     $topmodule_test, $topmodule_src, $test_mode, $test_type, $test_dump,
                     $build_dir, (@rtl_filelist, @testbench_filelist));
 
             # copy back the logs
-            `cp $synth_log_path $report_dir/$pumpkin_parameter_hash{synth_log_filename}` if -e $synth_log_path;
-            `cp $impl_log_path  $report_dir/$pumpkin_parameter_hash{impl_log_filename}`  if -e $impl_log_path;
-            `cp $sim_log_path   $report_dir/$pumpkin_parameter_hash{sim_log_filename}`   if -e $sim_log_path;
+            `cp $synth_log_path $report_dir/$pumpkin_path_hash{synth_log_filename}` if -e $synth_log_path;
+            `cp $impl_log_path  $report_dir/$pumpkin_path_hash{impl_log_filename}`  if -e $impl_log_path;
+            `cp $sim_log_path   $report_dir/$pumpkin_path_hash{sim_log_filename}`   if -e $sim_log_path;
 
             if($test_mode eq 'post-synthesis' or $test_mode eq 'post-implementation')
             {
@@ -353,8 +355,8 @@ sub task_begin
         else
         {
             chdir $build_dir;
-            $pumpkin_parameter_hash{'waveform_filename'} = "sim_waves.fst";
-            $waveform_path = "$build_dir/$pumpkin_parameter_hash{'waveform_filename'}";
+            $pumpkin_path_hash{'waveform_filename'} = "sim_waves.fst";
+            $waveform_path = "$build_dir/$pumpkin_path_hash{'waveform_filename'}";
 
             my $sim_config_path = &create_sim_config_file();
             push @rtl_filelist, $sim_config_path;
@@ -376,7 +378,7 @@ sub task_begin
                                           ." IVERILOG_DUMPER=fst -fst";
 
                 my $icarus_run_log      = `$icarus_run_cmd`;
-                my $icarus_run_log_path = "$report_dir/$pumpkin_parameter_hash{'sim_log_filename'}";
+                my $icarus_run_log_path = "$report_dir/$pumpkin_path_hash{'sim_log_filename'}";
 
                 die "[error-script] fail to open $icarus_run_log_path"
                 if !open log_handle, ">$icarus_run_log_path";
@@ -429,6 +431,7 @@ sub vivado_wrapper
             $util_rpt_path,
 
             $constr_generator_path,
+            $autogen_constr,
             $device_constr_path,
             $final_constr_path,
 
@@ -457,7 +460,7 @@ sub vivado_wrapper
     my $vivado_cmd = "vivado -mode batch -source $pumpkin_path_hash{'vivado_wrapper_path'}";
         $vivado_cmd .= " -tclargs $test_name";
         $vivado_cmd .= " $waveform_path $timing_rpt_path $util_rpt_path $synth_log_path";
-        $vivado_cmd .= " $constr_generator_path $device_constr_path $final_constr_path";
+        $vivado_cmd .= " $constr_generator_path $autogen_constr $device_constr_path $final_constr_path";
         $vivado_cmd .= " $device_name $cycle_time";
         $vivado_cmd .= " $topmodule_test $topmodule_src $test_mode $test_type $test_dump";
         $vivado_cmd .= " @combined_filelist";
@@ -617,7 +620,7 @@ sub test_name_enumerate
 
 sub create_sim_config_file
 {
-    my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_parameter_hash{'sim_config_filename'}";
+    my $sim_config_path = "$pumpkin_path_hash{'src_rtl_dir'}/definitions/"."$pumpkin_path_hash{'sim_config_filename'}";
 
     system "cat /dev/null >$sim_config_path" if(-e $sim_config_path);
     #die "[error-script] unable to delete old timing def file $sim_config_path" if -e $sim_config_path;
@@ -634,7 +637,7 @@ sub create_sim_config_file
 
     if($pumpkin_parameter_hash{'running_on_mac'} == 1)
     {
-        printf config_handle "    `define DUMP_FILENAME \"$pumpkin_parameter_hash{'waveform_filename'}\"\n";
+        printf config_handle "    `define DUMP_FILENAME \"$pumpkin_path_hash{'waveform_filename'}\"\n";
     }
 
     printf config_handle "`else\n";

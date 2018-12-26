@@ -7,22 +7,23 @@ set util_rpt_file_path [lindex $argv 3]
 set vivado_synth_log_path [lindex $argv 4]
 
 set constr_generator_path [lindex $argv 5]
-set device_constraint_path [lindex $argv 6]
-set final_constraint_path [lindex $argv 7]
+set autogen_constr [lindex $argv 6]
+set device_constraint_path [lindex $argv 7]
+set final_constraint_path [lindex $argv 8]
 
-set device [lindex $argv 8]
-set cycle_time [lindex $argv 9]
+set device [lindex $argv 9]
+set cycle_time [lindex $argv 10]
 
-set topmodule_test [lindex $argv 10]
-set topmodule_src [lindex $argv 11]
-set sim_mode [lindex $argv 12]
-set sim_type [lindex $argv 13]
-set dumpon [lindex $argv 14]
+set topmodule_test [lindex $argv 11]
+set topmodule_src [lindex $argv 12]
+set sim_mode [lindex $argv 13]
+set sim_type [lindex $argv 14]
+set dumpon [lindex $argv 15]
 
 set parallel_thread 6
 
 #reading file list
-set i 15
+set i 16
 while {$i < $argc} {
     lappend files [lindex $argv $i]
     incr i 1
@@ -65,7 +66,7 @@ if {[string equal -nocase -length 5 $sim_mode "post-"]} {
     if {[get_property PROGRESS [get_runs "synth_run"]] != "100%"} {
         error "[error-script] synthesis failed"
     } else {
-        exec $constr_generator_path $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraint_path $final_constraint_path $files
+        exec $constr_generator_path $autogen_constr $project_name $topmodule_src $cycle_time $vivado_synth_log_path $device_constraint_path $final_constraint_path $files
         add_files -norecurse -fileset constrs_1 $final_constraint_path
     }
 
