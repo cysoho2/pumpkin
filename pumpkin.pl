@@ -363,18 +363,18 @@ sub task_begin
 
             say "[info-script] invoking icarus compiler ...";
 
-            my $icarus_compilation_cmd = "iverilog -o $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}"
-                                         ." -s $topmodule_test -I$pumpkin_path_hash{'src_rtl_dir'}/definitions";
+            my $icarus_compilation_cmd = "iverilog -o $build_dir/$pumpkin_path_hash{'compilation_output_filename'}"
+                                        ." -s $topmodule_test -I$pumpkin_path_hash{'src_rtl_dir'}/definitions";
                $icarus_compilation_cmd .= " -DDUMP" if $test_dump eq 'on';
                $icarus_compilation_cmd .= " @rtl_filelist @testbench_filelist";
 
             #say "[info-script] icarus cmd is - $icarus_compilation_cmd";
             system $icarus_compilation_cmd;
 
-            if(-e "$build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}")
+            if(-e "$build_dir/$pumpkin_path_hash{'compilation_output_filename'}")
             {
                 say "[info-script] invoking icarus simulator ...";
-                my $icarus_run_cmd      = "vvp $build_dir/$pumpkin_parameter_hash{'compilation_output_filename'}"
+                my $icarus_run_cmd      = "vvp $build_dir/$pumpkin_path_hash{'compilation_output_filename'}"
                                           ." IVERILOG_DUMPER=fst -fst";
 
                 my $icarus_run_log      = `$icarus_run_cmd`;
