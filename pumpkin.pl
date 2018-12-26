@@ -83,12 +83,12 @@ sub pumpkin_init
     $pumpkin_path_hash{'util_rpt_filename'}            = 'util.log';
     $pumpkin_path_hash{'sim_config_filename'}          = 'sim_config.h';
     $pumpkin_path_hash{'compilation_output_filename'}  = 'sim';
+    $pumpkin_path_hash{'report_dirname'}               = "report";
     
     $pumpkin_path_hash{'pumpkin_root_dir'}             = getcwd;
     $pumpkin_path_hash{'src_rtl_dir'}                  = "$pumpkin_path_hash{'pumpkin_root_dir'}/rtl";
     $pumpkin_path_hash{'src_verify_dir'}               = "$pumpkin_path_hash{'pumpkin_root_dir'}/verify";
     $pumpkin_path_hash{'working_temp_dir'}             = "$pumpkin_path_hash{'pumpkin_root_dir'}/working_temp";
-    $pumpkin_path_hash{'report_dirname'}               = "report";
     $pumpkin_path_hash{'assist_script_dir'}            = "$pumpkin_path_hash{'src_verify_dir'}/assist_script";
     $pumpkin_path_hash{'full_test_dir'}                = "$pumpkin_path_hash{'src_verify_dir'}/full_test";
     $pumpkin_path_hash{'unit_test_dir'}                = "$pumpkin_path_hash{'src_verify_dir'}/unit_test";
@@ -109,7 +109,7 @@ sub pumpkin_init
         {
             mkdir $pumpkin_path_hash{$key};
         }
-        # postfix with filename or dirname will bypass this check
+        # the postfix with 'filename' or 'dirname' will bypass this check
         elsif(!($key =~ 'filename' || $key =~ 'dirname'))
         {
             die "path invalid - $pumpkin_path_hash{$key}"
