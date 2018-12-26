@@ -79,7 +79,7 @@ sub pumpkin_init
         'arm_objdump'                   => 'aarch64-linux-gnu-objdump',
         'compilation_output_filename'   => 'sim',
 
-        'src_rtl_ext_format'            => qr/(\.v)$|(\.h)$/,
+        'src_rtl_ext_format'            => qr/(\.v)$|(\.vh)$/,
         'src_verify_ext_format'         => qr/(\.cpp)$|(\.h)$|(\.c)$/,
 
         'running_on_mac'                => '0'

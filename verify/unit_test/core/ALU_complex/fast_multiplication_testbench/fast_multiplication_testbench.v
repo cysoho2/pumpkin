@@ -1,5 +1,4 @@
-`include "sim_config.h"
-`include "parameters.h"
+`include "parameters.vh"
 
 module fast_multiplication_testbench;
 

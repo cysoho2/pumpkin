@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module find_first_one_index_testbench();
 

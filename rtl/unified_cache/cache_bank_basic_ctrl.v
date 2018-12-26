@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 `define IDLE        3'b000
 `define CHECK       3'b001

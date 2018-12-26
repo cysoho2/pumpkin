@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module dual_port_blockram_testbench();
 

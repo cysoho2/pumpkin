@@ -1,5 +1,4 @@
-`include "sim_config.h"
-`include "parameters.h"
+`include "parameters.vh"
 
 module multicycle_divider_testbench;
 

@@ -1,5 +1,4 @@
-`include "parameters.h"
-`include "sim_config.h"
+`include "parameters.vh"
 
 module tri_port_regfile_testbench();
 

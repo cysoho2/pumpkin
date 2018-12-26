@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module bitonic_sorter_testbench();
 

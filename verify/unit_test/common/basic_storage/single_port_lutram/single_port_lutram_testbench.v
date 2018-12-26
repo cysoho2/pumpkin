@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module single_port_lutram_testbench();
 

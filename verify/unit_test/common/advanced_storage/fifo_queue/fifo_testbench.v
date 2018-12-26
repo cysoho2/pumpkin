@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module fifo_queue_testbench();
 

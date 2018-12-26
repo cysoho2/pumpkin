@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module unified_cache_semi_axi_top
 #(

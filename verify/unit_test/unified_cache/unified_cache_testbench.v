@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 `define MEM_SIZE 64
 

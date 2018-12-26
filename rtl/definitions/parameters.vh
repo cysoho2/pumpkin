@@ -1,9 +1,9 @@
-`include "sim_config.h"
+`include "sim_config.vh"
 
 //`define COD_UCAS
 
 `ifdef COD_UCAS
-    `include "parameters_cod_ucas.h"
+    `include "parameters_cod_ucas.vh"
 `else
     `ifndef PARAMETERS
         `define PARAMETERS

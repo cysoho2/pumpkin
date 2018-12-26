@@ -1,4 +1,4 @@
-`include "parameters.h"
+`include "parameters.vh"
 
 module associative_single_port_array
 #(
