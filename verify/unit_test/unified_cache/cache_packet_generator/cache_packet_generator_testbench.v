@@ -7,6 +7,7 @@ reg reset_in;
 
 `define MEM_SIZE  65536
 `define NUM_REQUEST 16
+`define NUM_TEST_CASE 8
 
 `define MEM_DELAY 10
 `define DEAD_DELAY (`MEM_DELAY * 100)
@@ -22,6 +23,9 @@ reg [31:0] clk_counter;
 
 reg [2:0] mem_ctrl_state;
 
+integer                                             case_index;
+integer                                             wait_ctr;
+
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  test_packet_way0;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  test_packet_way1;
 wire                                                test_packet_ack_way0;
@@ -31,6 +35,9 @@ wire  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] return_packet_way1;
 wire                                                return_packet_ack_way0;
 wire                                                return_packet_ack_way1;
 
+reg                                                 test_case_ack_to_generator;
+wire                                                test_case_ack_from_generator;
+
 wire done;
 wire error;
 
@@ -38,13 +45,14 @@ reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  mem_return_packet;
 wire                                                from_cache_ack;
 wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]  cache_to_mem_packet;
 reg                                                 to_cache_ack;
+reg                                                 to_cache_ack_end_flag;
 
-wire [`CPU_ADDR_LEN_IN_BITS               - 1 : 0]  access_full_addr = 
-    cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS] ? 
+wire [`CPU_ADDR_LEN_IN_BITS               - 1 : 0]  access_full_addr =
+    cache_to_mem_packet[`UNIFIED_CACHE_PACKET_VALID_POS] ?
     cache_to_mem_packet[`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO] : 0;
 
 wire [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS   - 1 : 0]  write_mask_extend;
-wire [`UNIFIED_CACHE_PACKET_BYTE_MASK_LEN - 1 : 0]  write_mask = 
+wire [`UNIFIED_CACHE_PACKET_BYTE_MASK_LEN - 1 : 0]  write_mask =
     cache_to_mem_packet[`UNIFIED_CACHE_PACKET_BYTE_MASK_POS_HI : `UNIFIED_CACHE_PACKET_BYTE_MASK_POS_LO];
 
 generate
@@ -58,20 +66,24 @@ endgenerate
 cache_packet_generator
 #(
     .NUM_WAY(2),
-    .TIMING_OUT_CYCLE(`DEAD_DELAY)
+    .TIMING_OUT_CYCLE(`DEAD_DELAY),
+    .NUM_TEST_CASE(`NUM_TEST_CASE)
 )
 cache_packet_generator
 (
     .clk_in                         (clk_in),
     .reset_in                       (reset_in),
-    
+
     .test_packet_flatted_out        ({test_packet_way1, test_packet_way0}),
     .test_packet_ack_flatted_in     ({test_packet_ack_way1, test_packet_ack_way0}),
     .return_packet_flatted_in       ({return_packet_way1, return_packet_way0}),
     .return_packet_ack_flatted_out  ({return_packet_ack_way1, return_packet_ack_way0}),
-    
+
     .done                           (done),
-    .error                          (error)
+    .error                          (error),
+
+    .test_case_ack_in               (test_case_ack_to_generator),
+    .test_case_ack_out              (test_case_ack_from_generator)
 );
 
 // to cache packet
@@ -125,6 +137,7 @@ begin
         clk_counter                     <= 0;
         mem_return_packet               <= 0;
         to_cache_ack                    <= 0;
+        to_cache_ack_end_flag           <= 0;
     end
 
     else
@@ -167,31 +180,41 @@ begin
 
             `STATE_WRITE:
             begin
-                sim_memory[access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS]
-                <= write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
-                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO];
-                $display("write data %h to sim memory addr %h ", write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
-                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
-                mem_ctrl_state          <= `STATE_FINAL;
-                clk_counter             <= 0;
-                mem_return_packet       <= 0;
-                to_cache_ack            <= 1;
+
+                    to_cache_ack            <= 1;
+                    mem_ctrl_state          <= `STATE_FINAL;
+                    sim_memory[access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS]
+                    <= write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                               `UNIFIED_CACHE_PACKET_DATA_POS_LO];
+                    $display("write data %h to sim memory addr %h by way %d", write_mask_extend & cache_to_mem_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                               `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
+                                                                cache_to_mem_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
+                    mem_return_packet       <= 0;
+
+
+                    clk_counter             <= 0;
+
             end
 
             `STATE_READ_RETURN:
             begin
                 if(from_cache_ack)
                 begin
-                    mem_ctrl_state      <= `STATE_FINAL;
-                    $display("read return data %h to cache on addr %h ", mem_return_packet[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
-                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS);
+                    to_cache_ack            <= 1;
+                    mem_return_packet       <= 0;
+                    mem_ctrl_state          <= `STATE_FINAL;
+                    $display("read return data %h to cache on addr %h by way %d", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
+                                                           `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
+                                                            mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
+
                 end
                 else
-                    mem_ctrl_state      <= mem_ctrl_state;
-                
-                clk_counter             <= 0;
-                mem_return_packet       <= return_packet_concatenated;
-                to_cache_ack            <= 0;
+                begin
+                    mem_ctrl_state          <= mem_ctrl_state;
+                    mem_return_packet       <= return_packet_concatenated;
+                end
+                clk_counter                 <= 0;
+
             end
 
             `STATE_FINAL:
@@ -200,14 +223,54 @@ begin
                 clk_counter             <= 0;
                 mem_return_packet       <= 0;
                 to_cache_ack            <= 0;
+                to_cache_ack_end_flag   <= 0;
             end
         endcase
     end
 end
 
-reg         test_case;
+reg [31:0]  test_case;
 reg [511:0] test_case_content;
 reg         test_judge;
+
+always@(posedge clk_in)
+begin
+    if (reset_in)
+    begin
+        test_case_ack_to_generator <= 0;
+    end
+    else
+    begin
+        if (test_case_ack_to_generator)
+        begin
+            test_case_ack_to_generator <= 0;
+        end
+        else if (test_case_ack_from_generator)
+        begin
+            test_case_ack_to_generator <= 1;
+            test_case                  <= test_case + 1;
+            $display("[info-testbench] test case %d %s : %s\n",test_case, test_case_content, (done & ~error)? "passed" : "failed");
+        end
+        else
+        begin
+            test_case_ack_to_generator  <= test_case_ack_to_generator;
+            test_judge <= (done & ~error) === 1;
+
+            case (test_case)
+
+            0:begin test_case_content <= "single-way random"; end
+            1:begin test_case_content <= "single-way different bank"; end
+            2:begin test_case_content <= "single-way same bank"; end
+            3:begin test_case_content <= "single-way same set"; end
+
+            4:begin test_case_content <= "dual-way random"; end
+            5:begin test_case_content <= "dual-way different bank"; end
+            6:begin test_case_content <= "dual-way same bank"; end
+            7:begin test_case_content <= "dual-way same set"; end
+            endcase
+        end
+    end
+end
 
 initial
 begin
@@ -224,21 +287,23 @@ begin
 
     test_case = 0;
     test_case_content = "cache packet generator";
-    
-    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 2) test_judge = (done & ~error) === 1;
-    $display("[info-testbench] test case %d %s : %s",
-            test_case, test_case_content, test_judge? "passed" : "failed");
-    
-    #(`FULL_CYCLE_DELAY) $display("[info-testbench] simulation comes to the end\n");
+    test_case_ack_to_generator = 0;
+
+    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+//    $display("[info-testbench] test case %d %s : %s",
+//            test_case, test_case_content, test_judge? "passed" : "failed");
+//    #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
+
+    #(`FULL_CYCLE_DELAY) $display("\n[info-testbench] simulation comes to the end\n\n");
     $finish;
 end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
-always@*
-begin
-    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
-        $finish;
-end
+//always@*
+//begin
+//    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
+//        $finish;
+//end
 
 endmodule

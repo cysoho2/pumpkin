@@ -124,10 +124,10 @@ begin
                               (read_port_access_set_addr_in == write_port_access_set_addr_in);
     
     wire [SINGLE_ENTRY_WIDTH_IN_BITS - 1: 0] write_port_full_data_mask;
-    genvar bit_lane;
-    for(bit_lane = 0; bit_lane < SINGLE_ENTRY_WIDTH_IN_BITS; bit_lane = bit_lane + 1)
+    genvar byte_lane;
+    for(byte_lane = 0; byte_lane < SINGLE_ENTRY_WIDTH_IN_BITS; byte_lane = byte_lane + 1)
     begin
-        assign write_port_full_data_mask[bit_lane] = write_port_write_en_in[bit_lane / `BYTE_LEN_IN_BITS];
+        assign write_port_full_data_mask[byte_lane] = write_port_write_en_in[byte_lane / `BYTE_LEN_IN_BITS];
     end
     
     // read port operation
