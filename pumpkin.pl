@@ -93,11 +93,11 @@ sub pumpkin_init
     $pumpkin_path_hash{'full_test_dir'}                = "$pumpkin_path_hash{'src_verify_dir'}/full_test";
     $pumpkin_path_hash{'unit_test_dir'}                = "$pumpkin_path_hash{'src_verify_dir'}/unit_test";
     $pumpkin_path_hash{'unit_test_mem_image_dir'}      = "$pumpkin_path_hash{'src_verify_dir'}/unit_test/mem_image";
+    $pumpkin_path_hash{'mem_model_dir'}                = "$pumpkin_path_hash{'src_verify_dir'}/ddr_model";
     $pumpkin_path_hash{'unit_test_config_path'}        = "$pumpkin_path_hash{'unit_test_dir'}/unit.cfg";
     $pumpkin_path_hash{'vivado_wrapper_path'}          = "$pumpkin_path_hash{'assist_script_dir'}/vivado_wrapper.tcl";
     $pumpkin_path_hash{'constr_generator_path'}        = "$pumpkin_path_hash{'assist_script_dir'}/auto_constr.pl";
     $pumpkin_path_hash{'device_constr_dir'}            = "$pumpkin_path_hash{'assist_script_dir'}/fpga_device";
-    $pumpkin_path_hash{'mem_model_dir'}                = "$pumpkin_path_hash{'assist_script_dir'}/mem_model";
 
     &test_name_enumerate('full_test');
     &test_name_enumerate('unit_test');

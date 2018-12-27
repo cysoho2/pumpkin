@@ -11,17 +11,19 @@ module cache_packet_generator
     parameter MAX_NUM_TASK                                  = 2,
     parameter NUM_TASK_TYPE                                 = 2,
 
+    parameter UNIFIED_CACHE_PACKET_WIDTH_IN_BITS            = `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS,
+
     parameter DEFAULT_WAY_TIME_DELAY                        = 4
 )
 (
     input                                                           reset_in,
     input                                                           clk_in,
 
-    output  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS * NUM_WAY  - 1 : 0] test_packet_flatted_out,
-    input   [NUM_WAY                                       - 1 : 0] test_packet_ack_flatted_in,
+    output  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  test_packet_flatted_out,
+    input   [NUM_WAY                                      - 1 : 0]  test_packet_ack_flatted_in,
 
-    input   [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS * NUM_WAY  - 1 : 0] return_packet_flatted_in,
-    output  [NUM_WAY                                       - 1 : 0] return_packet_ack_flatted_out,
+    input   [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS * NUM_WAY - 1 : 0]  return_packet_flatted_in,
+    output  [NUM_WAY                                      - 1 : 0]  return_packet_ack_flatted_out,
 
     output                                                          done,
     output                                                          error,
@@ -78,9 +80,9 @@ reg [`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS - 1 : 0] sim_memory [MEM_SIZE - 1 : 0];
 
 
 // request buffer
-reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_out_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
-wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_in_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
-reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_expected_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
+reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_out_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
+wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_in_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
+reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] packed_way_packet_expected_buffer [(NUM_REQUEST * NUM_WAY) - 1 : 0];
 reg [31 : 0] packed_way_packet_out_buffer_boundry [NUM_WAY - 1 : 0];
 reg [31 : 0] packed_way_packet_in_buffer_boundry [NUM_WAY - 1 : 0];
 reg [31 : 0] packed_way_packet_expected_buffer_boundry [NUM_WAY - 1 : 0];
@@ -188,7 +190,7 @@ begin:way_logic
         integer scoreboard_index;
         integer valid_index;
 
-        reg  [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   test_packet;
+        reg  [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   test_packet;
 
         // counter
         reg  [31                                     : 0]   request_counter;
@@ -199,8 +201,8 @@ begin:way_logic
         wire [31                                     : 0]   buffer_physical_counter;
 
 
-        wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_concatenated;
-        wire [`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_from_buffer;
+        wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_concatenated;
+        wire [UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0]   packet_from_buffer;
 
         // enable signal
         wire   request_in_enable;
@@ -214,7 +216,7 @@ begin:way_logic
         wire [31:0]packet_expected_buffer_boundry = packed_way_packet_expected_buffer_boundry[WAY_INDEX];
 
 
-        assign test_packet_flatted_out[WAY_INDEX * `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS] = test_packet;
+        assign test_packet_flatted_out[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS] = test_packet;
         assign packet_in_end_way_flag[WAY_INDEX] = error_way[WAY_INDEX] | (buffer_virtual_counter == packet_in_buffer_boundry) & packet_in_enable_way[WAY_INDEX];
         assign packet_out_end_way_flag[WAY_INDEX] = done_way[WAY_INDEX] & packet_in_enable_way[WAY_INDEX];
 
@@ -305,7 +307,7 @@ begin:way_logic
         end
 
         integer request_index;
-        reg[`UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] way_packet_in_buffer [NUM_REQUEST - 1 : 0];
+        reg[UNIFIED_CACHE_PACKET_WIDTH_IN_BITS - 1 : 0] way_packet_in_buffer [NUM_REQUEST - 1 : 0];
         
         for (REQUEST_INDEX = 0; REQUEST_INDEX < NUM_REQUEST; REQUEST_INDEX = REQUEST_INDEX + 1)
         begin
@@ -348,13 +350,13 @@ begin:way_logic
                         buffer_virtual_counter          <= buffer_virtual_counter;
                     end
 
-                    else if(return_packet_flatted_in[(WAY_INDEX) * `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
+                    else if(return_packet_flatted_in[(WAY_INDEX) * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS + `UNIFIED_CACHE_PACKET_VALID_POS])
                     begin
                         return_packet_ack[WAY_INDEX]    <= 1;
                         timeout_counter                 <= 0;
                         error_way[WAY_INDEX]            <= timeout_counter >= TIMING_OUT_CYCLE;
                         way_packet_in_buffer
-                            [buffer_virtual_counter]   <= return_packet_flatted_in[WAY_INDEX * `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: `UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
+                            [buffer_virtual_counter]   <= return_packet_flatted_in[WAY_INDEX * UNIFIED_CACHE_PACKET_WIDTH_IN_BITS +: UNIFIED_CACHE_PACKET_WIDTH_IN_BITS];
                         buffer_virtual_counter <= buffer_virtual_counter + 1'b1;
 
                         way_in_valid_array
