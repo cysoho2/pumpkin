@@ -201,7 +201,7 @@ begin
                 if(from_cache_ack)
                 begin
                     to_cache_ack            <= 1;
-                    mem_return_packet       <= 0;
+                    mem_return_packet       <= return_packet_concatenated;
                     mem_ctrl_state          <= `STATE_FINAL;
                     $display("read return data %h to cache on addr %h by way %d", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                            `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
@@ -211,7 +211,7 @@ begin
                 else
                 begin
                     mem_ctrl_state          <= mem_ctrl_state;
-                    mem_return_packet       <= return_packet_concatenated;
+                    mem_return_packet       <= 0;
                 end
                 clk_counter                 <= 0;
 

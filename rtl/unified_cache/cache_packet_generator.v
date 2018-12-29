@@ -103,12 +103,16 @@ reg [$clog2(MAX_NUM_TASK) - 1 : 0] task_list_ctr;
 // reg [NUM_WAY * 32 - 1 : 0] way_in_time_delay_ctr;
 //reg [NUM_WAY - 1 : 0] check_request_in_counter_array [31:0];
 reg [31 : 0] preprocess_counter;
-wire preprocess_more_than_half = preprocess_counter >= NUM_REQUEST / 2;
-wire preprocess_counter_odd = (preprocess_counter % 2) == 1;
+wire preprocess_more_than_half = preprocess_counter >= (NUM_REQUEST / 2);
+wire preprocess_counter_odd = (preprocess_counter[0]) == 1;
 wire preprocess_counter_even = ~preprocess_counter_odd;
-wire [31 : 0] preprocess_read_after_write_index = preprocess_counter / 2;
+wire [31 : 0] preprocess_read_after_write_index = preprocess_counter >> 1;
 wire [31 : 0] preprocess_way_packet_buffer_index [NUM_WAY - 1 : 0];
 wire [31 : 0] preprocess_way_packet_buffer_half_index [NUM_WAY - 1 : 0];
+
+wire [31 : 0] preprocess_index_times_17 = (preprocess_read_after_write_index << 4) + preprocess_read_after_write_index;
+wire [31 : 0] preprocess_index_times_7 = (preprocess_read_after_write_index << 3) - preprocess_read_after_write_index;
+
 integer preprocess_way_index;
 
 generate
@@ -159,7 +163,6 @@ assign packet_out_enable_way = way_enable_reg;
 assign check_enable_way = {(NUM_WAY){(check_mode_reg == 0)}} & way_enable_reg;
 
 // task way control flag
-wire [MAX_NUM_TASK - 1 : 0] running_end_task_flag;
 wire running_end_flag;
 wire [NUM_WAY * NUM_TASK_TYPE - 1 : 0] task_end_way_flag;
 wire task_end_flag;
@@ -547,7 +550,7 @@ begin
                     /* packet in buffer */
 
                     /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 7) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                     /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
                                         [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                     /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
@@ -571,7 +574,7 @@ begin
                     if (preprocess_counter_odd)
                     begin
                         /* addr */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 7) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         /* data */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                         /* type */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
@@ -588,8 +591,8 @@ begin
                         /*cacheable*/   packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) / 2;
-                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) / 2;
+                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) >> 1;
+                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) >> 1;
 
                     end
 
@@ -648,7 +651,7 @@ begin
                     /* packet in buffer */
 
                     /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 17 % ($clog2(`UNIFIED_CACHE_NUM_BANK))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ({{(32 - $clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}, {(preprocess_index_times_17[$clog2(`UNIFIED_CACHE_NUM_BANK) - 1 : 0])}} << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                     /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
                                         [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                     /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
@@ -672,7 +675,7 @@ begin
                     if (preprocess_counter_odd)
                     begin
                         /* addr */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 17 % ($clog2(`UNIFIED_CACHE_NUM_BANK))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ({{(32 - $clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}, {(preprocess_index_times_17[$clog2(`UNIFIED_CACHE_NUM_BANK) - 1 : 0])}} << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         /* data */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                         /* type */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
@@ -689,8 +692,8 @@ begin
                         /*cacheable*/   packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) / 2;
-                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) / 2;
+                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) >> 1;
+                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) >> 1;
 
                     end
 
@@ -749,7 +752,7 @@ begin
                     /* packet in buffer */
 
                     /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 17 / ($clog2(`UNIFIED_CACHE_NUM_BANK))) << ($clog2(`UNIFIED_CACHE_NUM_BANK)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17[31 : ($clog2(`UNIFIED_CACHE_NUM_BANK))]) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                     /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
                                         [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                     /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
@@ -773,7 +776,7 @@ begin
                     if (preprocess_counter_odd)
                     begin
                         /* addr */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 17 / ($clog2(`UNIFIED_CACHE_NUM_BANK))) << ($clog2(`UNIFIED_CACHE_NUM_BANK)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17[31 : ($clog2(`UNIFIED_CACHE_NUM_BANK))]) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         /* data */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                         /* type */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
@@ -790,8 +793,8 @@ begin
                         /*cacheable*/   packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) / 2;
-                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) / 2;
+                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) >> 1;
+                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) >> 1;
 
                     end
 
@@ -850,7 +853,7 @@ begin
                     /* packet in buffer */
 
                     /* addr */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
-                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 19 / ($clog2(`UNIFIED_CACHE_NUM_SETS))) << ($clog2(`UNIFIED_CACHE_NUM_SETS)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                        [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index << ($clog2(`UNIFIED_CACHE_NUM_SETS))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                     /* data */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
                                         [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                     /* type */      packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[0]]
@@ -874,7 +877,7 @@ begin
                     if (preprocess_counter_odd)
                     begin
                         /* addr */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
-                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 19 / ($clog2(`UNIFIED_CACHE_NUM_SETS))) << ($clog2(`UNIFIED_CACHE_NUM_SETS)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index << ($clog2(`UNIFIED_CACHE_NUM_SETS))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         /* data */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index;
                         /* type */      packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
@@ -891,8 +894,8 @@ begin
                         /*cacheable*/   packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[0]]
                                             [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) / 2;
-                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) / 2;
+                        packed_way_packet_expected_buffer_boundry[0]                                        <= (preprocess_counter + 1) >> 1;
+                        packed_way_packet_in_buffer_boundry[0]                                              <= (preprocess_counter + 1) >> 1;
 
                     end
 
@@ -950,7 +953,7 @@ begin
                     begin
                         /* packet in buffer */
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
-                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 7 + NUM_REQUEST * preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17 + NUM_REQUEST * preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
@@ -974,7 +977,7 @@ begin
                         if (preprocess_counter_odd)
                         begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
-                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_read_after_write_index * 7 + NUM_REQUEST * preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((preprocess_index_times_17 + NUM_REQUEST * preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
@@ -991,8 +994,8 @@ begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) / 2;
-                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) / 2;
+                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) >> 1;
+                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) >> 1;
                         end
                    end
                         // end flag
@@ -1047,7 +1050,7 @@ begin
                     begin
                         /* packet in buffer */
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
-                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (((((preprocess_read_after_write_index * 17) << NUM_WAY) + preprocess_way_index) % ($clog2(`UNIFIED_CACHE_NUM_BANK))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[$clog2(`UNIFIED_CACHE_NUM_BANK) - 1 : 0]}, {(32 - $clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
@@ -1071,7 +1074,7 @@ begin
                         if (preprocess_counter_odd)
                         begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
-                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + (((((preprocess_read_after_write_index * 17) << NUM_WAY) + preprocess_way_index) % ($clog2(`UNIFIED_CACHE_NUM_BANK))) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[$clog2(`UNIFIED_CACHE_NUM_BANK) - 1 : 0]}, {(32 - $clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
@@ -1088,8 +1091,8 @@ begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) / 2;
-                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) / 2;
+                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) >> 1;
+                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) >> 1;
                         end
                    end
                         // end flag
@@ -1144,7 +1147,8 @@ begin
                     begin
                         /* packet in buffer */
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
-                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((((preprocess_read_after_write_index + NUM_REQUEST * preprocess_way_index) * 17) / ($clog2(`UNIFIED_CACHE_NUM_BANK))) << ($clog2(`UNIFIED_CACHE_NUM_BANK)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[31 : $clog2(`UNIFIED_CACHE_NUM_BANK)]}, {($clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                            
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
@@ -1168,7 +1172,7 @@ begin
                         if (preprocess_counter_odd)
                         begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
-                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((((preprocess_read_after_write_index + NUM_REQUEST * preprocess_way_index) * 17) / ($clog2(`UNIFIED_CACHE_NUM_BANK))) << ($clog2(`UNIFIED_CACHE_NUM_BANK)) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[31 : $clog2(`UNIFIED_CACHE_NUM_BANK)]}, {($clog2(`UNIFIED_CACHE_NUM_BANK)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
@@ -1185,8 +1189,8 @@ begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) / 2;
-                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) / 2;
+                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) >> 1;
+                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) >> 1;
                         end
                    end
                         // end flag
@@ -1241,7 +1245,7 @@ begin
                     begin
                         /* packet in buffer */
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
-                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((((preprocess_read_after_write_index * 13 / ($clog2(`UNIFIED_CACHE_NUM_SETS))) << ($clog2(`UNIFIED_CACHE_NUM_SETS))) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                            [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[31 : $clog2(`UNIFIED_CACHE_NUM_SETS)]}, {($clog2(`UNIFIED_CACHE_NUM_SETS)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
                             [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                         packed_way_packet_out_buffer[preprocess_way_packet_buffer_index[preprocess_way_index]]
@@ -1265,7 +1269,7 @@ begin
                         if (preprocess_counter_odd)
                         begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
-                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((((preprocess_read_after_write_index * 13 / ($clog2(`UNIFIED_CACHE_NUM_SETS))) << ($clog2(`UNIFIED_CACHE_NUM_SETS))) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
+                                [`UNIFIED_CACHE_PACKET_ADDR_POS_HI : `UNIFIED_CACHE_PACKET_ADDR_POS_LO]           <= {(`CPU_ADDR_LEN_IN_BITS){8'b0000_0000 + ((({{preprocess_index_times_17[31 : $clog2(`UNIFIED_CACHE_NUM_SETS)]}, {($clog2(`UNIFIED_CACHE_NUM_SETS)){1'b0}}} << $clog2(NUM_WAY)) + preprocess_way_index) << `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS)}};
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_DATA_POS_HI : `UNIFIED_CACHE_PACKET_DATA_POS_LO]           <= {(`UNIFIED_CACHE_BLOCK_SIZE_IN_BITS){1'b1}} - preprocess_read_after_write_index << preprocess_way_index;
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
@@ -1282,8 +1286,8 @@ begin
                             packed_way_packet_expected_buffer[preprocess_way_packet_buffer_half_index[preprocess_way_index]]
                                 [`UNIFIED_CACHE_PACKET_CACHEABLE_POS]                                            <= {1'b1};
 
-                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) / 2;
-                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) / 2;
+                            packed_way_packet_expected_buffer_boundry[preprocess_way_index]                                        <= (preprocess_counter + 1) >> 1;
+                            packed_way_packet_in_buffer_boundry[preprocess_way_index]                                              <= (preprocess_counter + 1) >> 1;
                         end
                    end
                         // end flag
