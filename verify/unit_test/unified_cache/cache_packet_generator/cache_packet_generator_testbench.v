@@ -205,7 +205,7 @@ begin
                     mem_ctrl_state          <= `STATE_FINAL;
                     $display("read return data %h to cache on addr %h by way %d", return_packet_concatenated[`UNIFIED_CACHE_PACKET_DATA_POS_HI :
                                                            `UNIFIED_CACHE_PACKET_DATA_POS_LO], access_full_addr >> `UNIFIED_CACHE_BLOCK_OFFSET_LEN_IN_BITS,
-                                                            mem_return_packet[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
+                                                            return_packet_concatenated[`UNIFIED_CACHE_PACKET_PORT_NUM_HI : `UNIFIED_CACHE_PACKET_PORT_NUM_LO]);
 
                 end
                 else
@@ -241,20 +241,21 @@ begin
     end
     else
     begin
-        if (test_case_ack_to_generator)
+        if (~test_case_ack_from_generator & test_case_ack_to_generator)
         begin
             test_case_ack_to_generator <= 0;
         end
-        else if (test_case_ack_from_generator)
+        else if (test_case_ack_from_generator & ~test_case_ack_to_generator)
         begin
             test_case_ack_to_generator <= 1;
+                        
             test_case                  <= test_case + 1;
             $display("[info-testbench] test case %d %s : %s\n",test_case, test_case_content, (done & ~error)? "passed" : "failed");
         end
+
         else
         begin
-            test_case_ack_to_generator  <= test_case_ack_to_generator;
-            test_judge <= (done & ~error) === 1;
+            //test_judge <= (done & ~error) === 1;
 
             case (test_case)
 
@@ -278,16 +279,17 @@ begin
         $dumpfile(`DUMP_FILENAME);
         $dumpvars(0, cache_packet_generator_testbench);
     `endif
+
+    test_case = 0;
+    test_case_content = "cache packet generator";
+    test_case_ack_to_generator = 0;
+
                                  clk_in   = 1'b0;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b0;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b1;
     #(`FULL_CYCLE_DELAY * 10)    reset_in = 1'b0;
 
     $display("\n[info-testbench] simulation for %m begins now");
-
-    test_case = 0;
-    test_case_content = "cache packet generator";
-    test_case_ack_to_generator = 0;
 
     #(`FULL_CYCLE_DELAY * `NUM_REQUEST * `DEAD_DELAY * 5) test_judge = (done & ~error) === 1;
 //    $display("[info-testbench] test case %d %s : %s",
@@ -300,10 +302,10 @@ end
 
 always begin #(`HALF_CYCLE_DELAY) clk_in <= ~clk_in; end
 
-//always@*
-//begin
-//    if((error | (done & ~error)) && clk_counter == `MEM_DELAY / 2)
-//        $finish;
-//end
+always@*
+begin
+    if(test_case == `NUM_TEST_CASE)
+        $finish;
+end
 
 endmodule
