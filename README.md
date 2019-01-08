@@ -71,5 +71,3 @@ x,y,z will be identified as unit tests; a,b,c will be identified as full tests.
 `-synth -full` indicates a pure full-chip synthesis procedure without simulation. One may use this to check whether the codes are synthesizable.
 `-synth -sim_func -full 001_basic_loop` indicates a post-synthesis full-chip functional simulation of testcase 001_basic_loop.
 `-impl -sim_time -dump -unit fifo_queue` indicates a post-implementation timing simulation of unit testcase fifo_queue with signals dumping.
-
--./pumpkin.pl -impl -sim_time -dump -unit fifo
