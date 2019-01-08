@@ -1,4 +1,4 @@
-#What is this?
+# What is this?
 
 Pumpkin is a non-profit personal side project aiming at building a powerful education/research-oriented CPU prototype with the following targets:
 * linux-compatible
@@ -9,17 +9,17 @@ Pumpkin is a non-profit personal side project aiming at building a powerful educ
 This package includes RTL codes, simulation scripts, unit tests, an ELF loader, along with a series of cpp source files which can be compiled by a standard compiler. 
 Tested can be performed with a RTL simulator or on a real FPGA board. 
 
-#Required Tools
+# Required Tools
 
 * vivado simulator (Linux)
 * gtkwave (Linux/MacOSX)     - sudo apt-get install gtkwave
 * iverilog (MacOSX)
 
-#Cautions 
+# Cautions 
     
 1. simulation performance may drastically degrades with -dump or -sim_time option.
 
-#Pumpkin.pl usage
+# Pumpkin.pl usage
 
 Pumpkin.pl is the main script for nearly all of the tasks. The following options is available: 
 
