@@ -1,9 +1,9 @@
 module issue_queue
 #(
-    parameter NUM_ISSUE_QUEUE_ENTRY = 6;
+    parameter NUM_ISSUE_QUEUE_ENTRY = 6,
 
-    parameter INST_TYPE_LENGTH_IN_BITS = 2;
-    parameter REG_INDEX_LENGTH_IN_BITS = 5;
+    parameter INST_TYPE_LENGTH_IN_BITS = 2,
+    parameter REG_INDEX_LENGTH_IN_BITS = 5,
     parameter CPU_OPERAND_LENGTH_IN_BITS = 32;
 )
 (
