@@ -1,7 +1,7 @@
 #What is this?
 
 Pumpkin is a non-profit personal side project aiming at building a powerful education/research-oriented CPU prototype with the following targets:
-* linux-compatible
+* linux-booting
 * high-performance (superscalar & out-of-order)
 * parameterized
 * synthesizable
