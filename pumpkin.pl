@@ -1,7 +1,8 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/env perl
 
 use v5.26;
 use strict;
+use warnings;
 use File::Find;
 use File::Copy;
 use POSIX;
