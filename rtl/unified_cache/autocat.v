@@ -20,8 +20,8 @@ reg                               access_valid_pre;
 reg [CACHE_ASSOCIATIVITY - 1 : 0] hit_vec_pre;
 reg [63                      : 0] access_counter;
 
-wire reset_with_request_limit = reset_in | access_counter == 2 ** RESET_BIN_POWER;
 wire request_limit            = access_counter == 2 ** RESET_BIN_POWER;
+wire reset_with_request_limit = reset_in | request_limit;
 
 always@(posedge clk_in)
 begin
@@ -115,7 +115,7 @@ always@(posedge clk_in)
 begin
     if(reset_in)
     begin
-        suggested_waymask_out <= 16'b1111_1111_1111_1111;
+        suggested_waymask_out       <= 16'b1111_1111_1111_1111;
     end
 
     else if(request_limit)
