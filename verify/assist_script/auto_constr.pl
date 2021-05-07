@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 
 use v5.26;
 use strict;
@@ -75,6 +75,11 @@ sub script_init
         'xczu2eg-sfva625-1-e' =>
         {
             'clk_in' => 'C4'
+        },
+
+        'xczu7ev-ffvc1156-1-e' =>
+        {
+            'clk_in' => 'F21'
         }
     )
 }
